@@ -119,3 +119,24 @@
 - [x] Supportare più dipendenti nello stesso giorno (pallini multipli)
 - [x] Mostrare ore (2H/4H/8H) nei giorni di ferie (tooltip)
 - [x] Aggiornamento automatico calendario dopo approvazione
+
+
+## Funzionalità Completate
+
+### Rinomina Applicazione
+- [x] Cambiare nome da "Dashboard Gestione Ferie" a "Power Leave"
+- [x] Aggiornare titolo in tutte le pagine
+- [ ] Aggiornare VITE_APP_TITLE tramite Management UI (da fare manualmente)
+
+### Bug Calendario Risolti
+- [x] Correzione confronto date per visualizzare richieste pending
+- [x] Aggiunta visualizzazione richieste rifiutate (rejected) con colore rosso
+- [x] Testato con dati reali per dicembre 2025
+- [x] Migliorato algoritmo di filtraggio date (confronto stringhe YYYY-MM-DD)
+
+### Filtri Calendario
+- [x] Implementato filtro per Membri (dropdown con lista dipendenti dinamica)
+- [x] Implementato filtro per Stati (Tutte, Approvate, In Sospeso, Rifiutate)
+- [x] Implementato filtro per Tipi di assenza (dinamico da database)
+- [x] Applicati filtri lato client ai dati monthLeaves
+- [x] Calendario si aggiorna automaticamente quando cambiano i filtri

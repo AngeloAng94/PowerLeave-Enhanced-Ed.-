@@ -1,0 +1,202 @@
+{
+  "query": "SELECT lr.id, u.name, lr.startDate, lr.endDate, lr.status, lr.hours \nFROM leave_requests lr \nLEFT JOIN users u ON lr.userId = u.id \nWHERE lr.startDate >= '2025-12-01' AND lr.startDate <= '2025-12-31'\nORDER BY lr.startDate, lr.status;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute SELECT lr.id, u.name, lr.startDate, lr.endDate, lr.status, lr.hours \nFROM leave_requests lr \nLEFT JOIN users u ON lr.userId = u.id \nWHERE lr.startDate >= '2025-12-01' AND lr.startDate <= '2025-12-31'\nORDER BY lr.startDate, lr.status;",
+  "rows": [
+    {
+      "id": "3",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-05",
+      "status": "approved",
+      "hours": "8"
+    },
+    {
+      "id": "1",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-01",
+      "status": "approved",
+      "hours": "8"
+    },
+    {
+      "id": "30007",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-05",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30011",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-03",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30010",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-01",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30008",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-05",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30001",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-03",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30005",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-03",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "5",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-05",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30003",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-01",
+      "endDate": "2025-12-03",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "2",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-02",
+      "endDate": "2025-12-02",
+      "status": "approved",
+      "hours": "2"
+    },
+    {
+      "id": "30012",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-02",
+      "endDate": "2025-12-02",
+      "status": "rejected",
+      "hours": "2"
+    },
+    {
+      "id": "30014",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-03",
+      "endDate": "2025-12-03",
+      "status": "rejected",
+      "hours": "4"
+    },
+    {
+      "id": "4",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-03",
+      "endDate": "2025-12-03",
+      "status": "rejected",
+      "hours": "4"
+    },
+    {
+      "id": "6",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-04",
+      "endDate": "2025-12-04",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30015",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-04",
+      "endDate": "2025-12-04",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "7",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-05",
+      "endDate": "2025-12-05",
+      "status": "rejected",
+      "hours": "4"
+    },
+    {
+      "id": "30016",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-05",
+      "endDate": "2025-12-05",
+      "status": "rejected",
+      "hours": "4"
+    },
+    {
+      "id": "8",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-10",
+      "endDate": "2025-12-15",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30009",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-10",
+      "endDate": "2025-12-15",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30002",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-15",
+      "endDate": "2025-12-20",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30004",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-15",
+      "endDate": "2025-12-20",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30006",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-15",
+      "endDate": "2025-12-20",
+      "status": "rejected",
+      "hours": "8"
+    },
+    {
+      "id": "30013",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-15",
+      "endDate": "2025-12-20",
+      "status": "rejected",
+      "hours": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tstartDate\tendDate\tstatus\thours\n3\tAngelo Anglani\t2025-12-01\t2025-12-05\tapproved\t8\n1\tAngelo Anglani\t2025-12-01\t2025-12-01\tapproved\t8\n30007\tAngelo Anglani\t2025-12-01\t2025-12-05\trejected\t8\n30011\tAngelo Anglani\t2025-12-01\t2025-12-03\trejected\t8\n30010\tAngelo Anglani\t2025-12-01\t2025-12-01\trejected\t8\n30008\tAngelo Anglani\t2025-12-01\t2025-12-05\trejected\t8\n30001\tAngelo Anglani\t2025-12-01\t2025-12-03\trejected\t8\n30005\tAngelo Anglani\t2025-12-01\t2025-12-03\trejected\t8\n5\tAngelo Anglani\t2025-12-01\t2025-12-05\trejected\t8\n30003\tAngelo Anglani\t2025-12-01\t2025-12-03\trejected\t8\n2\tAngelo Anglani\t2025-12-02\t2025-12-02\tapproved\t2\n30012\tAngelo Anglani\t2025-12-02\t2025-12-02\trejected\t2\n30014\tAngelo Anglani\t2025-12-03\t2025-12-03\trejected\t4\n4\tAngelo Anglani\t2025-12-03\t2025-12-03\trejected\t4\n6\tAngelo Anglani\t2025-12-04\t2025-12-04\trejected\t8\n30015\tAngelo Anglani\t2025-12-04\t2025-12-04\trejected\t8\n7\tAngelo Anglani\t2025-12-05\t2025-12-05\trejected\t4\n30016\tAngelo Anglani\t2025-12-05\t2025-12-05\trejected\t4\n8\tAngelo Anglani\t2025-12-10\t2025-12-15\trejected\t8\n30009\tAngelo Anglani\t2025-12-10\t2025-12-15\trejected\t8\n30002\tAngelo Anglani\t2025-12-15\t2025-12-20\trejected\t8\n30004\tAngelo Anglani\t2025-12-15\t2025-12-20\trejected\t8\n30006\tAngelo Anglani\t2025-12-15\t2025-12-20\trejected\t8\n30013\tAngelo Anglani\t2025-12-15\t2025-12-20\trejected\t8\n",
+  "stderr": "",
+  "execution_time_ms": 578
+}

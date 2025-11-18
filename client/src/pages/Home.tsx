@@ -38,6 +38,9 @@ export default function Home() {
   const [hours, setHours] = useState<string>("8");
   const [notes, setNotes] = useState("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [filterMember, setFilterMember] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
 
   const { data: stats } = trpc.leaves.getStats.useQuery(undefined, { enabled: isAuthenticated });
   const { data: leaveTypes } = trpc.leaves.getTypes.useQuery();
@@ -46,10 +49,18 @@ export default function Home() {
   const { data: allRequests } = trpc.leaves.getRequests.useQuery(undefined, { enabled: isAuthenticated });
   
   // Query per ottenere ferie del mese corrente per il calendario
-  const { data: monthLeaves } = trpc.announcements.getByMonth.useQuery(
+  const { data: monthLeavesRaw } = trpc.announcements.getByMonth.useQuery(
     { year: currentMonth.getFullYear(), month: currentMonth.getMonth() + 1 },
     { enabled: isAuthenticated }
   );
+  
+  // Applica filtri ai dati del calendario
+  const monthLeaves = monthLeavesRaw?.filter((leave) => {
+    if (filterMember !== "all" && leave.userId.toString() !== filterMember) return false;
+    if (filterStatus !== "all" && leave.status !== filterStatus) return false;
+    if (filterType !== "all" && leave.leaveTypeId.toString() !== filterType) return false;
+    return true;
+  });
 
   const createRequestMutation = trpc.leaves.createRequest.useMutation({
     onSuccess: () => {
@@ -145,7 +156,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Dashboard Gestione Ferie</CardTitle>
+            <CardTitle className="text-2xl">Power Leave</CardTitle>
             <CardDescription>Accedi per gestire le ferie del tuo team</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -224,7 +235,7 @@ export default function Home() {
         <div className="w-full max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-4xl font-black text-foreground mb-2">Dashboard Gestione Ferie</h1>
+            <h1 className="text-4xl font-black text-foreground mb-2">Power Leave</h1>
             <p className="text-muted-foreground">Pianifica, visualizza e approva le ferie del tuo team con facilità.</p>
           </div>
 
@@ -474,18 +485,62 @@ export default function Home() {
                       <ChevronRight className="w-5 h-5" />
                     </Button>
                   </div>
-                  <div className="flex items-center gap-4 text-xs flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-muted-foreground">Approvate</span>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={filterMember} onValueChange={setFilterMember}>
+                        <SelectTrigger className="w-[150px] h-8 text-xs">
+                          <SelectValue placeholder="Membri" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutti i membri</SelectItem>
+                          {allRequests && Array.from(new Set(allRequests.map(r => r.userId))).map((userId) => {
+                            const req = allRequests.find(r => r.userId === userId);
+                            return req ? (
+                              <SelectItem key={userId} value={userId.toString()}>
+                                {req.userName || `User ${userId}`}
+                              </SelectItem>
+                            ) : null;
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <Select value={filterStatus} onValueChange={setFilterStatus}>
+                        <SelectTrigger className="w-[150px] h-8 text-xs">
+                          <SelectValue placeholder="Stati" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutti gli stati</SelectItem>
+                          <SelectItem value="approved">Approvate</SelectItem>
+                          <SelectItem value="pending">In Sospeso</SelectItem>
+                          <SelectItem value="rejected">Rifiutate</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={filterType} onValueChange={setFilterType}>
+                        <SelectTrigger className="w-[150px] h-8 text-xs">
+                          <SelectValue placeholder="Tipi" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutti i tipi</SelectItem>
+                          {leaveTypes?.map((type) => (
+                            <SelectItem key={type.id} value={type.id.toString()}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                      <span className="text-muted-foreground">In Sospeso</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span className="text-muted-foreground">Festività</span>
+                    <div className="flex items-center gap-4 text-xs flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span className="text-muted-foreground">Approvate</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                        <span className="text-muted-foreground">In Sospeso</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <span className="text-muted-foreground">Rifiutate</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -510,14 +565,13 @@ export default function Home() {
                     // Ottieni le ferie per questo giorno
                     const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const dayLeaves = monthLeaves?.filter((leave) => {
-                      const startDate = new Date(leave.startDate);
-                      const endDate = new Date(leave.endDate);
-                      const currentDate = new Date(dateStr);
-                      return currentDate >= startDate && currentDate <= endDate;
+                      // Le date sono stringhe in formato YYYY-MM-DD, confrontiamole direttamente
+                      return leave.startDate <= dateStr && leave.endDate >= dateStr;
                     }) || [];
                     
                     const hasApproved = dayLeaves.some(l => l.status === 'approved');
                     const hasPending = dayLeaves.some(l => l.status === 'pending');
+                    const hasRejected = dayLeaves.some(l => l.status === 'rejected');
 
                     return (
                       <button
@@ -529,19 +583,25 @@ export default function Home() {
                             ? "bg-green-500/10 border-green-500/50"
                             : hasPending
                             ? "bg-orange-500/10 border-orange-500/50"
+                            : hasRejected
+                            ? "bg-red-500/10 border-red-500/50"
                             : "border-border"
                         } ${isWeekend ? "text-muted-foreground" : ""}`}
                       >
                         <span className={`text-xs ${isToday ? "font-bold text-primary" : ""}`}>{day}</span>
                         {dayLeaves.length > 0 && (
                           <div className="flex flex-wrap gap-0.5 mt-0.5 w-full">
-                            {dayLeaves.slice(0, 2).map((leave, idx) => (
+                            {dayLeaves.slice(0, 3).map((leave, idx) => (
                               <div
                                 key={idx}
                                 className={`w-1.5 h-1.5 rounded-full ${
-                                  leave.status === 'approved' ? 'bg-green-500' : 'bg-orange-500'
+                                  leave.status === 'approved' 
+                                    ? 'bg-green-500' 
+                                    : leave.status === 'pending'
+                                    ? 'bg-orange-500'
+                                    : 'bg-red-500'
                                 }`}
-                                title={`${leave.userName} (${leave.hours}h)`}
+                                title={`${leave.userName} (${leave.hours}h) - ${leave.status}`}
                               />
                             ))}
                           </div>
