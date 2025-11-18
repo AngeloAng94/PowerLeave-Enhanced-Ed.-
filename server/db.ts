@@ -89,4 +89,131 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Leave management queries
+
+export async function getLeaveTypes() {
+  const db = await getDb();
+  if (!db) return [];
+  const { leaveTypes } = await import("../drizzle/schema");
+  return db.select().from(leaveTypes);
+}
+
+export async function getLeaveBalance(userId: number, year: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { leaveBalances } = await import("../drizzle/schema");
+  return db.select().from(leaveBalances).where(eq(leaveBalances.userId, userId));
+}
+
+export async function createLeaveRequest(data: {
+  userId: number;
+  leaveTypeId: number;
+  startDate: Date;
+  endDate: Date;
+  days: number;
+  notes?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const { leaveRequests } = await import("../drizzle/schema");
+  await db.insert(leaveRequests).values({
+    userId: data.userId,
+    leaveTypeId: data.leaveTypeId,
+    startDate: data.startDate,
+    endDate: data.endDate,
+    days: data.days,
+    notes: data.notes,
+    status: "pending",
+  });
+}
+
+export async function getLeaveRequests(filters?: { userId?: number; status?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  const { leaveRequests, users, leaveTypes } = await import("../drizzle/schema");
+  
+  let query = db
+    .select({
+      id: leaveRequests.id,
+      userId: leaveRequests.userId,
+      userName: users.name,
+      leaveTypeId: leaveRequests.leaveTypeId,
+      leaveTypeName: leaveTypes.name,
+      startDate: leaveRequests.startDate,
+      endDate: leaveRequests.endDate,
+      days: leaveRequests.days,
+      notes: leaveRequests.notes,
+      status: leaveRequests.status,
+      reviewedBy: leaveRequests.reviewedBy,
+      reviewedAt: leaveRequests.reviewedAt,
+      reviewNotes: leaveRequests.reviewNotes,
+      createdAt: leaveRequests.createdAt,
+    })
+    .from(leaveRequests)
+    .leftJoin(users, eq(leaveRequests.userId, users.id))
+    .leftJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id));
+
+  if (filters?.userId) {
+    query = query.where(eq(leaveRequests.userId, filters.userId)) as any;
+  }
+  if (filters?.status) {
+    query = query.where(eq(leaveRequests.status, filters.status as any)) as any;
+  }
+
+  return query;
+}
+
+export async function updateLeaveRequestStatus(requestId: number, status: "approved" | "rejected", reviewedBy: number, reviewNotes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const { leaveRequests } = await import("../drizzle/schema");
+  await db.update(leaveRequests)
+    .set({
+      status,
+      reviewedBy,
+      reviewedAt: new Date(),
+      reviewNotes,
+    })
+    .where(eq(leaveRequests.id, requestId));
+}
+
+export async function getAnnouncements(limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  const { announcements, users } = await import("../drizzle/schema");
+  return db
+    .select({
+      id: announcements.id,
+      title: announcements.title,
+      content: announcements.content,
+      type: announcements.type,
+      createdBy: announcements.createdBy,
+      createdByName: users.name,
+      createdAt: announcements.createdAt,
+    })
+    .from(announcements)
+    .leftJoin(users, eq(announcements.createdBy, users.id))
+    .orderBy(announcements.createdAt)
+    .limit(limit);
+}
+
+export async function getMessages(userId: number, limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  const { messages, users } = await import("../drizzle/schema");
+  return db
+    .select({
+      id: messages.id,
+      fromUserId: messages.fromUserId,
+      fromUserName: users.name,
+      toUserId: messages.toUserId,
+      content: messages.content,
+      isRead: messages.isRead,
+      createdAt: messages.createdAt,
+    })
+    .from(messages)
+    .leftJoin(users, eq(messages.fromUserId, users.id))
+    .where(eq(messages.toUserId, userId))
+    .orderBy(messages.createdAt)
+    .limit(limit);
+}
