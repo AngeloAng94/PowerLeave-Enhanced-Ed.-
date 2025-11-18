@@ -139,10 +139,24 @@ export const appRouter = router({
   }),
 
   announcements: router({
+    // Get all announcements
     getAll: publicProcedure.query(async () => {
       const { getAnnouncements } = await import("./db");
       return getAnnouncements();
     }),
+
+    // Get leave requests for a specific month (for calendar display)
+    getByMonth: publicProcedure
+      .input(
+        z.object({
+          year: z.number(),
+          month: z.number().min(1).max(12),
+        })
+      )
+      .query(async ({ input }) => {
+        const { getLeaveRequestsByMonth } = await import("./db");
+        return getLeaveRequestsByMonth(input.year, input.month);
+      }),
   }),
 
   messages: router({

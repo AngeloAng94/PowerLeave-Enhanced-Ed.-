@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -217,4 +217,43 @@ export async function getMessages(userId: number, limit = 10) {
     .where(eq(messages.toUserId, userId))
     .orderBy(messages.createdAt)
     .limit(limit);
+}
+
+export async function getLeaveRequestsByMonth(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { leaveRequests, users, leaveTypes } = await import("../drizzle/schema");
+  
+  // Calcola il primo e l'ultimo giorno del mese
+  const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const lastDayStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  
+  // Query per ottenere tutte le richieste che si sovrappongono con il mese
+  // Usa STR_TO_DATE per convertire le stringhe in date per il confronto
+  const results = await db
+    .select({
+      id: leaveRequests.id,
+      userId: leaveRequests.userId,
+      userName: users.name,
+      leaveTypeId: leaveRequests.leaveTypeId,
+      leaveTypeName: leaveTypes.name,
+      startDate: leaveRequests.startDate,
+      endDate: leaveRequests.endDate,
+      days: leaveRequests.days,
+      hours: leaveRequests.hours,
+      status: leaveRequests.status,
+      notes: leaveRequests.notes,
+    })
+    .from(leaveRequests)
+    .leftJoin(users, eq(leaveRequests.userId, users.id))
+    .leftJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id))
+    .where(
+      // Richieste che si sovrappongono con il mese
+      // Usa confronto diretto tra stringhe in formato YYYY-MM-DD (funziona correttamente)
+      sql`(${leaveRequests.startDate} <= ${lastDayStr} AND ${leaveRequests.endDate} >= ${firstDay})`
+    );
+  
+  return results;
 }

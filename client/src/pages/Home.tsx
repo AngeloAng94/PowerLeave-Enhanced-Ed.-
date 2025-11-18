@@ -31,6 +31,7 @@ import { toast } from "sonner";
 
 export default function Home() {
   const { user, loading, isAuthenticated, logout } = useAuth();
+  const utils = trpc.useUtils();
   const [leaveTypeId, setLeaveTypeId] = useState<string>("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -43,6 +44,12 @@ export default function Home() {
   const { data: pendingRequests } = trpc.leaves.getRequests.useQuery({ status: "pending" }, { enabled: isAuthenticated });
   const { data: announcements } = trpc.announcements.getAll.useQuery();
   const { data: allRequests } = trpc.leaves.getRequests.useQuery(undefined, { enabled: isAuthenticated });
+  
+  // Query per ottenere ferie del mese corrente per il calendario
+  const { data: monthLeaves } = trpc.announcements.getByMonth.useQuery(
+    { year: currentMonth.getFullYear(), month: currentMonth.getMonth() + 1 },
+    { enabled: isAuthenticated }
+  );
 
   const createRequestMutation = trpc.leaves.createRequest.useMutation({
     onSuccess: () => {
@@ -59,8 +66,12 @@ export default function Home() {
   });
 
   const reviewRequestMutation = trpc.leaves.reviewRequest.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Richiesta aggiornata con successo!");
+      // Invalida tutte le query per aggiornare la UI
+      await utils.leaves.getRequests.invalidate();
+      await utils.leaves.getStats.invalidate();
+      await utils.announcements.getByMonth.invalidate();
     },
     onError: (error) => {
       toast.error("Errore nell'aggiornamento: " + error.message);
@@ -495,15 +506,46 @@ export default function Home() {
                     const day = i + 1;
                     const isToday = day === new Date().getDate() && currentMonth.getMonth() === new Date().getMonth() && currentMonth.getFullYear() === new Date().getFullYear();
                     const isWeekend = ((startingDayOfWeek + i) % 7 === 5 || (startingDayOfWeek + i) % 7 === 6);
+                    
+                    // Ottieni le ferie per questo giorno
+                    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayLeaves = monthLeaves?.filter((leave) => {
+                      const startDate = new Date(leave.startDate);
+                      const endDate = new Date(leave.endDate);
+                      const currentDate = new Date(dateStr);
+                      return currentDate >= startDate && currentDate <= endDate;
+                    }) || [];
+                    
+                    const hasApproved = dayLeaves.some(l => l.status === 'approved');
+                    const hasPending = dayLeaves.some(l => l.status === 'pending');
 
                     return (
                       <button
                         key={day}
-                        className={`aspect-square p-1 rounded-md border border-border flex flex-col items-center justify-center text-sm hover:bg-muted/50 transition-colors ${
-                          isToday ? "ring-2 ring-primary bg-primary/10" : ""
+                        className={`aspect-square p-1 rounded-md border flex flex-col items-start justify-start text-sm hover:bg-muted/50 transition-colors ${
+                          isToday
+                            ? "ring-2 ring-primary bg-primary/10 border-primary"
+                            : hasApproved
+                            ? "bg-green-500/10 border-green-500/50"
+                            : hasPending
+                            ? "bg-orange-500/10 border-orange-500/50"
+                            : "border-border"
                         } ${isWeekend ? "text-muted-foreground" : ""}`}
                       >
-                        <span className={isToday ? "font-bold text-primary" : ""}>{day}</span>
+                        <span className={`text-xs ${isToday ? "font-bold text-primary" : ""}`}>{day}</span>
+                        {dayLeaves.length > 0 && (
+                          <div className="flex flex-wrap gap-0.5 mt-0.5 w-full">
+                            {dayLeaves.slice(0, 2).map((leave, idx) => (
+                              <div
+                                key={idx}
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  leave.status === 'approved' ? 'bg-green-500' : 'bg-orange-500'
+                                }`}
+                                title={`${leave.userName} (${leave.hours}h)`}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </button>
                     );
                   })}

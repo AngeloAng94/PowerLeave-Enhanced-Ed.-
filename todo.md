@@ -107,3 +107,15 @@
 - [x] Testare migrazione su dati campione
 - [x] Documentare processo per utenti finali
 - [x] Creare guida utente
+
+
+## Bug Risolti
+
+### Calendario non mostra ferie approvate
+- [x] Implementare query per ottenere ferie dal database per il mese corrente
+- [x] Visualizzare giorni con ferie approvate (sfondo verde)
+- [x] Visualizzare giorni con ferie in sospeso (sfondo arancione)
+- [x] Mostrare pallini colorati per dipendenti nei giorni di ferie
+- [x] Supportare più dipendenti nello stesso giorno (pallini multipli)
+- [x] Mostrare ore (2H/4H/8H) nei giorni di ferie (tooltip)
+- [x] Aggiornamento automatico calendario dopo approvazione
