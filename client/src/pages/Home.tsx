@@ -7,21 +7,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Calendar, BarChart3, Users, Send, CheckCircle2, Clock, UserCheck, Plane } from "lucide-react";
+import {
+  Calendar,
+  BarChart3,
+  Users,
+  Send,
+  CheckCircle2,
+  Clock,
+  UserCheck,
+  Plane,
+  MessageSquare,
+  Bell,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  Download,
+  FileText,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function Home() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, logout } = useAuth();
   const [leaveTypeId, setLeaveTypeId] = useState<string>("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const { data: stats } = trpc.leaves.getStats.useQuery(undefined, { enabled: isAuthenticated });
   const { data: leaveTypes } = trpc.leaves.getTypes.useQuery();
   const { data: pendingRequests } = trpc.leaves.getRequests.useQuery({ status: "pending" }, { enabled: isAuthenticated });
   const { data: announcements } = trpc.announcements.getAll.useQuery();
+  const { data: allRequests } = trpc.leaves.getRequests.useQuery(undefined, { enabled: isAuthenticated });
 
   const createRequestMutation = trpc.leaves.createRequest.useMutation({
     onSuccess: () => {
@@ -63,6 +83,38 @@ export default function Home() {
     reviewRequestMutation.mutate({ requestId, status });
   };
 
+  // Calendar helpers
+  const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    return { daysInMonth, startingDayOfWeek: startingDayOfWeek === 0 ? 7 : startingDayOfWeek };
+  };
+
+  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+
+  const previousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+
+  // Mock data for team members
+  const teamMembers = [
+    { id: 1, name: "Riccardo Ferracuti", role: "Team Leader", avatar: user?.name?.charAt(0) || "R", f2a: 208, used: 80, available: 128 },
+    { id: 2, name: "Angelo Anglani", role: "Team Member", avatar: "A", f2a: 192, used: 40, available: 152 },
+    { id: 3, name: "Leyla Lionte", role: "Team Member", avatar: "L", f2a: 192, used: 120, available: 72 },
+    { id: 4, name: "Nicola Oro", role: "Team Member", avatar: "N", f2a: 192, used: 16, available: 176 },
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -93,12 +145,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border p-4 flex flex-col">
+      <aside className="w-64 shrink-0 bg-card border-r border-border p-4 flex flex-col">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-primary font-bold">{user?.name?.charAt(0) || "U"}</span>
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <span className="text-primary font-bold text-lg">{user?.name?.charAt(0) || "U"}</span>
           </div>
           <div>
             <h2 className="text-sm font-semibold text-foreground">{user?.name || "Utente"}</h2>
@@ -111,30 +163,54 @@ export default function Home() {
             <BarChart3 className="w-5 h-5" />
             Dashboard
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3">
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
             <Calendar className="w-5 h-5" />
             Calendario
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3">
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
             <Users className="w-5 h-5" />
             Team
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+            <BarChart3 className="w-5 h-5" />
+            Report
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+            <FileText className="w-5 h-5" />
+            Politiche Ferie
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+            <MessageSquare className="w-5 h-5" />
+            Messaggi
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+            <Bell className="w-5 h-5" />
+            Bacheca
           </Button>
         </nav>
 
         <div className="mt-auto space-y-2">
-          <Button className="w-full" onClick={() => toast.info("Funzionalità in arrivo")}>
+          <Button className="w-full" onClick={() => toast.info("Scorri in basso per il form")}>
             <Plane className="w-4 h-4 mr-2" />
             Richiedi Ferie
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+            <Settings className="w-5 h-5" />
+            Impostazioni
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => logout()}>
+            <LogOut className="w-5 h-5" />
+            Logout
           </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="ml-64 p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
+        <div className="w-full max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard Gestione Ferie</h1>
+            <h1 className="text-4xl font-black text-foreground mb-2">Dashboard Gestione Ferie</h1>
             <p className="text-muted-foreground">Pianifica, visualizza e approva le ferie del tuo team con facilità.</p>
           </div>
 
@@ -193,7 +269,7 @@ export default function Home() {
                   </div>
                   <div className="relative w-12 h-12">
                     <svg className="w-full h-full -rotate-90">
-                      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted" />
+                      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted opacity-20" />
                       <circle
                         cx="24"
                         cy="24"
@@ -212,9 +288,8 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* Main Grid */}
+          {/* Request Form and Pending Approvals */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Request Form */}
             <Card className="xl:col-span-2">
               <CardHeader>
                 <CardTitle>Invia una richiesta</CardTitle>
@@ -265,7 +340,6 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* Pending Requests (Admin Only) */}
             {user?.role === "admin" && (
               <Card>
                 <CardHeader>
@@ -273,37 +347,155 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {pendingRequests && pendingRequests.length > 0 ? (
-                    pendingRequests.map((request) => (
+                    pendingRequests.slice(0, 2).map((request) => (
                       <div key={request.id} className="p-4 rounded-lg bg-muted/50 space-y-3">
-                        <div>
-                          <p className="font-semibold text-foreground">{request.userName}</p>
-                          <p className="text-sm text-muted-foreground">{request.leaveTypeName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {request.startDate && new Date(request.startDate).toLocaleDateString()} -{" "}
-                            {request.endDate && new Date(request.endDate).toLocaleDateString()}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{request.days} giorni</p>
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                            <span className="text-primary font-bold text-sm">{request.userName?.charAt(0) || "U"}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-foreground">{request.userName}</p>
+                            <p className="text-sm text-muted-foreground">{request.leaveTypeName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {request.startDate && new Date(request.startDate).toLocaleDateString("it-IT", { day: "numeric", month: "short" })} -{" "}
+                              {request.endDate && new Date(request.endDate).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="default" onClick={() => handleReviewRequest(request.id, "approved")} disabled={reviewRequestMutation.isPending}>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            onClick={() => handleReviewRequest(request.id, "approved")}
+                            disabled={reviewRequestMutation.isPending}
+                          >
                             <CheckCircle2 className="w-4 h-4 mr-1" />
                             Approva
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleReviewRequest(request.id, "rejected")} disabled={reviewRequestMutation.isPending}>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={() => handleReviewRequest(request.id, "rejected")}
+                            disabled={reviewRequestMutation.isPending}
+                          >
                             Rifiuta
                           </Button>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">Nessuna richiesta in sospeso</p>
+                    <p className="text-sm text-muted-foreground text-center py-8">Nessuna richiesta in sospeso</p>
                   )}
                 </CardContent>
               </Card>
             )}
+          </div>
 
-            {/* Announcements */}
-            {!user?.role || user.role !== "admin" ? (
+          {/* Team Leave Balance Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Il mio saldo ferie</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {teamMembers.map((member) => (
+                  <div key={member.id} className="bg-muted/50 p-4 rounded-lg">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span className="text-primary font-bold">{member.avatar}</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground text-sm">{member.name}</p>
+                        <p className="text-xs text-muted-foreground">{member.role}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-xs text-muted-foreground">in F2A</p>
+                        <p className="font-bold text-foreground text-lg">{member.f2a}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Usate</p>
+                        <p className="font-bold text-foreground text-lg">{member.used}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Disponibili</p>
+                        <p className="font-bold text-green-600 text-lg">{member.available}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Calendar and Sidebar */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <Card className="xl:col-span-2">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={previousMonth}>
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <h2 className="text-lg font-bold">
+                      {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                    </h2>
+                    <Button variant="ghost" size="icon" onClick={nextMonth}>
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-muted-foreground">Approvate</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                      <span className="text-muted-foreground">In Sospeso</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span className="text-muted-foreground">Festività</span>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                  {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((day) => (
+                    <div key={day} className="py-2 text-xs font-bold text-muted-foreground uppercase">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: startingDayOfWeek - 1 }).map((_, i) => (
+                    <div key={`empty-${i}`} className="aspect-square"></div>
+                  ))}
+                  {Array.from({ length: daysInMonth }).map((_, i) => {
+                    const day = i + 1;
+                    const isToday = day === new Date().getDate() && currentMonth.getMonth() === new Date().getMonth() && currentMonth.getFullYear() === new Date().getFullYear();
+                    const isWeekend = ((startingDayOfWeek + i) % 7 === 5 || (startingDayOfWeek + i) % 7 === 6);
+
+                    return (
+                      <button
+                        key={day}
+                        className={`aspect-square p-1 rounded-md border border-border flex flex-col items-center justify-center text-sm hover:bg-muted/50 transition-colors ${
+                          isToday ? "ring-2 ring-primary bg-primary/10" : ""
+                        } ${isWeekend ? "text-muted-foreground" : ""}`}
+                      >
+                        <span className={isToday ? "font-bold text-primary" : ""}>{day}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Bacheca Annunci</CardTitle>
@@ -312,8 +504,8 @@ export default function Home() {
                   {announcements && announcements.length > 0 ? (
                     announcements.map((announcement) => (
                       <div key={announcement.id} className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <h3 className="font-bold text-blue-400">{announcement.title}</h3>
-                        <p className="text-sm text-blue-300/80 mt-1">{announcement.content}</p>
+                        <h3 className="font-bold text-blue-600 dark:text-blue-400 text-sm">{announcement.title}</h3>
+                        <p className="text-sm text-blue-600/80 dark:text-blue-400/80 mt-1">{announcement.content}</p>
                       </div>
                     ))
                   ) : (
@@ -321,8 +513,85 @@ export default function Home() {
                   )}
                 </CardContent>
               </Card>
-            ) : null}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Messaggi Recenti</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-bold text-sm">L</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <p className="font-semibold text-foreground text-sm">Leyla Lionte</p>
+                        <span className="text-xs text-muted-foreground">10:45</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">Ciao, ho inviato la richiesta per il 12 Ago...</p>
+                    </div>
+                    <div className="flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full">1</div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-bold text-sm">A</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <p className="font-semibold text-foreground text-sm">Angelo Anglani</p>
+                        <span className="text-xs text-muted-foreground">Ieri</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">Richiesta inviata, grazie!</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
+
+          {/* Summary Table */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Riepilogo Utilizzo Ferie</CardTitle>
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filtra per tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutti i tipi</SelectItem>
+                    <SelectItem value="ferie">Ferie</SelectItem>
+                    <SelectItem value="permesso">Permesso</SelectItem>
+                    <SelectItem value="malattia">Malattia</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-xs uppercase bg-muted text-muted-foreground">
+                    <tr>
+                      <th className="px-6 py-3 text-left">Dipendente</th>
+                      <th className="px-6 py-3 text-left">Tipo Assenza</th>
+                      <th className="px-6 py-3 text-left">Giorni Utilizzati</th>
+                      <th className="px-6 py-3 text-left">Saldo Residuo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teamMembers.map((member, idx) => (
+                      <tr key={member.id} className={idx !== teamMembers.length - 1 ? "border-b border-border" : ""}>
+                        <td className="px-6 py-4 font-medium text-foreground">{member.name}</td>
+                        <td className="px-6 py-4 text-muted-foreground">Ferie</td>
+                        <td className="px-6 py-4 text-muted-foreground">{member.used}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{member.available}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
