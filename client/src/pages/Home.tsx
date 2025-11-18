@@ -34,6 +34,7 @@ export default function Home() {
   const [leaveTypeId, setLeaveTypeId] = useState<string>("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [hours, setHours] = useState<string>("8");
   const [notes, setNotes] = useState("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -49,6 +50,7 @@ export default function Home() {
       setLeaveTypeId("");
       setStartDate("");
       setEndDate("");
+      setHours("8");
       setNotes("");
     },
     onError: (error) => {
@@ -75,6 +77,7 @@ export default function Home() {
       leaveTypeId: parseInt(leaveTypeId),
       startDate,
       endDate,
+      hours: parseInt(hours),
       notes,
     });
   };
@@ -296,7 +299,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmitRequest} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="leave-type">Tipo di assenza</Label>
                       <Select value={leaveTypeId} onValueChange={setLeaveTypeId}>
@@ -313,16 +316,29 @@ export default function Home() {
                       </Select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="start-date">Data Inizio</Label>
-                        <Input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="end-date">Data Fine</Label>
-                        <Input id="end-date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="start-date">Data Inizio</Label>
+                      <Input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                     </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="end-date">Data Fine</Label>
+                      <Input id="end-date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="hours">Ore per giorno</Label>
+                    <Select value={hours} onValueChange={setHours}>
+                      <SelectTrigger id="hours">
+                        <SelectValue placeholder="Seleziona ore" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">2 ore (Permesso breve)</SelectItem>
+                        <SelectItem value="4">4 ore (Mezza giornata)</SelectItem>
+                        <SelectItem value="8">8 ore (Giornata intera)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">

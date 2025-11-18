@@ -39,6 +39,7 @@ export const appRouter = router({
           leaveTypeId: z.number(),
           startDate: z.string(),
           endDate: z.string(),
+          hours: z.number().default(8), // 2, 4, o 8 ore
           notes: z.string().optional(),
         })
       )
@@ -51,9 +52,10 @@ export const appRouter = router({
         await createLeaveRequest({
           userId: ctx.user.id,
           leaveTypeId: input.leaveTypeId,
-          startDate,
-          endDate,
+          startDate: input.startDate,
+          endDate: input.endDate,
           days,
+          hours: input.hours || 8,
           notes: input.notes,
         });
 
@@ -92,7 +94,7 @@ export const appRouter = router({
         }
 
         const { updateLeaveRequestStatus } = await import("./db");
-        await updateLeaveRequestStatus(input.requestId, input.status, ctx.user.id, input.reviewNotes);
+        await updateLeaveRequestStatus(input.requestId, input.status, ctx.user.id);
 
         return { success: true };
       }),

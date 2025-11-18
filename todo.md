@@ -81,3 +81,29 @@
 - [x] Colonna giorni utilizzati
 - [x] Colonna saldo residuo
 - [x] Filtro per tipo di assenza
+
+
+## Adattamenti per Compatibilità Excel
+
+### Supporto Granularità Oraria
+- [x] Aggiungere campo `hours` alla tabella `leave_requests`
+- [x] Modificare calcolo giorni per supportare frazioni (0.25 = 2H, 0.5 = 4H, 1 = 8H)
+- [x] Aggiornare form richiesta per permettere selezione ore
+- [ ] Aggiornare visualizzazione calendario per mostrare ore
+
+### Script Importazione Dati
+- [x] Creare script Python per importare dati da Excel
+- [x] Mappare dipendenti Excel → utenti database
+- [x] Importare richieste storiche (2021-2024) come "approved"
+- [x] Calcolare saldi ferie iniziali per ogni dipendente
+- [x] Validare dati importati vs Excel originale
+
+### Vista Storica
+- [ ] Aggiungere filtro anno nella dashboard
+- [ ] Implementare vista storica multi-anno
+- [ ] Aggiungere export Excel per backup
+
+### Migrazione e Training
+- [x] Testare migrazione su dati campione
+- [x] Documentare processo per utenti finali
+- [x] Creare guida utente

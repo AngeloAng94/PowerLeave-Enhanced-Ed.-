@@ -61,16 +61,16 @@ export type InsertLeaveBalance = typeof leaveBalances.$inferInsert;
  */
 export const leaveRequests = mysqlTable("leave_requests", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("user_id").notNull(),
-  leaveTypeId: int("leave_type_id").notNull(),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
+  userId: int("userId").notNull(),
+  leaveTypeId: int("leaveTypeId").notNull(),
+  startDate: varchar("startDate", { length: 10 }).notNull(),
+  endDate: varchar("endDate", { length: 10 }).notNull(),
   days: int("days").notNull(),
-  notes: text("notes"),
+  hours: int("hours").default(8).notNull(), // Ore per giorno: 2, 4, o 8
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
-  reviewedBy: int("reviewed_by"),
-  reviewedAt: timestamp("reviewed_at"),
-  reviewNotes: text("review_notes"),
+  notes: text("notes"),
+  reviewedBy: int("reviewedBy"),
+  reviewedAt: timestamp("reviewedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -108,9 +108,10 @@ export async function getLeaveBalance(userId: number, year: number) {
 export async function createLeaveRequest(data: {
   userId: number;
   leaveTypeId: number;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   days: number;
+  hours?: number;
   notes?: string;
 }) {
   const db = await getDb();
@@ -122,6 +123,7 @@ export async function createLeaveRequest(data: {
     startDate: data.startDate,
     endDate: data.endDate,
     days: data.days,
+    hours: data.hours || 8,
     notes: data.notes,
     status: "pending",
   });
@@ -142,11 +144,11 @@ export async function getLeaveRequests(filters?: { userId?: number; status?: str
       startDate: leaveRequests.startDate,
       endDate: leaveRequests.endDate,
       days: leaveRequests.days,
+      hours: leaveRequests.hours,
       notes: leaveRequests.notes,
       status: leaveRequests.status,
       reviewedBy: leaveRequests.reviewedBy,
       reviewedAt: leaveRequests.reviewedAt,
-      reviewNotes: leaveRequests.reviewNotes,
       createdAt: leaveRequests.createdAt,
     })
     .from(leaveRequests)
@@ -163,7 +165,7 @@ export async function getLeaveRequests(filters?: { userId?: number; status?: str
   return query;
 }
 
-export async function updateLeaveRequestStatus(requestId: number, status: "approved" | "rejected", reviewedBy: number, reviewNotes?: string) {
+export async function updateLeaveRequestStatus(requestId: number, status: "approved" | "rejected", reviewedBy: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const { leaveRequests } = await import("../drizzle/schema");
@@ -172,7 +174,6 @@ export async function updateLeaveRequestStatus(requestId: number, status: "appro
       status,
       reviewedBy,
       reviewedAt: new Date(),
-      reviewNotes,
     })
     .where(eq(leaveRequests.id, requestId));
 }
