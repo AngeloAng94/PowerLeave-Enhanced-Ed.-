@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS company_closures (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  date VARCHAR(10) NOT NULL,\n  reason VARCHAR(255) NOT NULL,\n  type ENUM('holiday', 'shutdown') DEFAULT 'holiday' NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute CREATE TABLE IF NOT EXISTS company_closures (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  date VARCHAR(10) NOT NULL,\n  reason VARCHAR(255) NOT NULL,\n  type ENUM('holiday', 'shutdown') DEFAULT 'holiday' NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 211
+}

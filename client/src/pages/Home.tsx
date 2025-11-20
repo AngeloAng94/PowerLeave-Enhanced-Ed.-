@@ -49,6 +49,11 @@ export default function Home() {
     user?.role === "admin" ? { status: "pending" } : { userId: user?.id },
     { enabled: isAuthenticated }
   );
+  // Carica riepilogo utilizzo ferie dal database
+  const { data: leaveSummary } = trpc.leaveUsage.getSummary.useQuery(
+    filterType === "all" ? undefined : { leaveTypeId: parseInt(filterType) },
+    { enabled: isAuthenticated }
+  );
   const { data: announcements } = trpc.announcements.getAll.useQuery();
   const { data: allRequests } = trpc.leaves.getRequests.useQuery(undefined, { enabled: isAuthenticated });
   
@@ -136,6 +141,9 @@ export default function Home() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
+  // Stato per filtro tabella riepilogo
+  const [summaryFilter, setSummaryFilter] = useState<string>("all");
+  
   // Dati saldo ferie: per ADMIN tutti i membri, per USER solo se stesso
   const teamMembers = [
     { id: 1, name: "Riccardo Ferracuti", role: "Team Leader", avatar: user?.name?.charAt(0) || "R", f2a: 208, used: 80, available: 128 },
@@ -148,6 +156,11 @@ export default function Home() {
   const visibleTeamMembers = user?.role === "admin" 
     ? teamMembers 
     : teamMembers.filter(m => m.name === user?.name);
+  
+  // Filtra riepilogo utilizzo ferie per USER (solo se stesso)
+  const visibleSummary = leaveSummary && user?.role === "admin"
+    ? leaveSummary
+    : leaveSummary?.filter(s => s.userId === user?.id) || [];
 
   if (loading) {
     return (
@@ -193,10 +206,6 @@ export default function Home() {
         </div>
 
         <nav className="flex-1 space-y-2">
-          <Button variant="secondary" className="w-full justify-start gap-3">
-            <BarChart3 className="w-5 h-5" />
-            Dashboard
-          </Button>
           <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
             <Calendar className="w-5 h-5" />
             Calendario
@@ -727,15 +736,15 @@ export default function Home() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Riepilogo Utilizzo Ferie</CardTitle>
-                <Select defaultValue="all">
+                <Select value={summaryFilter} onValueChange={setSummaryFilter}>
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="Filtra per tipo" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tutti i tipi</SelectItem>
-                    <SelectItem value="ferie">Ferie</SelectItem>
-                    <SelectItem value="permesso">Permesso</SelectItem>
-                    <SelectItem value="malattia">Malattia</SelectItem>
+                    {leaveTypes?.map(lt => (
+                      <SelectItem key={lt.id} value={lt.id.toString()}>{lt.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -752,14 +761,24 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(user?.role === "admin" ? teamMembers : teamMembers.filter(m => m.name === user?.name)).map((member, idx, arr) => (
-                      <tr key={member.id} className={idx !== arr.length - 1 ? "border-b border-border" : ""}>
-                        <td className="px-6 py-4 font-medium text-foreground">{member.name}</td>
-                        <td className="px-6 py-4 text-muted-foreground">Ferie</td>
-                        <td className="px-6 py-4 text-muted-foreground">{member.used}</td>
-                        <td className="px-6 py-4 text-muted-foreground">{member.available}</td>
+                    {visibleSummary.length > 0 ? (
+                      visibleSummary
+                        .filter(s => summaryFilter === "all" || s.leaveTypeId.toString() === summaryFilter)
+                        .map((summary, idx, arr) => (
+                          <tr key={`${summary.userId}-${summary.leaveTypeId}`} className={idx !== arr.length - 1 ? "border-b border-border" : ""}>
+                            <td className="px-6 py-4 font-medium text-foreground">{summary.userName}</td>
+                            <td className="px-6 py-4 text-muted-foreground">{summary.leaveTypeName}</td>
+                            <td className="px-6 py-4 text-muted-foreground">{summary.usedDays}</td>
+                            <td className="px-6 py-4 text-muted-foreground">{summary.availableDays}</td>
+                          </tr>
+                        ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                          Nessun dato disponibile
+                        </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>

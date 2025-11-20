@@ -1,0 +1,58 @@
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/dist-packages/mysql/connector/connection_cext.py", line 772, in cmd_query
+    self._cmysql.query(
+_mysql_connector.MySQLInterfaceError: Unknown column 'created_at' in 'field list'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ubuntu/dashboard-ferie-team/import_excel_fixed.py", line 273, in main
+    stats = import_excel(excel_path, conn)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/dashboard-ferie-team/import_excel_fixed.py", line 202, in import_excel
+    cursor.execute("""
+  File "/usr/local/lib/python3.11/dist-packages/mysql/connector/cursor_cext.py", line 353, in execute
+    self._connection.cmd_query(
+  File "/usr/local/lib/python3.11/dist-packages/mysql/connector/opentelemetry/context_propagation.py", line 97, in wrapper
+    return method(cnx, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/mysql/connector/connection_cext.py", line 781, in cmd_query
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1054 (42S22): Unknown column 'created_at' in 'field list'
+============================================================
+  IMPORTAZIONE DATI EXCEL -> POWER LEAVE
+============================================================
+
+🔌 Connessione al database...
+✓ Connesso
+
+🧹 Pulizia database...
+✓ Database pulito
+
+📊 Apertura file Excel: /home/ubuntu/upload/PianoFerie2025.xlsx
+✓ Foglio caricato: 39 righe, 1749 colonne
+
+📅 Lettura intestazione date...
+✓ Trovate 1747 date (da 2021-04-01 a 2024-12-11)
+
+👥 Lettura nomi dipendenti...
+✓ Trovati 30 dipendenti
+   - Lionte
+   - Ferracuti
+   - Scarpa
+   - Adlane
+   - Carapelle
+   ... e altri 25
+
+💾 Creazione utenti nel database...
+✓ Creati 30 utenti
+
+📋 Creazione tipi di assenza...
+✓ Creati 3 tipi di assenza
+
+🏖️  Importazione richieste ferie...
+✓ Importate 1711 richieste di ferie
+
+🏢 Rilevamento chiusure aziendali...
+
+❌ ERRORE: 1054 (42S22): Unknown column 'created_at' in 'field list'
