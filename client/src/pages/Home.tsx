@@ -27,10 +27,12 @@ import {
   FileText,
 } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
 
 export default function Home() {
   const { user, loading, isAuthenticated, logout } = useAuth();
+  const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   const [leaveTypeId, setLeaveTypeId] = useState<string>("");
   const [startDate, setStartDate] = useState("");
