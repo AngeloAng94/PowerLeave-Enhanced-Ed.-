@@ -60,7 +60,13 @@ export default function Home() {
   const { data: allRequests } = trpc.leaves.getRequests.useQuery(undefined, { enabled: isAuthenticated });
   
   // Query per ottenere ferie del mese corrente per il calendario
-  const { data: monthLeavesRaw } = trpc.announcements.getByMonth.useQuery(
+  const { data: monthLeavesRaw } = trpc.leaves.getMonthlyLeaves.useQuery(
+    { year: currentMonth.getFullYear(), month: currentMonth.getMonth() + 1 },
+    { enabled: isAuthenticated }
+  );
+
+  // Query chiusure aziendali per il calendario
+  const { data: companyClosures } = trpc.leaves.getCompanyClosures.useQuery(
     { year: currentMonth.getFullYear(), month: currentMonth.getMonth() + 1 },
     { enabled: isAuthenticated }
   );
@@ -635,6 +641,11 @@ export default function Home() {
                       return leave.startDate <= dateStr && leave.endDate >= dateStr;
                     }) || [];
                     
+                    // Chiusure aziendali e feste nazionali
+                    const closure = companyClosures?.find((c: any) => c.date === dateStr);
+                    const isHoliday = closure?.type === "holiday"; // Festa nazionale (ROSSO)
+                    const isShutdown = closure?.type === "shutdown"; // Chiusura aziendale (ARANCIONE)
+                    
                     const hasApproved = dayLeaves.some(l => l.status === 'approved');
                     const hasPending = dayLeaves.some(l => l.status === 'pending');
                     const hasRejected = dayLeaves.some(l => l.status === 'rejected');
@@ -645,6 +656,10 @@ export default function Home() {
                         className={`aspect-square p-1 rounded-md border flex flex-col items-start justify-start text-sm hover:bg-muted/50 transition-colors ${
                           isToday
                             ? "ring-2 ring-primary bg-primary/10 border-primary"
+                            : isHoliday
+                            ? "bg-red-600/30 border-red-600"
+                            : isShutdown
+                            ? "bg-amber-600/30 border-amber-600"
                             : hasApproved
                             ? "bg-green-500/10 border-green-500/50"
                             : hasPending
@@ -770,8 +785,8 @@ export default function Home() {
                           <tr key={`${summary.userId}-${summary.leaveTypeId}`} className={idx !== arr.length - 1 ? "border-b border-border" : ""}>
                             <td className="px-6 py-4 font-medium text-foreground">{summary.userName}</td>
                             <td className="px-6 py-4 text-muted-foreground">{summary.leaveTypeName}</td>
-                            <td className="px-6 py-4 text-muted-foreground">{summary.usedDays}</td>
-                            <td className="px-6 py-4 text-muted-foreground">{summary.availableDays}</td>
+                            <td className="px-6 py-4 text-muted-foreground">{summary.daysUsed}</td>
+                            <td className="px-6 py-4 text-muted-foreground">{summary.remainingBalance}</td>
                           </tr>
                         ))
                     ) : (

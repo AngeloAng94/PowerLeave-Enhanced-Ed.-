@@ -315,8 +315,8 @@ export async function getLeaveUsageSummary(leaveTypeId?: number) {
         leaveTypeName: leaveType[0]?.name || 'Unknown',
         leaveTypeId: balance.leaveTypeId,
         totalDays: balance.totalDays,
-        usedDays: balance.usedDays,
-        availableDays: balance.totalDays - balance.usedDays,
+        daysUsed: balance.usedDays, // Match frontend naming
+        remainingBalance: balance.totalDays - balance.usedDays, // Match frontend naming
       });
     }
   }
