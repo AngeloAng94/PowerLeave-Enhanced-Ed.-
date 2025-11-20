@@ -26,7 +26,7 @@ import os
 from dotenv import load_dotenv
 
 # Carica variabili d'ambiente
-load_dotenv()
+load_dotenv('.env.import')
 
 # Configurazione database
 DB_CONFIG = {
@@ -72,8 +72,8 @@ def get_or_create_leave_type(cursor, name, hours):
     
     # Crea nuovo tipo
     cursor.execute(
-        "INSERT INTO leave_types (name, description, requiresApproval) VALUES (%s, %s, %s)",
-        (name, f"Importato da Excel - {hours} ore", True)
+        "INSERT INTO leave_types (name, description, requires_approval) VALUES (%s, %s, %s)",
+        (name, f"Importato da Excel - {hours} ore", 1)
     )
     return cursor.lastrowid
 
@@ -283,7 +283,7 @@ def import_to_database(employees, leave_records, dry_run=False):
             if not dry_run:
                 # Verifica se esiste già un saldo
                 cursor.execute(
-                    "SELECT id FROM leave_balances WHERE userId = %s AND year = %s",
+                    "SELECT id FROM leave_balances WHERE user_id = %s AND year = %s",
                     (user_id, current_year)
                 )
                 existing = cursor.fetchone()
@@ -291,16 +291,18 @@ def import_to_database(employees, leave_records, dry_run=False):
                 if existing:
                     cursor.execute(
                         """UPDATE leave_balances 
-                           SET totalDays = %s, usedDays = %s, availableDays = %s
+                           SET total_days = %s, used_days = %s
                            WHERE id = %s""",
-                        (total_days, used_days, available_days, existing[0])
+                        (total_days, used_days, existing[0])
                     )
                 else:
+                    # Usa il primo tipo di ferie trovato
+                    leave_type_id = list(leave_type_ids.values())[0]
                     cursor.execute(
                         """INSERT INTO leave_balances 
-                           (userId, year, totalDays, usedDays, availableDays)
+                           (user_id, leave_type_id, year, total_days, used_days)
                            VALUES (%s, %s, %s, %s, %s)""",
-                        (user_id, current_year, total_days, used_days, available_days)
+                        (user_id, leave_type_id, current_year, total_days, used_days)
                     )
             
             print(f"  ✓ {emp_name}: {used_days}/{total_days} giorni utilizzati")

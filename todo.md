@@ -167,3 +167,54 @@
 - [x] Testare con utenti di entrambi i ruoli (4 test passati)
 - [x] Protezione lato server per reviewRequest (solo admin)
 - [x] createRequest ora restituisce requestId per tracking
+
+
+## Test Vista USER
+- [ ] Commentare temporaneamente logica auto-admin per owner
+- [ ] Testare vista USER con screenshot
+- [ ] Ripristinare logica auto-admin per owner
+
+
+## Privacy Tabella Riepilogo
+- [x] Filtrare tabella "Riepilogo Utilizzo Ferie" per USER (solo propria riga)
+- [x] ADMIN continua a vedere tutte le righe
+- [x] Ripristinare codice originale (rimuovere modifiche temporanee test)
+- [x] Ripristinare ruolo admin per owner
+
+## Importazione Dati Excel
+- [ ] Eseguire script import_excel_to_db.py con PianoFerie2025.xlsx
+- [ ] Verificare dati importati nel database
+- [ ] Testare dashboard con dati reali
+
+
+## Chiusure Aziendali
+- [x] Correggere errore userid → user_id nello script import
+- [ ] Analizzare Excel per identificare giorni con tutti/quasi tutti in ferie
+- [ ] Creare tabella company_closures nel database (date, reason, type)
+- [ ] Modificare script import per rilevare e salvare chiusure automaticamente
+- [ ] Aggiungere procedura tRPC per ottenere chiusure del mese
+- [ ] Visualizzare chiusure aziendali nel calendario (colore grigio/rosso)
+
+
+## Bug e Problemi da Risolvere
+
+### Menu Sidebar
+- [ ] Calendario - rimuovere "funzionalità in arrivo", creare pagina dedicata
+- [ ] Team - rimuovere "funzionalità in arrivo", creare pagina lista team
+- [ ] Report - rimuovere "funzionalità in arrivo", creare pagina report
+- [ ] Politiche Ferie - rimuovere "funzionalità in arrivo", creare pagina politiche
+- [ ] Impostazioni - rimuovere "funzionalità in arrivo", creare pagina impostazioni
+
+### Calendario
+- [ ] Mostrare ferie importate dall'Excel (ultimi 6 mesi)
+- [ ] Verificare che i pallini colorati appaiano correttamente
+- [ ] Testare con dati reali di alcuni colleghi
+
+### Messaggi Recenti
+- [ ] Permettere lettura completa dei messaggi (modal o espansione)
+- [ ] Aggiungere pulsante per eliminare messaggi letti
+
+### Riepilogo Utilizzo Ferie
+- [ ] Caricare TUTTI i 30 dipendenti importati dall'Excel
+- [ ] Far funzionare il filtro per tipo assenza
+- [ ] Mostrare dati reali invece di dati statici

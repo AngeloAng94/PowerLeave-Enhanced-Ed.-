@@ -752,8 +752,8 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {teamMembers.map((member, idx) => (
-                      <tr key={member.id} className={idx !== teamMembers.length - 1 ? "border-b border-border" : ""}>
+                    {(user?.role === "admin" ? teamMembers : teamMembers.filter(m => m.name === user?.name)).map((member, idx, arr) => (
+                      <tr key={member.id} className={idx !== arr.length - 1 ? "border-b border-border" : ""}>
                         <td className="px-6 py-4 font-medium text-foreground">{member.name}</td>
                         <td className="px-6 py-4 text-muted-foreground">Ferie</td>
                         <td className="px-6 py-4 text-muted-foreground">{member.used}</td>

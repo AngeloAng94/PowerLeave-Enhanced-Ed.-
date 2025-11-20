@@ -95,6 +95,20 @@ export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = typeof announcements.$inferInsert;
 
 /**
+ * Company closures (holidays, company-wide shutdowns)
+ */
+export const companyClosures = mysqlTable("company_closures", {
+  id: int("id").autoincrement().primaryKey(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  reason: varchar("reason", { length: 255 }).notNull(), // es. "Natale", "Ferragosto", "Ponte"
+  type: mysqlEnum("type", ["holiday", "shutdown"]).default("holiday").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CompanyClosure = typeof companyClosures.$inferSelect;
+export type InsertCompanyClosure = typeof companyClosures.$inferInsert;
+
+/**
  * Messages between team members
  */
 export const messages = mysqlTable("messages", {
