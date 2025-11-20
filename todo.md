@@ -218,3 +218,35 @@
 - [ ] Caricare TUTTI i 30 dipendenti importati dall'Excel
 - [ ] Far funzionare il filtro per tipo assenza
 - [ ] Mostrare dati reali invece di dati statici
+
+
+### Analytics/Cruscotto
+- [ ] Nascondere voce "Dashboard" (Analytics) dal menu sidebar
+- [ ] Feature futura: Cruscotto HR con statistiche team (giorni utilizzati, trend, ecc.) per multi-team
+
+
+## Feature Future Importanti
+
+### Gestione Utenti Integrata
+- [ ] Pagina "Team" per visualizzare tutti i membri
+- [ ] Funzione "Invita membro" (genera link o invia email)
+- [ ] Creazione utenti direttamente da Power Leave (senza Excel)
+- [ ] Gestione ruoli (promuovi a admin, degrada a user)
+- [ ] Rimozione membri dal team
+
+### Multi-Team Support
+- [ ] Tabella `teams` nel database
+- [ ] Associazione utenti a team specifici
+- [ ] Dashboard filtrata per team
+- [ ] Statistiche aggregate per team
+- [ ] Cruscotto HR multi-team per owner
+
+### Import Excel Migliorato
+- [ ] Correggere lettura struttura:
+  * Riga 1: Mesi (gen-25, feb-25, mar-25, ...)
+  * Riga 2: Giorni (1-31, poi ricomincia per mese successivo)
+  * Colonna A (da riga 3): Nomi dipendenti
+  * Ogni riga dipendente: X/P2/P4 nelle colonne = giorni ferie
+- [ ] Import dinamico di TUTTI i dipendenti (lettura fino a riga vuota)
+- [ ] Rilevamento automatico chiusure aziendali (celle gialle/arancioni)
+- [ ] Supporto altri formati (CSV, Google Sheets)

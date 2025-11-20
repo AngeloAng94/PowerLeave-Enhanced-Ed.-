@@ -165,6 +165,15 @@ export const appRouter = router({
       return getMessages(ctx.user.id);
     }),
   }),
+
+  leaveUsage: router({
+    getSummary: protectedProcedure
+      .input(z.object({ leaveTypeId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const { getLeaveUsageSummary } = await import("./db");
+        return getLeaveUsageSummary(input?.leaveTypeId);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

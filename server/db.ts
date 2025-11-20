@@ -1,6 +1,6 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, leaveBalances, leaveTypes, leaveRequests } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -268,4 +268,58 @@ export async function getLeaveRequestsByMonth(year: number, month: number) {
     );
   
   return results;
+}
+
+
+/**
+ * Get leave usage summary for all users
+ */
+export async function getLeaveUsageSummary(leaveTypeId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Get all users
+  const allUsers = await db.select().from(users);
+  
+  const summary = [];
+  
+  for (const user of allUsers) {
+    // Get leave balance
+    let balances;
+    if (leaveTypeId) {
+      balances = await db
+        .select()
+        .from(leaveBalances)
+        .where(and(
+          eq(leaveBalances.userId, user.id),
+          eq(leaveBalances.leaveTypeId, leaveTypeId)
+        ));
+    } else {
+      balances = await db
+        .select()
+        .from(leaveBalances)
+        .where(eq(leaveBalances.userId, user.id));
+    }
+    
+    // Get leave type name
+    for (const balance of balances) {
+      const leaveType = await db
+        .select()
+        .from(leaveTypes)
+        .where(eq(leaveTypes.id, balance.leaveTypeId))
+        .limit(1);
+      
+      summary.push({
+        userId: user.id,
+        userName: user.name || user.email || 'Unknown',
+        leaveTypeName: leaveType[0]?.name || 'Unknown',
+        leaveTypeId: balance.leaveTypeId,
+        totalDays: balance.totalDays,
+        usedDays: balance.usedDays,
+        availableDays: balance.totalDays - balance.usedDays,
+      });
+    }
+  }
+  
+  return summary;
 }
