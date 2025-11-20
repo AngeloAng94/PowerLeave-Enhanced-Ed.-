@@ -1,0 +1,34 @@
+{
+  "query": "SELECT name, COUNT(*) as count FROM leave_types GROUP BY name ORDER BY count DESC, name",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute SELECT name, COUNT(*) as count FROM leave_types GROUP BY name ORDER BY count DESC, name",
+  "rows": [
+    {
+      "name": "PERMESSO 2 ORE",
+      "count": "5"
+    },
+    {
+      "name": "PERMESSO 4 ORE",
+      "count": "5"
+    },
+    {
+      "name": "FERIE/ROL 8 H",
+      "count": "4"
+    },
+    {
+      "name": "Ferie",
+      "count": "1"
+    },
+    {
+      "name": "Malattia",
+      "count": "1"
+    },
+    {
+      "name": "Permesso",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tcount\nPERMESSO 2 ORE\t5\nPERMESSO 4 ORE\t5\nFERIE/ROL 8 H\t4\nFerie\t1\nMalattia\t1\nPermesso\t1\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}

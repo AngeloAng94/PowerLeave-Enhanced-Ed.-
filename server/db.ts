@@ -323,3 +323,63 @@ export async function getLeaveUsageSummary(leaveTypeId?: number) {
   
   return summary;
 }
+
+/**
+ * Get monthly calendar data (all leave requests for a specific month)
+ */
+export async function getMonthlyCalendar(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  const requests = await db
+    .select({
+      id: leaveRequests.id,
+      userId: leaveRequests.userId,
+      userName: users.name,
+      leaveTypeId: leaveRequests.leaveTypeId,
+      leaveTypeName: leaveTypes.name,
+      startDate: leaveRequests.startDate,
+      endDate: leaveRequests.endDate,
+      status: leaveRequests.status,
+      hours: leaveRequests.hours,
+    })
+    .from(leaveRequests)
+    .leftJoin(users, eq(leaveRequests.userId, users.id))
+    .leftJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id))
+    .where(
+      and(
+        sql`${leaveRequests.startDate} <= ${endDate.toISOString().split('T')[0]}`,
+        sql`${leaveRequests.endDate} >= ${startDate.toISOString().split('T')[0]}`
+      )
+    );
+
+  return requests;
+}
+
+/**
+ * Get company closures for a specific month
+ */
+export async function getCompanyClosures(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const { companyClosures } = await import("../drizzle/schema");
+
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  const closures = await db
+    .select()
+    .from(companyClosures)
+    .where(
+      and(
+        sql`${companyClosures.date} >= ${startDate.toISOString().split('T')[0]}`,
+        sql`${companyClosures.date} <= ${endDate.toISOString().split('T')[0]}`
+      )
+    );
+
+  return closures;
+}

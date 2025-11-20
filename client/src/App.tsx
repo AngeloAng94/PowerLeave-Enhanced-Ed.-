@@ -5,12 +5,22 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import Team from "./pages/Team";
+import Calendario from "./pages/Calendario";
+import Report from "./pages/Report";
+import Politiche from "./pages/Politiche";
+import Impostazioni from "./pages/Impostazioni";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/team"} component={Team} />
+      <Route path={"/calendario"} component={Calendario} />
+      <Route path={"/report"} component={Report} />
+      <Route path={"/politiche"} component={Politiche} />
+      <Route path={"/impostazioni"} component={Impostazioni} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -1,0 +1,52 @@
+{
+  "query": "SELECT * FROM leave_types ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute SELECT * FROM leave_types ORDER BY id",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Ferie",
+      "description": "Giorni di ferie annuali",
+      "requires_approval": "1",
+      "createdAt": "2025-11-18 10:35:28"
+    },
+    {
+      "id": "2",
+      "name": "Permesso",
+      "description": "Permessi retribuiti",
+      "requires_approval": "1",
+      "createdAt": "2025-11-18 10:35:28"
+    },
+    {
+      "id": "3",
+      "name": "Malattia",
+      "description": "Assenza per malattia",
+      "requires_approval": "0",
+      "createdAt": "2025-11-18 10:35:28"
+    },
+    {
+      "id": "30010",
+      "name": "FERIE/ROL 8 H",
+      "description": "Importato da Excel - 8 ore",
+      "requires_approval": "1",
+      "createdAt": "2025-11-20 00:49:11"
+    },
+    {
+      "id": "30011",
+      "name": "PERMESSO 2 ORE",
+      "description": "Importato da Excel - 2 ore",
+      "requires_approval": "1",
+      "createdAt": "2025-11-20 00:49:11"
+    },
+    {
+      "id": "30012",
+      "name": "PERMESSO 4 ORE",
+      "description": "Importato da Excel - 4 ore",
+      "requires_approval": "1",
+      "createdAt": "2025-11-20 00:49:11"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdescription\trequires_approval\tcreatedAt\n1\tFerie\tGiorni di ferie annuali\t1\t2025-11-18 10:35:28\n2\tPermesso\tPermessi retribuiti\t1\t2025-11-18 10:35:28\n3\tMalattia\tAssenza per malattia\t0\t2025-11-18 10:35:28\n30010\tFERIE/ROL 8 H\tImportato da Excel - 8 ore\t1\t2025-11-20 00:49:11\n30011\tPERMESSO 2 ORE\tImportato da Excel - 2 ore\t1\t2025-11-20 00:49:11\n30012\tPERMESSO 4 ORE\tImportato da Excel - 4 ore\t1\t2025-11-20 00:49:11\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

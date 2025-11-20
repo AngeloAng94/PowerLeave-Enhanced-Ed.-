@@ -206,19 +206,19 @@ export default function Home() {
         </div>
 
         <nav className="flex-1 space-y-2">
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/calendario"}>
             <Calendar className="w-5 h-5" />
             Calendario
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/team"}>
             <Users className="w-5 h-5" />
             Team
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/report"}>
             <BarChart3 className="w-5 h-5" />
             Report
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/politiche"}>
             <FileText className="w-5 h-5" />
             Politiche Ferie
           </Button>
@@ -237,7 +237,7 @@ export default function Home() {
             <Plane className="w-4 h-4 mr-2" />
             Richiedi Ferie
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => toast.info("Funzionalità in arrivo")}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/impostazioni"}>
             <Settings className="w-5 h-5" />
             Impostazioni
           </Button>

@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { teamRouter } from "./team";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -136,6 +137,22 @@ export const appRouter = router({
         utilizationRate: totalUsers > 0 ? Math.round((approvedCount / (totalUsers * 24)) * 100) : 0,
       };
     }),
+
+    // Get monthly leaves for calendar
+    getMonthlyLeaves: protectedProcedure
+      .input(z.object({ year: z.number(), month: z.number() }))
+      .query(async ({ input }) => {
+        const { getMonthlyCalendar } = await import("./db");
+        return getMonthlyCalendar(input.year, input.month);
+      }),
+
+    // Get company closures for a month
+    getCompanyClosures: protectedProcedure
+      .input(z.object({ year: z.number(), month: z.number() }))
+      .query(async ({ input }) => {
+        const { getCompanyClosures } = await import("./db");
+        return getCompanyClosures(input.year, input.month);
+      }),
   }),
 
   announcements: router({
@@ -174,6 +191,8 @@ export const appRouter = router({
         return getLeaveUsageSummary(input?.leaveTypeId);
       }),
   }),
+
+  team: teamRouter,
 });
 
 export type AppRouter = typeof appRouter;
