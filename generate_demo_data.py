@@ -39,14 +39,11 @@ if os.getenv('DATABASE_URL'):
         DB_CONFIG['port'] = int(match.group(4))
         DB_CONFIG['database'] = match.group(5)
 
-# Nomi reali dall'Excel
+# Nomi reali dall'Excel (15 persone)
 EMPLOYEE_NAMES = [
     "Lionte", "Ferracuti", "Scarpa", "Adlane", "Carapelle",
     "Garufo", "Parigi", "Puzzo", "Currò", "Carvalho",
-    "Ganci", "Dipierro", "Oro", "Lazzarelli", "Anglani",
-    "Bianchi", "Rossi", "Verdi", "Neri", "Gialli",
-    "Blu", "Viola", "Arancioni", "Rosa", "Grigi",
-    "Marroni", "Celesti", "Turchesi", "Fucsia", "Beige"
+    "Ganci", "Dipierro", "Oro", "Lazzarelli", "Anglani"
 ]
 
 # Chiusure aziendali 2025-2026
@@ -141,8 +138,8 @@ def generate_random_leaves(conn, user_map, leave_type_ids):
     daily_count = {}  # Conta quante persone in ferie per giorno
     
     for name, user_id in user_map.items():
-        # Ogni dipendente prende 8-15 giorni di ferie nel periodo
-        num_leaves = random.randint(8, 15)
+        # Ogni dipendente prende 3-8 giorni di ferie nel periodo (più realistico)
+        num_leaves = random.randint(3, 8)
         
         for _ in range(num_leaves):
             # Scegli data random
