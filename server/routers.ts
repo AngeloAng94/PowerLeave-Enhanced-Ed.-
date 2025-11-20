@@ -49,7 +49,7 @@ export const appRouter = router({
         const endDate = new Date(input.endDate);
         const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-        await createLeaveRequest({
+        const requestId = await createLeaveRequest({
           userId: ctx.user.id,
           leaveTypeId: input.leaveTypeId,
           startDate: input.startDate,
@@ -59,7 +59,7 @@ export const appRouter = router({
           notes: input.notes,
         });
 
-        return { success: true };
+        return { success: true, requestId };
       }),
 
     // Get leave requests (filtered by user or status)

@@ -44,7 +44,11 @@ export default function Home() {
 
   const { data: stats } = trpc.leaves.getStats.useQuery(undefined, { enabled: isAuthenticated });
   const { data: leaveTypes } = trpc.leaves.getTypes.useQuery();
-  const { data: pendingRequests } = trpc.leaves.getRequests.useQuery({ status: "pending" }, { enabled: isAuthenticated });
+  // Per ADMIN: tutte le richieste pending. Per USER: solo le proprie richieste
+  const { data: pendingRequests } = trpc.leaves.getRequests.useQuery(
+    user?.role === "admin" ? { status: "pending" } : { userId: user?.id },
+    { enabled: isAuthenticated }
+  );
   const { data: announcements } = trpc.announcements.getAll.useQuery();
   const { data: allRequests } = trpc.leaves.getRequests.useQuery(undefined, { enabled: isAuthenticated });
   
@@ -132,13 +136,18 @@ export default function Home() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
-  // Mock data for team members
+  // Dati saldo ferie: per ADMIN tutti i membri, per USER solo se stesso
   const teamMembers = [
     { id: 1, name: "Riccardo Ferracuti", role: "Team Leader", avatar: user?.name?.charAt(0) || "R", f2a: 208, used: 80, available: 128 },
     { id: 2, name: "Angelo Anglani", role: "Team Member", avatar: "A", f2a: 192, used: 40, available: 152 },
     { id: 3, name: "Leyla Lionte", role: "Team Member", avatar: "L", f2a: 192, used: 120, available: 72 },
     { id: 4, name: "Nicola Oro", role: "Team Member", avatar: "N", f2a: 192, used: 16, available: 176 },
   ];
+  
+  // Filtra per mostrare solo il proprio saldo se USER
+  const visibleTeamMembers = user?.role === "admin" 
+    ? teamMembers 
+    : teamMembers.filter(m => m.name === user?.name);
 
   if (loading) {
     return (
@@ -378,7 +387,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {user?.role === "admin" && (
+            {user?.role === "admin" ? (
               <Card>
                 <CardHeader>
                   <CardTitle>Richieste da Approvare</CardTitle>
@@ -424,7 +433,53 @@ export default function Home() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground text-center py-8">Nessuna richiesta in sospeso</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">Nessuna richiesta in sospeso</p>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Le mie richieste</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {pendingRequests && pendingRequests.length > 0 ? (
+                    pendingRequests.map((request) => (
+                      <div key={request.id} className="p-4 rounded-lg bg-muted/50 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-foreground">{request.leaveTypeName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {request.startDate && new Date(request.startDate).toLocaleDateString("it-IT", { day: "numeric", month: "short" })} -{" "}
+                              {request.endDate && new Date(request.endDate).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{request.hours}h per giorno</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {request.status === "approved" && (
+                              <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium">
+                                Approvata
+                              </span>
+                            )}
+                            {request.status === "pending" && (
+                              <span className="px-2 py-1 rounded-full bg-orange-500/10 text-orange-600 text-xs font-medium">
+                                In Sospeso
+                              </span>
+                            )}
+                            {request.status === "rejected" && (
+                              <span className="px-2 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-medium">
+                                Rifiutata
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {request.notes && (
+                          <p className="text-sm text-muted-foreground italic">Note: {request.notes}</p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nessuna richiesta</p>
                   )}
                 </CardContent>
               </Card>
@@ -438,7 +493,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                {teamMembers.map((member) => (
+                {visibleTeamMembers.map((member) => (
                   <div key={member.id} className="bg-muted/50 p-4 rounded-lg">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">

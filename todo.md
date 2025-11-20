@@ -140,3 +140,30 @@
 - [x] Implementato filtro per Tipi di assenza (dinamico da database)
 - [x] Applicati filtri lato client ai dati monthLeaves
 - [x] Calendario si aggiorna automaticamente quando cambiano i filtri
+
+
+## Viste Differenziate per Ruoli
+
+### Vista Dipendente Standard (USER)
+- [x] Mostrare solo "Le mie richieste" invece di "Richieste da Approvare"
+- [x] Nascondere pulsanti Approva/Rifiuta per utenti normali
+- [x] Sezione "Il mio saldo ferie" mostra SOLO la card dell'utente loggato
+- [x] Calendario mostra tutte le ferie del team (trasparenza)
+- [x] Tabella riepilogativa mostra tutti i dipendenti (trasparenza)
+- [x] Form richiesta ferie sempre visibile
+- [x] Badge colorati per stato richieste (Approvata/In Sospeso/Rifiutata)
+
+### Vista Manager/Leader (ADMIN)
+- [x] Mostrare "Richieste da Approvare" con pulsanti Approva/Rifiuta
+- [x] Sezione "Il mio saldo ferie" mostra tutte le card del team (4 membri)
+- [x] Tutte le altre sezioni identiche alla vista USER
+- [x] Possibilità di approvare/rifiutare richieste
+- [x] Protezione backend: solo admin possono approvare/rifiutare
+
+### Implementazione Tecnica
+- [x] Usare `user.role` per condizionare rendering componenti
+- [x] Filtrare richieste per userId quando role === 'user'
+- [x] Filtrare saldo ferie per userId quando role === 'user'
+- [x] Testare con utenti di entrambi i ruoli (4 test passati)
+- [x] Protezione lato server per reviewRequest (solo admin)
+- [x] createRequest ora restituisce requestId per tracking

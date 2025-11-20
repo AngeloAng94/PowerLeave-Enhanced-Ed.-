@@ -113,10 +113,11 @@ export async function createLeaveRequest(data: {
   days: number;
   hours?: number;
   notes?: string;
-}) {
+}): Promise<number> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const { leaveRequests } = await import("../drizzle/schema");
+  
   await db.insert(leaveRequests).values({
     userId: data.userId,
     leaveTypeId: data.leaveTypeId,
@@ -127,6 +128,17 @@ export async function createLeaveRequest(data: {
     notes: data.notes,
     status: "pending",
   });
+  
+  // Ottieni l'ID dell'ultima richiesta inserita per questo utente
+  const { desc } = await import("drizzle-orm");
+  const inserted = await db
+    .select({ id: leaveRequests.id })
+    .from(leaveRequests)
+    .where(eq(leaveRequests.userId, data.userId))
+    .orderBy(desc(leaveRequests.id))
+    .limit(1);
+  
+  return inserted[0]?.id || 0;
 }
 
 export async function getLeaveRequests(filters?: { userId?: number; status?: string }) {

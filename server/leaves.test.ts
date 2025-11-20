@@ -77,7 +77,9 @@ describe("leaves router", () => {
         notes: "Test vacation",
       });
 
-      expect(result).toEqual({ success: true });
+      expect(result.success).toBe(true);
+      expect(result.requestId).toBeDefined();
+      expect(typeof result.requestId).toBe('number');
     });
 
     it("calculates days correctly", async () => {
@@ -153,7 +155,7 @@ describe("leaves router", () => {
           reviewNotes: "Approved by test",
         });
 
-        expect(result).toEqual({ success: true });
+        expect(result.success).toBe(true);
       }
     });
 

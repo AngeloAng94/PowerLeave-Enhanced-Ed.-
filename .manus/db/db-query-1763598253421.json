@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, email, role FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute SELECT id, name, email, role FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Angelo Anglani",
+      "email": "angelo.anglani94@gmail.com",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n1\tAngelo Anglani\tangelo.anglani94@gmail.com\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}
