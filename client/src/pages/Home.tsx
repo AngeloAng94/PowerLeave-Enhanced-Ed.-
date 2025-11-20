@@ -206,19 +206,19 @@ export default function Home() {
         </div>
 
         <nav className="flex-1 space-y-2">
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/calendario"}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setLocation("/calendario")}>
             <Calendar className="w-5 h-5" />
             Calendario
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/team"}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setLocation("/team")}>
             <Users className="w-5 h-5" />
             Team
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/report"}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setLocation("/report")}>
             <BarChart3 className="w-5 h-5" />
             Report
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/politiche"}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setLocation("/politiche")}>
             <FileText className="w-5 h-5" />
             Politiche Ferie
           </Button>
@@ -237,7 +237,7 @@ export default function Home() {
             <Plane className="w-4 h-4 mr-2" />
             Richiedi Ferie
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => window.location.href = "/impostazioni"}>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setLocation("/impostazioni")}>
             <Settings className="w-5 h-5" />
             Impostazioni
           </Button>
