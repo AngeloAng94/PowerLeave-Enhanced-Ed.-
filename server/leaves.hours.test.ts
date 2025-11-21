@@ -36,9 +36,14 @@ describe("leaves.createRequest with hours support", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const leaveTypes = await caller.leaves.getTypes();
+    if (leaveTypes.length === 0) {
+      throw new Error("No leave types available for testing");
+    }
+
     // Test con valore default (8 ore)
     const input = {
-      leaveTypeId: 1,
+      leaveTypeId: leaveTypes[0]!.id,
       startDate: "2025-12-01",
       endDate: "2025-12-01",
       notes: "Test richiesta giornata intera",
@@ -54,8 +59,13 @@ describe("leaves.createRequest with hours support", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const leaveTypes = await caller.leaves.getTypes();
+    if (leaveTypes.length === 0) {
+      throw new Error("No leave types available for testing");
+    }
+
     const input = {
-      leaveTypeId: 1,
+      leaveTypeId: leaveTypes[0]!.id,
       startDate: "2025-12-02",
       endDate: "2025-12-02",
       hours: 2,
@@ -71,8 +81,13 @@ describe("leaves.createRequest with hours support", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const leaveTypes = await caller.leaves.getTypes();
+    if (leaveTypes.length === 0) {
+      throw new Error("No leave types available for testing");
+    }
+
     const input = {
-      leaveTypeId: 1,
+      leaveTypeId: leaveTypes[0]!.id,
       startDate: "2025-12-03",
       endDate: "2025-12-03",
       hours: 4,
@@ -88,8 +103,13 @@ describe("leaves.createRequest with hours support", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const leaveTypes = await caller.leaves.getTypes();
+    if (leaveTypes.length === 0) {
+      throw new Error("No leave types available for testing");
+    }
+
     const input = {
-      leaveTypeId: 1,
+      leaveTypeId: leaveTypes[0]!.id,
       startDate: "2025-12-04",
       endDate: "2025-12-04",
       hours: 8,
@@ -119,9 +139,14 @@ describe("leaves.getRequests returns hours field", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const leaveTypes = await caller.leaves.getTypes();
+    if (leaveTypes.length === 0) {
+      throw new Error("No leave types available for testing");
+    }
+
     // Prima crea una richiesta con ore specifiche
     await caller.leaves.createRequest({
-      leaveTypeId: 1,
+      leaveTypeId: leaveTypes[0]!.id,
       startDate: "2025-12-05",
       endDate: "2025-12-05",
       hours: 4,

@@ -62,9 +62,15 @@ describe("Role-based access control", () => {
       const adminCaller = appRouter.createCaller(adminCtx);
       const userCaller = appRouter.createCaller(userCtx);
 
+      // Get valid leave type ID
+      const leaveTypes = await userCaller.leaves.getTypes();
+      if (leaveTypes.length === 0) {
+        throw new Error("No leave types available for testing");
+      }
+
       // User crea una richiesta
       const createResult = await userCaller.leaves.createRequest({
-        leaveTypeId: 1,
+        leaveTypeId: leaveTypes[0]!.id,
         startDate: "2025-12-25",
         endDate: "2025-12-25",
         hours: 8,

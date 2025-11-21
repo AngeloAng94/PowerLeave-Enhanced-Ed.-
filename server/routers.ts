@@ -37,18 +37,54 @@ export const appRouter = router({
     createRequest: protectedProcedure
       .input(
         z.object({
-          leaveTypeId: z.number(),
-          startDate: z.string(),
-          endDate: z.string(),
-          hours: z.number().default(8), // 2, 4, o 8 ore
-          notes: z.string().optional(),
+          leaveTypeId: z.number().positive("Leave type ID must be positive"),
+          startDate: z.string().min(1, "Start date is required"),
+          endDate: z.string().min(1, "End date is required"),
+          hours: z.number().min(0.5, "Hours must be at least 0.5").max(24, "Hours cannot exceed 24").default(8),
+          notes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         const { createLeaveRequest } = await import("./db");
+        
+        // Validate dates
         const startDate = new Date(input.startDate);
         const endDate = new Date(input.endDate);
-        const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        // Check if dates are valid
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error("Invalid date format");
+        }
+        
+        // Check date range (must be between 2020 and 2100)
+        const minYear = 2020;
+        const maxYear = 2100;
+        if (startDate.getFullYear() < minYear || startDate.getFullYear() > maxYear ||
+            endDate.getFullYear() < minYear || endDate.getFullYear() > maxYear) {
+          throw new Error(`Dates must be between ${minYear} and ${maxYear}`);
+        }
+        
+        // Check end date is not before start date
+        if (endDate < startDate) {
+          throw new Error("End date cannot be before start date");
+        }
+        
+        // Check period is not longer than 365 days
+        const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        if (daysDiff > 365) {
+          throw new Error("Leave period cannot exceed 365 days");
+        }
+        
+        const days = daysDiff;
+        
+        // Verify leave type exists
+        const { getLeaveTypes } = await import("./db");
+        const leaveTypes = await getLeaveTypes();
+        const leaveTypeExists = leaveTypes.some(lt => lt.id === input.leaveTypeId);
+        
+        if (!leaveTypeExists) {
+          throw new Error(`Leave type with ID ${input.leaveTypeId} not found`);
+        }
 
         const requestId = await createLeaveRequest({
           userId: ctx.user.id,
@@ -84,9 +120,9 @@ export const appRouter = router({
     reviewRequest: protectedProcedure
       .input(
         z.object({
-          requestId: z.number(),
+          requestId: z.number().positive("Request ID must be positive"),
           status: z.enum(["approved", "rejected"]),
-          reviewNotes: z.string().optional(),
+          reviewNotes: z.string().max(500, "Review notes cannot exceed 500 characters").optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -94,7 +130,15 @@ export const appRouter = router({
           throw new Error("Only admins can review leave requests");
         }
 
-        const { updateLeaveRequestStatus } = await import("./db");
+        // Verify request exists before updating
+        const { getLeaveRequests, updateLeaveRequestStatus } = await import("./db");
+        const allRequests = await getLeaveRequests();
+        const requestExists = allRequests.some(r => r.id === input.requestId);
+        
+        if (!requestExists) {
+          throw new Error(`Leave request with ID ${input.requestId} not found`);
+        }
+
         await updateLeaveRequestStatus(input.requestId, input.status, ctx.user.id);
 
         return { success: true };

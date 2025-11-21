@@ -70,8 +70,14 @@ describe("leaves router", () => {
       const ctx = createMockContext("user");
       const caller = appRouter.createCaller(ctx);
 
+      // Get valid leave type ID
+      const leaveTypes = await caller.leaves.getTypes();
+      if (leaveTypes.length === 0) {
+        throw new Error("No leave types available for testing");
+      }
+
       const result = await caller.leaves.createRequest({
-        leaveTypeId: 1,
+        leaveTypeId: leaveTypes[0]!.id,
         startDate: "2025-12-01",
         endDate: "2025-12-05",
         notes: "Test vacation",
@@ -86,9 +92,14 @@ describe("leaves router", () => {
       const ctx = createMockContext("user");
       const caller = appRouter.createCaller(ctx);
 
+      const leaveTypes = await caller.leaves.getTypes();
+      if (leaveTypes.length === 0) {
+        throw new Error("No leave types available for testing");
+      }
+
       // 5 days from Dec 1 to Dec 5 (inclusive)
       const result = await caller.leaves.createRequest({
-        leaveTypeId: 1,
+        leaveTypeId: leaveTypes[0]!.id,
         startDate: "2025-12-01",
         endDate: "2025-12-05",
       });
@@ -138,9 +149,14 @@ describe("leaves router", () => {
       const ctx = createMockContext("admin");
       const caller = appRouter.createCaller(ctx);
 
+      const leaveTypes = await caller.leaves.getTypes();
+      if (leaveTypes.length === 0) {
+        throw new Error("No leave types available for testing");
+      }
+
       // First create a request
       await caller.leaves.createRequest({
-        leaveTypeId: 1,
+        leaveTypeId: leaveTypes[0]!.id,
         startDate: "2025-12-10",
         endDate: "2025-12-15",
       });
