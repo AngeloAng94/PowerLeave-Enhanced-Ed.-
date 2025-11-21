@@ -250,3 +250,14 @@
 - [ ] Import dinamico di TUTTI i dipendenti (lettura fino a riga vuota)
 - [ ] Rilevamento automatico chiusure aziendali (celle gialle/arancioni)
 - [ ] Supporto altri formati (CSV, Google Sheets)
+
+
+## Test Affidabilità Produzione (Richiesta Colleghi - Novembre 2025)
+
+- [ ] Test stress: 100+ richieste simultanee
+- [ ] Test race conditions: approvazioni concorrenti
+- [ ] Test integrità database: foreign keys, transazioni, rollback
+- [ ] Test backup/restore database
+- [ ] Documentazione deployment cloud (Manus/AWS/GCP)
+- [ ] Documentazione deployment on-premise
+- [ ] Runbook operativo (manutenzione, patch, rollback)
