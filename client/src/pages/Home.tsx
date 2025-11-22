@@ -713,38 +713,7 @@ export default function Home() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Messaggi Recenti</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <span className="text-primary font-bold text-sm">L</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center">
-                        <p className="font-semibold text-foreground text-sm">Leyla Lionte</p>
-                        <span className="text-xs text-muted-foreground">10:45</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">Ciao, ho inviato la richiesta per il 12 Ago...</p>
-                    </div>
-                    <div className="flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full">1</div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <span className="text-primary font-bold text-sm">A</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center">
-                        <p className="font-semibold text-foreground text-sm">Angelo Anglani</p>
-                        <span className="text-xs text-muted-foreground">Ieri</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">Richiesta inviata, grazie!</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Messaggi Recenti rimossi - funzionalità non implementata */}
             </div>
           </div>
 

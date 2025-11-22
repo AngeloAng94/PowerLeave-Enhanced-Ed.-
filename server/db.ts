@@ -383,3 +383,60 @@ export async function getCompanyClosures(year: number, month: number) {
 
   return closures;
 }
+
+/**
+ * Update leave balance when a request is approved
+ * Increments usedDays by the specified amount
+ */
+export async function updateLeaveBalance(
+  userId: number,
+  leaveTypeId: number,
+  year: number,
+  daysToAdd: number
+) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update leave balance: database not available");
+    return;
+  }
+
+  const { leaveBalances } = await import("../drizzle/schema");
+
+  try {
+    // Find existing balance
+    const existingBalance = await db
+      .select()
+      .from(leaveBalances)
+      .where(
+        and(
+          eq(leaveBalances.userId, userId),
+          eq(leaveBalances.leaveTypeId, leaveTypeId),
+          eq(leaveBalances.year, year)
+        )
+      )
+      .limit(1);
+
+    if (existingBalance.length > 0) {
+      // Update existing balance
+      await db
+        .update(leaveBalances)
+        .set({
+          usedDays: sql`${leaveBalances.usedDays} + ${daysToAdd}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(leaveBalances.id, existingBalance[0].id));
+    } else {
+      // Create new balance if doesn't exist
+      await db.insert(leaveBalances).values({
+        userId,
+        leaveTypeId,
+        year,
+        totalDays: 26, // Default Italian annual leave
+        usedDays: daysToAdd,
+      });
+    }
+  } catch (error) {
+    console.error("[Database] Failed to update leave balance:", error);
+    throw error;
+  }
+}

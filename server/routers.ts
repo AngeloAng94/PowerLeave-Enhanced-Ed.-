@@ -141,6 +141,23 @@ export const appRouter = router({
 
         await updateLeaveRequestStatus(input.requestId, input.status, ctx.user.id);
 
+        // If approved, update leave balance
+        if (input.status === "approved") {
+          const request = allRequests.find(r => r.id === input.requestId);
+          if (request) {
+            // Calculate working days based on hours
+            // 8H = 1 day, 4H = 0.5 days, 2H = 0.25 days
+            const hoursPerDay = request.hours || 8;
+            const workingDaysPerRequest = hoursPerDay / 8; // 8H = 1, 4H = 0.5, 2H = 0.25
+            const totalWorkingDays = request.days * workingDaysPerRequest;
+
+            // Update leave balance
+            const { updateLeaveBalance } = await import("./db");
+            const currentYear = new Date().getFullYear();
+            await updateLeaveBalance(request.userId, request.leaveTypeId, currentYear, totalWorkingDays);
+          }
+        }
+
         return { success: true };
       }),
 

@@ -1,4 +1,5 @@
 import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { relations } from "drizzle-orm";
 
 /**
  * Core user table backing auth flow.
@@ -44,8 +45,8 @@ export type InsertLeaveType = typeof leaveTypes.$inferInsert;
  */
 export const leaveBalances = mysqlTable("leave_balances", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("user_id").notNull(),
-  leaveTypeId: int("leave_type_id").notNull(),
+  userId: int("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  leaveTypeId: int("leave_type_id").notNull().references(() => leaveTypes.id, { onDelete: "restrict" }),
   totalDays: int("total_days").notNull().default(24),
   usedDays: int("used_days").notNull().default(0),
   year: int("year").notNull(),
@@ -61,15 +62,15 @@ export type InsertLeaveBalance = typeof leaveBalances.$inferInsert;
  */
 export const leaveRequests = mysqlTable("leave_requests", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  leaveTypeId: int("leaveTypeId").notNull(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  leaveTypeId: int("leaveTypeId").notNull().references(() => leaveTypes.id, { onDelete: "restrict" }),
   startDate: varchar("startDate", { length: 10 }).notNull(),
   endDate: varchar("endDate", { length: 10 }).notNull(),
   days: int("days").notNull(),
   hours: int("hours").default(8).notNull(), // Ore per giorno: 2, 4, o 8
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
   notes: text("notes"),
-  reviewedBy: int("reviewedBy"),
+  reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -86,7 +87,7 @@ export const announcements = mysqlTable("announcements", {
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
   type: mysqlEnum("type", ["info", "warning", "success"]).default("info").notNull(),
-  createdBy: int("created_by").notNull(),
+  createdBy: int("created_by").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -113,8 +114,8 @@ export type InsertCompanyClosure = typeof companyClosures.$inferInsert;
  */
 export const messages = mysqlTable("messages", {
   id: int("id").autoincrement().primaryKey(),
-  fromUserId: int("from_user_id").notNull(),
-  toUserId: int("to_user_id").notNull(),
+  fromUserId: int("from_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  toUserId: int("to_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   isRead: int("is_read").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

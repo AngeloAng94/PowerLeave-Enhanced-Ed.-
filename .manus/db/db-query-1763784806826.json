@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE leave_requests \nADD CONSTRAINT fk_leave_requests_userId \nFOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute ALTER TABLE leave_requests \nADD CONSTRAINT fk_leave_requests_userId \nFOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1924
+}

@@ -261,3 +261,15 @@
 - [ ] Documentazione deployment cloud (Manus/AWS/GCP)
 - [ ] Documentazione deployment on-premise
 - [ ] Runbook operativo (manutenzione, patch, rollback)
+
+
+## Bug Critici Calcolo Dinamico (Feedback Utente - Novembre 2025)
+
+- [x] Aggiungere foreign keys database (leaveTypeId, userId) per integrità referenziale
+- [ ] Implementare validazione sovrapposizione date (bloccare richieste duplicate stesso giorno) - DEFERRED
+- [x] Implementare calcolo dinamico saldi ferie (scala ore/giorni ad ogni approvazione)
+- [x] Fixare statistiche Home (ferie approvate, staff disponibile) per aggiornamento real-time
+- [x] Fixare riepilogo utilizzo ferie (mostrare tutti 15 dipendenti con dati aggiornati)
+- [x] Implementare conversione corretta ore→giorni lavorativi (8H=1gg, 4H=0.5gg, 2H=0.25gg)
+- [x] Fixare statistiche Report (percentuali utilizzo dinamiche)
+- [x] Rimuovere sezione messaggi recenti (funzionalità non implementata)
