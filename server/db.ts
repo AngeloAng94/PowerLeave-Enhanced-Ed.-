@@ -7,9 +7,10 @@ let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  const { ENV } = await import("./_core/env");
+  if (!_db && ENV.databaseUrl) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _db = drizzle(ENV.databaseUrl);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -102,7 +103,12 @@ export async function getLeaveBalance(userId: number, year: number) {
   const db = await getDb();
   if (!db) return [];
   const { leaveBalances } = await import("../drizzle/schema");
-  return db.select().from(leaveBalances).where(eq(leaveBalances.userId, userId));
+  return db.select().from(leaveBalances).where(
+    and(
+      eq(leaveBalances.userId, userId),
+      eq(leaveBalances.year, year)
+    )
+  );
 }
 
 export async function createLeaveRequest(data: {
@@ -146,6 +152,15 @@ export async function getLeaveRequests(filters?: { userId?: number; status?: str
   if (!db) return [];
   const { leaveRequests, users, leaveTypes } = await import("../drizzle/schema");
   
+  // Build conditions array
+  const conditions = [];
+  if (filters?.userId) {
+    conditions.push(eq(leaveRequests.userId, filters.userId));
+  }
+  if (filters?.status) {
+    conditions.push(eq(leaveRequests.status, filters.status as any));
+  }
+
   let query = db
     .select({
       id: leaveRequests.id,
@@ -167,11 +182,9 @@ export async function getLeaveRequests(filters?: { userId?: number; status?: str
     .leftJoin(users, eq(leaveRequests.userId, users.id))
     .leftJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id));
 
-  if (filters?.userId) {
-    query = query.where(eq(leaveRequests.userId, filters.userId)) as any;
-  }
-  if (filters?.status) {
-    query = query.where(eq(leaveRequests.status, filters.status as any)) as any;
+  // Apply combined where clause if conditions exist
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
   }
 
   return query;

@@ -56,6 +56,10 @@ export const appRouter = router({
           throw new Error("Invalid date format");
         }
         
+        // Normalize dates to avoid timezone issues
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        
         // Check date range (must be between 2020 and 2100)
         const minYear = 2020;
         const maxYear = 2100;
@@ -67,6 +71,11 @@ export const appRouter = router({
         // Check end date is not before start date
         if (endDate < startDate) {
           throw new Error("End date cannot be before start date");
+        }
+        
+        // Validate hours
+        if (isNaN(input.hours) || input.hours <= 0) {
+          throw new Error("Hours must be a positive number");
         }
         
         // Check period is not longer than 365 days
@@ -163,24 +172,31 @@ export const appRouter = router({
 
     // Get dashboard statistics
     getStats: protectedProcedure.query(async ({ ctx }) => {
-      const { getLeaveRequests } = await import("./db");
-      const { users } = await import("../drizzle/schema");
-      const { getDb } = await import("./db");
+      const { getLeaveRequests, getDb } = await import("./db");
+      const { users, leaveBalances } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
       const db = await getDb();
 
       // Get all requests for the current year
       const currentYear = new Date().getFullYear();
       const allRequests = await getLeaveRequests();
 
-      const approvedCount = allRequests.filter((r) => r.status === "approved").length;
-      const pendingCount = allRequests.filter((r) => r.status === "pending").length;
+      // Filter requests for current year based on startDate
+      const currentYearRequests = allRequests.filter((r) => {
+        if (!r.startDate) return false;
+        const year = new Date(r.startDate).getFullYear();
+        return year === currentYear;
+      });
+
+      const approvedCount = currentYearRequests.filter((r) => r.status === "approved").length;
+      const pendingCount = currentYearRequests.filter((r) => r.status === "pending").length;
 
       // Get total users count
       const totalUsers = db ? (await db.select().from(users)).length : 0;
 
       // Calculate staff available today
       const today = new Date();
-      const onLeaveToday = allRequests.filter(
+      const onLeaveToday = currentYearRequests.filter(
         (r) =>
           r.status === "approved" &&
           r.startDate &&
@@ -190,12 +206,29 @@ export const appRouter = router({
       ).length;
       const availableStaff = totalUsers - onLeaveToday;
 
+      // Calculate utilization rate based on actual days used vs total days available
+      let usedDays = 0;
+      let totalDaysAvailable = 0;
+
+      if (db) {
+        // Sum days from approved requests in current year
+        usedDays = currentYearRequests
+          .filter((r) => r.status === "approved")
+          .reduce((sum, r) => sum + (r.days || 0), 0);
+
+        // Sum total days from leave balances for current year
+        const balances = await db.select().from(leaveBalances).where(eq(leaveBalances.year, currentYear));
+        totalDaysAvailable = balances.reduce((sum, b) => sum + (b.totalDays || 0), 0);
+      }
+
+      const utilizationRate = totalDaysAvailable > 0 ? Math.round((usedDays / totalDaysAvailable) * 100) : 0;
+
       return {
         approvedCount,
         pendingCount,
         availableStaff,
         totalStaff: totalUsers,
-        utilizationRate: totalUsers > 0 ? Math.round((approvedCount / (totalUsers * 24)) * 100) : 0,
+        utilizationRate,
       };
     }),
 

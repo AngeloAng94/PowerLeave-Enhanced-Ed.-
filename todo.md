@@ -273,3 +273,13 @@
 - [x] Implementare conversione corretta ore→giorni lavorativi (8H=1gg, 4H=0.5gg, 2H=0.25gg)
 - [x] Fixare statistiche Report (percentuali utilizzo dinamiche)
 - [x] Rimuovere sezione messaggi recenti (funzionalità non implementata)
+
+
+## Correzioni Mirate Codice (Richiesta Utente - Novembre 2025)
+
+- [x] Fix query Drizzle: getLeaveBalance filtra per year, getLeaveRequests usa and() per filtri multipli
+- [x] Validazioni server richieste ferie: normalizzazione date setHours(0,0,0,0), controlli hours > 0
+- [x] Fix routing client: window.location.href solo per login esterno (corretto)
+- [x] Fix localStorage in useAuth: spostato setItem dentro useEffect, non useMemo
+- [x] Fix calcolo utilizzo ferie: basato su giorni reali (usedDays/totalDays), non conteggio richieste
+- [x] Usa ENV.databaseUrl invece di process.env.DATABASE_URL in getDb
