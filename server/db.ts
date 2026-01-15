@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, leaveBalances, leaveTypes, leaveRequests } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -451,5 +451,66 @@ export async function updateLeaveBalance(
   } catch (error) {
     console.error("[Database] Failed to update leave balance:", error);
     throw error;
+  }
+}
+
+
+/**
+ * Check if there are overlapping leave requests for a user
+ * Returns true if overlap exists (blocking the new request)
+ */
+export async function checkOverlappingRequests(
+  userId: number,
+  startDate: string,
+  endDate: string,
+  excludeRequestId?: number
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot check overlapping requests: database not available");
+    return false;
+  }
+
+  try {
+    // Normalize dates using shared helper
+    const { normalizeDate, dateRangesOverlap } = await import("../shared/utils");
+    const newStart = normalizeDate(startDate);
+    const newEnd = normalizeDate(endDate);
+
+    // Get all non-rejected requests for this user
+    const existingRequests = await db
+      .select()
+      .from(leaveRequests)
+      .where(
+        and(
+          eq(leaveRequests.userId, userId),
+          ne(leaveRequests.status, "rejected")
+        )
+      );
+
+    // Check for overlap with each existing request
+    for (const request of existingRequests) {
+      // Skip if we're editing this request
+      if (excludeRequestId && request.id === excludeRequestId) {
+        continue;
+      }
+
+      // Use shared helper for overlap check
+      const hasOverlap = dateRangesOverlap(
+        newStart,
+        newEnd,
+        request.startDate,
+        request.endDate
+      );
+
+      if (hasOverlap) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error("[Database] Failed to check overlapping requests:", error);
+    return false;
   }
 }

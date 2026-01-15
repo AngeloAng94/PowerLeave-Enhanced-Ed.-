@@ -95,6 +95,18 @@ export const appRouter = router({
           throw new Error(`Leave type with ID ${input.leaveTypeId} not found`);
         }
 
+        // Check for overlapping requests (same user, dates overlap, status != rejected)
+        const { checkOverlappingRequests } = await import("./db");
+        const hasOverlap = await checkOverlappingRequests(
+          ctx.user.id,
+          input.startDate,
+          input.endDate
+        );
+        
+        if (hasOverlap) {
+          throw new Error("Hai già una richiesta ferie in queste date. Verifica il calendario prima di procedere.");
+        }
+
         const requestId = await createLeaveRequest({
           userId: ctx.user.id,
           leaveTypeId: input.leaveTypeId,

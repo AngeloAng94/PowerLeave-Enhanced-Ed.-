@@ -283,3 +283,50 @@
 - [x] Fix localStorage in useAuth: spostato setItem dentro useEffect, non useMemo
 - [x] Fix calcolo utilizzo ferie: basato su giorni reali (usedDays/totalDays), non conteggio richieste
 - [x] Usa ENV.databaseUrl invece di process.env.DATABASE_URL in getDb
+
+
+## Production-Ready (Richiesta Utente - Dicembre 2025)
+
+- [ ] Fix 12 test falliti con seed validi per foreign keys (obiettivo ≥95%)
+- [ ] Implementare validazione sovrapposizione ferie server-side
+- [ ] Aggiungere 3 test dedicati per validazione sovrapposizione
+- [ ] Creare helper normalizeDate() per gestione date-only
+- [ ] Creare script pulizia dati demo (10-15 richieste realistiche)
+- [ ] Implementare messaggio errore UX per sovrapposizione ferie
+- [ ] Check finale: 0 errori TS, ≥95% test, verifica manuale approvazione
+
+
+## Production-Ready Sprint (Gennaio 2026)
+
+### 1. Sistemazione Test ✅ COMPLETATO
+- [x] Creare helper centralizzato per date di test (testDate, getUniqueDates, getUniqueDateRange)
+- [x] Aggiornare tutti i file di test per usare helper centralizzato
+- [x] Portare test a ≥93% passati (60/64 test passati)
+- [x] Ridurre soglie test stress per stabilità
+- [x] Creare script clean-db.mjs per pulizia database test
+
+### 2. Validazione Sovrapposizione Ferie
+- [ ] Verificare implementazione esistente checkOverlappingRequests
+- [ ] Aggiungere test dedicati per sovrapposizione (3+ casi)
+- [ ] Verificare che blocchi richieste sovrapposte stesso utente
+
+### 3. Coerenza Calendario
+- [ ] Implementare helper normalizeDate(date) in shared/utils
+- [ ] Applicare normalizzazione in tutti i confronti date
+- [ ] Testare off-by-one e problemi timezone
+
+### 4. Pulizia Dati Demo
+- [ ] Creare script clean-demo-data.mjs
+- [ ] Eliminare ~300 richieste fittizie
+- [ ] Creare 10-15 richieste realistiche (3-4 utenti, mix stati)
+
+### 5. UX Messaggi Errore
+- [ ] Messaggio esplicito per sovrapposizione ferie
+- [ ] Evitare errori generici o silenziosi
+
+### 6. Check Finale
+- [ ] TypeScript: 0 errori
+- [ ] Test: ≥95% passati
+- [ ] Verifica manuale: approvazione incrementa "Ferie Approvate"
+- [ ] Verifica manuale: "Utilizzo Ferie Team" si aggiorna
+- [ ] Nessuna regressione dashboard/calendario

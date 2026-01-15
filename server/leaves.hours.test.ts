@@ -1,132 +1,82 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 import { appRouter } from "./routers";
+import { createTestContext, getValidLeaveTypeId, getUniqueDates } from "./test-helpers";
 import type { TrpcContext } from "./_core/context";
 
-type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
-
-function createAuthContext(role: "admin" | "user" = "user"): { ctx: TrpcContext } {
-  const user: AuthenticatedUser = {
-    id: 1,
-    openId: "test-user",
-    email: "test@example.com",
-    name: "Test User",
-    loginMethod: "manus",
-    role,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastSignedIn: new Date(),
-  };
-
-  const ctx: TrpcContext = {
-    user,
-    req: {
-      protocol: "https",
-      headers: {},
-    } as TrpcContext["req"],
-    res: {
-      clearCookie: () => {},
-    } as TrpcContext["res"],
-  };
-
-  return { ctx };
-}
-
 describe("leaves.createRequest with hours support", () => {
+  let validLeaveTypeId: number;
+  let userCtx: TrpcContext;
+
+  beforeAll(async () => {
+    validLeaveTypeId = await getValidLeaveTypeId();
+    const result = await createTestContext("user");
+    userCtx = result.ctx;
+  });
+
   it("accepts hours parameter with default value of 8", async () => {
-    const { ctx } = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
+    const caller = appRouter.createCaller(userCtx);
+    const { startDate, endDate } = getUniqueDates();
 
-    const leaveTypes = await caller.leaves.getTypes();
-    if (leaveTypes.length === 0) {
-      throw new Error("No leave types available for testing");
-    }
-
-    // Test con valore default (8 ore)
-    const input = {
-      leaveTypeId: leaveTypes[0]!.id,
-      startDate: "2025-12-01",
-      endDate: "2025-12-01",
+    const result = await caller.leaves.createRequest({
+      leaveTypeId: validLeaveTypeId,
+      startDate,
+      endDate,
       notes: "Test richiesta giornata intera",
-    };
-
-    // Non dovrebbe lanciare errori
-    await expect(caller.leaves.createRequest(input)).resolves.toMatchObject({
-      success: true,
     });
+
+    expect(result.success).toBe(true);
   });
 
   it("accepts 2 hours for short leave", async () => {
-    const { ctx } = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
+    const caller = appRouter.createCaller(userCtx);
+    const { startDate, endDate } = getUniqueDates();
 
-    const leaveTypes = await caller.leaves.getTypes();
-    if (leaveTypes.length === 0) {
-      throw new Error("No leave types available for testing");
-    }
-
-    const input = {
-      leaveTypeId: leaveTypes[0]!.id,
-      startDate: "2025-12-02",
-      endDate: "2025-12-02",
+    const result = await caller.leaves.createRequest({
+      leaveTypeId: validLeaveTypeId,
+      startDate,
+      endDate,
       hours: 2,
       notes: "Permesso breve 2 ore",
-    };
-
-    await expect(caller.leaves.createRequest(input)).resolves.toMatchObject({
-      success: true,
     });
+
+    expect(result.success).toBe(true);
   });
 
   it("accepts 4 hours for half day", async () => {
-    const { ctx } = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
+    const caller = appRouter.createCaller(userCtx);
+    const { startDate, endDate } = getUniqueDates();
 
-    const leaveTypes = await caller.leaves.getTypes();
-    if (leaveTypes.length === 0) {
-      throw new Error("No leave types available for testing");
-    }
-
-    const input = {
-      leaveTypeId: leaveTypes[0]!.id,
-      startDate: "2025-12-03",
-      endDate: "2025-12-03",
+    const result = await caller.leaves.createRequest({
+      leaveTypeId: validLeaveTypeId,
+      startDate,
+      endDate,
       hours: 4,
       notes: "Mezza giornata",
-    };
-
-    await expect(caller.leaves.createRequest(input)).resolves.toMatchObject({
-      success: true,
     });
+
+    expect(result.success).toBe(true);
   });
 
   it("accepts 8 hours for full day", async () => {
-    const { ctx } = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
+    const caller = appRouter.createCaller(userCtx);
+    const { startDate, endDate } = getUniqueDates();
 
-    const leaveTypes = await caller.leaves.getTypes();
-    if (leaveTypes.length === 0) {
-      throw new Error("No leave types available for testing");
-    }
-
-    const input = {
-      leaveTypeId: leaveTypes[0]!.id,
-      startDate: "2025-12-04",
-      endDate: "2025-12-04",
+    const result = await caller.leaves.createRequest({
+      leaveTypeId: validLeaveTypeId,
+      startDate,
+      endDate,
       hours: 8,
       notes: "Giornata intera",
-    };
-
-    await expect(caller.leaves.createRequest(input)).resolves.toMatchObject({
-      success: true,
     });
+
+    expect(result.success).toBe(true);
   });
 
   it("validates required fields", async () => {
-    const { ctx } = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
+    const caller = appRouter.createCaller(userCtx);
 
     const invalidInput = {
-      leaveTypeId: 1,
+      leaveTypeId: validLeaveTypeId,
       // Missing startDate and endDate
     } as any;
 
@@ -135,20 +85,24 @@ describe("leaves.createRequest with hours support", () => {
 });
 
 describe("leaves.getRequests returns hours field", () => {
-  it("includes hours in the response", async () => {
-    const { ctx } = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
+  let validLeaveTypeId: number;
+  let userCtx: TrpcContext;
 
-    const leaveTypes = await caller.leaves.getTypes();
-    if (leaveTypes.length === 0) {
-      throw new Error("No leave types available for testing");
-    }
+  beforeAll(async () => {
+    validLeaveTypeId = await getValidLeaveTypeId();
+    const result = await createTestContext("user");
+    userCtx = result.ctx;
+  });
+
+  it("includes hours in the response", async () => {
+    const caller = appRouter.createCaller(userCtx);
+    const { startDate, endDate } = getUniqueDates();
 
     // Prima crea una richiesta con ore specifiche
     await caller.leaves.createRequest({
-      leaveTypeId: leaveTypes[0]!.id,
-      startDate: "2025-12-05",
-      endDate: "2025-12-05",
+      leaveTypeId: validLeaveTypeId,
+      startDate,
+      endDate,
       hours: 4,
       notes: "Test con 4 ore",
     });

@@ -1,0 +1,110 @@
+{
+  "query": "SELECT lr.id, u.name, lr.startDate, lr.endDate, lr.days, lr.hours, lr.status, lr.notes \nFROM leave_requests lr \nJOIN users u ON lr.userId = u.id \nORDER BY lr.id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute SELECT lr.id, u.name, lr.startDate, lr.endDate, lr.days, lr.hours, lr.status, lr.notes \nFROM leave_requests lr \nJOIN users u ON lr.userId = u.id \nORDER BY lr.id",
+  "rows": [
+    {
+      "id": "480634",
+      "name": "Angelo Anglani",
+      "startDate": "2025-08-11",
+      "endDate": "2025-08-22",
+      "days": "12",
+      "hours": "8",
+      "status": "approved",
+      "notes": "Ferie estive"
+    },
+    {
+      "id": "480635",
+      "name": "Angelo Anglani",
+      "startDate": "2025-12-23",
+      "endDate": "2025-12-31",
+      "days": "9",
+      "hours": "8",
+      "status": "pending",
+      "notes": "Ferie natalizie"
+    },
+    {
+      "id": "480636",
+      "name": "Lionte",
+      "startDate": "2025-11-15",
+      "endDate": "2025-11-15",
+      "days": "1",
+      "hours": "4",
+      "status": "approved",
+      "notes": "Permesso visita medica"
+    },
+    {
+      "id": "480637",
+      "name": "Lionte",
+      "startDate": "2025-12-15",
+      "endDate": "2025-12-16",
+      "days": "2",
+      "hours": "8",
+      "status": "rejected",
+      "notes": "Ferie ponte - rifiutato per evento team"
+    },
+    {
+      "id": "480638",
+      "name": "Lionte",
+      "startDate": "2025-12-10",
+      "endDate": "2025-12-10",
+      "days": "1",
+      "hours": "2",
+      "status": "pending",
+      "notes": "Permesso breve"
+    },
+    {
+      "id": "480639",
+      "name": "Ferracuti",
+      "startDate": "2025-10-06",
+      "endDate": "2025-10-10",
+      "days": "5",
+      "hours": "8",
+      "status": "approved",
+      "notes": "Settimana di riposo"
+    },
+    {
+      "id": "480640",
+      "name": "Ferracuti",
+      "startDate": "2025-11-28",
+      "endDate": "2025-11-28",
+      "days": "1",
+      "hours": "8",
+      "status": "pending",
+      "notes": "Giorno personale"
+    },
+    {
+      "id": "480641",
+      "name": "Scarpa",
+      "startDate": "2025-09-22",
+      "endDate": "2025-09-23",
+      "days": "2",
+      "hours": "8",
+      "status": "approved",
+      "notes": "Ponte autunnale"
+    },
+    {
+      "id": "480642",
+      "name": "Scarpa",
+      "startDate": "2025-12-05",
+      "endDate": "2025-12-05",
+      "days": "1",
+      "hours": "4",
+      "status": "pending",
+      "notes": "Permesso pomeriggio"
+    },
+    {
+      "id": "480643",
+      "name": "Scarpa",
+      "startDate": "2025-11-01",
+      "endDate": "2025-11-01",
+      "days": "1",
+      "hours": "8",
+      "status": "approved",
+      "notes": "Ponte Ognissanti"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tstartDate\tendDate\tdays\thours\tstatus\tnotes\n480634\tAngelo Anglani\t2025-08-11\t2025-08-22\t12\t8\tapproved\tFerie estive\n480635\tAngelo Anglani\t2025-12-23\t2025-12-31\t9\t8\tpending\tFerie natalizie\n480636\tLionte\t2025-11-15\t2025-11-15\t1\t4\tapproved\tPermesso visita medica\n480637\tLionte\t2025-12-15\t2025-12-16\t2\t8\trejected\tFerie ponte - rifiutato per evento team\n480638\tLionte\t2025-12-10\t2025-12-10\t1\t2\tpending\tPermesso breve\n480639\tFerracuti\t2025-10-06\t2025-10-10\t5\t8\tapproved\tSettimana di riposo\n480640\tFerracuti\t2025-11-28\t2025-11-28\t1\t8\tpending\tGiorno personale\n480641\tScarpa\t2025-09-22\t2025-09-23\t2\t8\tapproved\tPonte autunnale\n480642\tScarpa\t2025-12-05\t2025-12-05\t1\t4\tpending\tPermesso pomeriggio\n480643\tScarpa\t2025-11-01\t2025-11-01\t1\t8\tapproved\tPonte Ognissanti\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO leave_balances (userId, leaveTypeId, year, totalDays, usedDays, availableDays)\nSELECT u.id, (SELECT id FROM leave_types LIMIT 1), 2025, 26, 0, 26\nFROM users u WHERE u.name IS NOT NULL",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute INSERT INTO leave_balances (userId, leaveTypeId, year, totalDays, usedDays, availableDays)\nSELECT u.id, (SELECT id FROM leave_types LIMIT 1), 2025, 26, 0, 26\nFROM users u WHERE u.name IS NOT NULL",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'userId' in 'field list'"
+  ]
+}

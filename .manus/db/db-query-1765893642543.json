@@ -1,0 +1,54 @@
+{
+  "query": "SELECT id, name FROM leave_types",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VbK495ECNVdRwG.root --database M7yuKMnqbZ6zKJgcZb5X5y --execute SELECT id, name FROM leave_types",
+  "rows": [
+    {
+      "id": "30010",
+      "name": "FERIE/ROL 8 H"
+    },
+    {
+      "id": "30011",
+      "name": "PERMESSO 2 ORE"
+    },
+    {
+      "id": "30012",
+      "name": "PERMESSO 4 ORE"
+    },
+    {
+      "id": "180001",
+      "name": "Test Leave Type for Deletion"
+    },
+    {
+      "id": "180002",
+      "name": "FERIE/ROL 8 H"
+    },
+    {
+      "id": "210001",
+      "name": "Test Leave Type for Deletion"
+    },
+    {
+      "id": "210002",
+      "name": "FERIE/ROL 8 H"
+    },
+    {
+      "id": "240001",
+      "name": "Test Leave Type for Deletion"
+    },
+    {
+      "id": "240002",
+      "name": "FERIE/ROL 8 H"
+    },
+    {
+      "id": "240003",
+      "name": "Test Leave Type 1765893399003"
+    },
+    {
+      "id": "240004",
+      "name": "Test Leave Type 1765893428807"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n30010\tFERIE/ROL 8 H\n30011\tPERMESSO 2 ORE\n30012\tPERMESSO 4 ORE\n180001\tTest Leave Type for Deletion\n180002\tFERIE/ROL 8 H\n210001\tTest Leave Type for Deletion\n210002\tFERIE/ROL 8 H\n240001\tTest Leave Type for Deletion\n240002\tFERIE/ROL 8 H\n240003\tTest Leave Type 1765893399003\n240004\tTest Leave Type 1765893428807\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}
