@@ -854,17 +854,30 @@ async def get_leave_balances(current_user: dict = Depends(get_current_user)):
             {"_id": 0}
         ).to_list(100)
     
-    # Enrich with user and leave type names
+    # Fetch all users and leave types upfront to avoid N+1 queries
+    user_ids = list(set(b["user_id"] for b in balances))
+    leave_type_ids = list(set(b["leave_type_id"] for b in balances))
+    
+    users_list = await db.users.find(
+        {"user_id": {"$in": user_ids}}, 
+        {"_id": 0, "user_id": 1, "name": 1}
+    ).to_list(1000)
+    users_dict = {u["user_id"]: u.get("name", "Unknown") for u in users_list}
+    
+    leave_types_list = await db.leave_types.find(
+        {"id": {"$in": leave_type_ids}}, 
+        {"_id": 0, "id": 1, "name": 1}
+    ).to_list(100)
+    leave_types_dict = {lt["id"]: lt.get("name", "Unknown") for lt in leave_types_list}
+    
+    # Build result with lookups
     result = []
     for b in balances:
-        user = await db.users.find_one({"user_id": b["user_id"]}, {"_id": 0, "name": 1})
-        leave_type = await db.leave_types.find_one({"id": b["leave_type_id"]}, {"_id": 0, "name": 1})
-        
         result.append({
             "user_id": b["user_id"],
-            "user_name": user.get("name", "Unknown") if user else "Unknown",
+            "user_name": users_dict.get(b["user_id"], "Unknown"),
             "leave_type_id": b["leave_type_id"],
-            "leave_type_name": leave_type.get("name", "Unknown") if leave_type else "Unknown",
+            "leave_type_name": leave_types_dict.get(b["leave_type_id"], "Unknown"),
             "total_days": b.get("total_days", 0),
             "used_days": b.get("used_days", 0),
             "remaining_days": b.get("total_days", 0) - b.get("used_days", 0)
