@@ -2452,8 +2452,12 @@ function ClosuresPage({ user }) {
 
   const handleReviewException = async (exceptionId, status) => {
     try {
+      const exception = exceptions.find(e => e.id === exceptionId);
       await api.put(`/api/closures/exceptions/${exceptionId}/review`, { status });
-      toast.success(status === 'approved' ? 'Deroga approvata!' : 'Deroga rifiutata');
+      
+      // Send notification
+      NotificationService.closureException(exception?.user_name || 'Dipendente', status);
+      
       loadData();
     } catch (err) {
       toast.error(err.message);
