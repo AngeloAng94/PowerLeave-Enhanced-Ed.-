@@ -2077,43 +2077,109 @@ function StatsPage() {
         </div>
       </div>
 
-      {/* Detailed Table */}
+      {/* Detailed Table - Grouped by Employee */}
       <div className="bg-card p-6 rounded-2xl border">
-        <h2 className="text-lg font-semibold mb-4">Dettaglio Saldi Completo</h2>
+        <h2 className="text-lg font-semibold mb-4">Riepilogo Saldi Team</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-4 font-semibold text-foreground">Dipendente</th>
-                <th className="text-left py-3 px-4 font-semibold text-foreground">Tipo Assenza</th>
-                <th className="text-right py-3 px-4 font-semibold text-foreground">Totali</th>
-                <th className="text-right py-3 px-4 font-semibold text-foreground">Utilizzati</th>
-                <th className="text-right py-3 px-4 font-semibold text-foreground">Disponibili</th>
-                <th className="text-right py-3 px-4 font-semibold text-foreground">%</th>
+                <th className="text-center py-3 px-4 font-semibold text-foreground" colSpan={2}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    Ferie
+                  </span>
+                </th>
+                <th className="text-center py-3 px-4 font-semibold text-foreground" colSpan={2}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    Permessi
+                  </span>
+                </th>
+                <th className="text-center py-3 px-4 font-semibold text-foreground" colSpan={2}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    Malattia
+                  </span>
+                </th>
+                <th className="text-center py-3 px-4 font-semibold text-foreground">Totale Usati</th>
+              </tr>
+              <tr className="border-b border-border/50 text-xs text-muted-foreground">
+                <th className="py-2 px-4"></th>
+                <th className="py-2 px-4 text-center">Usati</th>
+                <th className="py-2 px-4 text-center">Disp.</th>
+                <th className="py-2 px-4 text-center">Usati</th>
+                <th className="py-2 px-4 text-center">Disp.</th>
+                <th className="py-2 px-4 text-center">Usati</th>
+                <th className="py-2 px-4 text-center">Disp.</th>
+                <th className="py-2 px-4 text-center"></th>
               </tr>
             </thead>
             <tbody>
-              {balances.map((b, i) => {
-                const percentage = b.total_days > 0 ? Math.round((b.used_days / b.total_days) * 100) : 0;
-                return (
-                  <tr key={i} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                    <td className="py-3 px-4 font-medium text-foreground">{b.user_name}</td>
-                    <td className="py-3 px-4 text-foreground">{b.leave_type_name}</td>
-                    <td className="py-3 px-4 text-right text-foreground">{b.total_days}</td>
-                    <td className="py-3 px-4 text-right" style={{color: '#EF4444'}}>{b.used_days}</td>
-                    <td className="py-3 px-4 text-right" style={{color: '#22C55E'}}>{b.remaining_days}</td>
-                    <td className="py-3 px-4 text-right">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        percentage > 70 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                        percentage > 40 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      }`}>
-                        {percentage}%
+              {(() => {
+                // Group balances by user
+                const userBalances = {};
+                balances.forEach(b => {
+                  if (!userBalances[b.user_id]) {
+                    userBalances[b.user_id] = { 
+                      name: b.user_name, 
+                      ferie: { used: 0, remaining: 0 },
+                      permesso: { used: 0, remaining: 0 },
+                      malattia: { used: 0, remaining: 0 },
+                      total: 0
+                    };
+                  }
+                  const type = b.leave_type_name?.toLowerCase() || '';
+                  if (type.includes('ferie') || type.includes('ferie')) {
+                    userBalances[b.user_id].ferie.used += b.used_days || 0;
+                    userBalances[b.user_id].ferie.remaining += b.remaining_days || 0;
+                  } else if (type.includes('permess')) {
+                    userBalances[b.user_id].permesso.used += b.used_days || 0;
+                    userBalances[b.user_id].permesso.remaining += b.remaining_days || 0;
+                  } else if (type.includes('malattia')) {
+                    userBalances[b.user_id].malattia.used += b.used_days || 0;
+                    userBalances[b.user_id].malattia.remaining += b.remaining_days || 0;
+                  }
+                  userBalances[b.user_id].total += b.used_days || 0;
+                });
+                
+                return Object.entries(userBalances).map(([userId, data], i) => (
+                  <tr key={userId} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
+                          {data.name?.[0]}
+                        </div>
+                        <span className="font-medium text-foreground">{data.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="font-semibold" style={{color: '#EF4444'}}>{data.ferie.used}</span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="font-semibold" style={{color: '#22C55E'}}>{data.ferie.remaining}</span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="font-semibold" style={{color: '#EF4444'}}>{data.permesso.used}</span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="font-semibold" style={{color: '#22C55E'}}>{data.permesso.remaining}</span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="font-semibold" style={{color: '#EF4444'}}>{data.malattia.used}</span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="font-semibold" style={{color: '#22C55E'}}>{data.malattia.remaining}</span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                        {data.total} gg
                       </span>
                     </td>
                   </tr>
-                );
-              })}
+                ));
+              })()}
             </tbody>
           </table>
         </div>
