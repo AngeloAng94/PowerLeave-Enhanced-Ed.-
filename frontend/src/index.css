@@ -178,6 +178,39 @@ h1, h2, h3, h4, h5, h6 {
 input, select, textarea {
   font-family: inherit;
   font-size: 1rem;
+  color: var(--foreground);
+  background-color: var(--input);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* Fix dark mode form inputs */
+.dark input,
+.dark select,
+.dark textarea {
+  color: #F1F5F9;
+  background-color: #1E293B;
+  border-color: #334155;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748B;
+}
+
+.dark select option {
+  background-color: #1E293B;
+  color: #F1F5F9;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #3B82F6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 input:focus, select:focus, textarea:focus {
