@@ -1068,7 +1068,7 @@ function Dashboard() {
       </div>
 
       {/* Mobile Layout */}
-      <div className="md:hidden">
+      <div className="md:hidden min-h-screen flex flex-col">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
@@ -1076,68 +1076,71 @@ function Dashboard() {
         
         {/* Mobile Sidebar Drawer */}
         <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r flex flex-col transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-            className="w-full btn-primary flex items-center justify-center gap-2 mb-3"
-          >
-            <Icons.Plus />
-            Nuova Richiesta
+          <div className="p-6 flex-1 overflow-y-auto">
+            <div className="flex items-center gap-3 mb-8">
+              <RocketLogo size={36} />
+              <span className="font-bold text-lg">PowerLeave</span>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg mb-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
+                <span className="text-white font-semibold">{user?.name?.[0] || 'U'}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{user?.name}</p>
+                <p className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+              </div>
+            </div>
+
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                    currentPage === item.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="p-4 border-t shrink-0">
+            <button onClick={() => { setShowRequestForm(true); setSidebarOpen(false); }} className="w-full btn-primary flex items-center justify-center gap-2 mb-3">
+              <Icons.Plus /> Nuova Richiesta
+            </button>
+            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground">
+              <Icons.Logout /> Esci
+            </button>
+          </div>
+        </aside>
+
+        {/* Mobile header */}
+        <div className="fixed top-0 left-0 right-0 z-30 bg-card border-b p-4 flex items-center justify-between">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-muted rounded-lg">
+            <Icons.Menu />
           </button>
-          <button
-            data-testid="logout-btn"
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Icons.Logout />
-            Esci
-          </button>
+          <span className="font-bold">PowerLeave</span>
+          <ThemeToggle />
         </div>
-      </aside>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-card border-b p-4 flex items-center justify-between">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-muted rounded-lg">
-          <Icons.Menu />
-        </button>
-        <span className="font-bold">PowerLeave</span>
-        <ThemeToggle />
+        {/* Mobile content */}
+        <div className="flex-1 overflow-auto pt-16 p-4">
+          {currentPage === 'dashboard' && <DashboardContent stats={stats} pendingRequests={pendingRequests} myRequests={myRequests} user={user} onReview={handleReview} />}
+          {currentPage === 'calendar' && <CalendarPage />}
+          {currentPage === 'stats' && <StatsPage />}
+          {currentPage === 'requests' && <RequestsPage user={user} />}
+          {currentPage === 'announcements' && <AnnouncementsPage user={user} />}
+          {currentPage === 'closures' && <ClosuresPage user={user} />}
+          {currentPage === 'team' && <TeamPage />}
+          {currentPage === 'settings' && <SettingsPage />}
+        </div>
       </div>
-
-      {/* Main content area */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        {/* Desktop header bar */}
-        <div className="hidden md:flex items-center justify-between px-8 py-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-30 shrink-0">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">
-              {currentPage === 'dashboard' && 'Dashboard'}
-              {currentPage === 'calendar' && 'Calendario'}
-              {currentPage === 'stats' && 'Statistiche'}
-              {currentPage === 'requests' && 'Richieste Ferie'}
-              {currentPage === 'announcements' && 'Bacheca Annunci'}
-              {currentPage === 'closures' && 'Chiusure Aziendali'}
-              {currentPage === 'team' && 'Team'}
-              {currentPage === 'settings' && 'Impostazioni'}
-            </h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Ciao, {user?.name?.split(' ')[0]}</span>
-            <ThemeToggle />
-          </div>
-        </div>
-        
-        {/* Page content */}
-        <div className="flex-1 overflow-auto p-6 md:p-8 pt-20 md:pt-6">
-        {currentPage === 'dashboard' && (
-          <DashboardContent
-            stats={stats}
-            pendingRequests={pendingRequests}
-            myRequests={myRequests}
             user={user}
             onReview={handleReview}
           />
