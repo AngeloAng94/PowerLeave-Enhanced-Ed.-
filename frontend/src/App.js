@@ -1141,19 +1141,6 @@ function Dashboard() {
           {currentPage === 'settings' && <SettingsPage />}
         </div>
       </div>
-            user={user}
-            onReview={handleReview}
-          />
-        )}
-        {currentPage === 'calendar' && <CalendarPage />}
-        {currentPage === 'stats' && <StatsPage />}
-        {currentPage === 'requests' && <RequestsPage user={user} />}
-        {currentPage === 'announcements' && <AnnouncementsPage user={user} />}
-        {currentPage === 'closures' && <ClosuresPage user={user} />}
-        {currentPage === 'team' && <TeamPage />}
-        {currentPage === 'settings' && <SettingsPage />}
-        </div>
-      </main>
 
       {/* Request Modal */}
       {showRequestForm && (
