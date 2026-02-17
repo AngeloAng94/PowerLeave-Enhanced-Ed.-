@@ -834,6 +834,8 @@ function Dashboard() {
   const navItems = [
     { id: 'dashboard', icon: <Icons.Home />, label: 'Dashboard' },
     { id: 'calendar', icon: <Icons.Calendar />, label: 'Calendario' },
+    { id: 'stats', icon: <Icons.Chart />, label: 'Stats' },
+    { id: 'requests', icon: <Icons.Plane />, label: 'Richieste Ferie' },
     { id: 'team', icon: <Icons.Users />, label: 'Team' },
     { id: 'settings', icon: <Icons.Settings />, label: 'Impostazioni' },
   ];
