@@ -130,15 +130,15 @@ class PowerLeaveAPITester:
         
         return success
 
-    def test_user_login(self):
-        """Test user login with existing credentials"""
+    def test_demo_admin_login(self):
+        """Test demo admin login with pre-seeded credentials"""
         login_data = {
-            "email": "mario@test.it",
-            "password": "password123"
+            "email": "admin@demo.it",
+            "password": "demo123"
         }
         
         success, response = self.run_test(
-            "User Login",
+            "Demo Admin Login",
             "POST",
             "/api/auth/login",
             200,
@@ -151,6 +151,28 @@ class PowerLeaveAPITester:
             self.user_id = response.get('user_id')
             self.org_id = response.get('org_id')
             print(f"   🎫 Login token: {self.token[:20]}...")
+            print(f"   👤 Role: {response.get('role', 'unknown')}")
+        
+        return success
+
+    def test_demo_user_login(self):
+        """Test demo user login with pre-seeded credentials"""
+        login_data = {
+            "email": "mario@demo.it",
+            "password": "demo123"
+        }
+        
+        success, response = self.run_test(
+            "Demo User Login",
+            "POST",
+            "/api/auth/login",
+            200,
+            data=login_data,
+            auth=False
+        )
+        
+        if success and 'token' in response:
+            print(f"   👤 User role: {response.get('role', 'unknown')}")
         
         return success
 
