@@ -219,19 +219,23 @@ const Icons = {
 };
 
 // ============== THEME TOGGLE ==============
-function ThemeToggle() {
+function ThemeToggle({ className = '' }) {
   const [dark, setDark] = useState(() => {
     if (typeof window !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
+      const saved = localStorage.getItem('theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
-    return false;
+    return true;
   });
 
   useEffect(() => {
     if (dark) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }, [dark]);
 
@@ -239,9 +243,23 @@ function ThemeToggle() {
     <button
       data-testid="theme-toggle"
       onClick={() => setDark(!dark)}
-      className="p-2 rounded-lg hover:bg-muted transition-colors"
+      className={`relative p-2.5 rounded-xl transition-all duration-300 ${
+        dark 
+          ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-yellow-300 shadow-lg shadow-indigo-500/30' 
+          : 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-400/30'
+      } hover:scale-110 ${className}`}
+      title={dark ? 'Passa al tema chiaro' : 'Passa al tema scuro'}
     >
-      {dark ? <Icons.Sun /> : <Icons.Moon />}
+      <div className="relative w-5 h-5">
+        {/* Sun */}
+        <div className={`absolute inset-0 transition-all duration-500 ${dark ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'}`}>
+          <Icons.Sun />
+        </div>
+        {/* Moon */}
+        <div className={`absolute inset-0 transition-all duration-500 ${dark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'}`}>
+          <Icons.Moon />
+        </div>
+      </div>
     </button>
   );
 }
