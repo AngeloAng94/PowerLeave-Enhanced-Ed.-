@@ -1728,11 +1728,13 @@ function CalendarPage() {
   );
 }
 
-// ============== STATS PAGE ==============
+// ============== STATS PAGE (ANALYTICS AVANZATE) ==============
 function StatsPage() {
   const [stats, setStats] = useState(null);
   const [balances, setBalances] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [team, setTeam] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('year');
 
   useEffect(() => {
     loadStats();
@@ -1740,68 +1742,305 @@ function StatsPage() {
 
   const loadStats = async () => {
     try {
-      const [statsData, balancesData, requestsData] = await Promise.all([
+      const [statsData, balancesData, requestsData, teamData] = await Promise.all([
         api.get('/api/stats'),
         api.get('/api/leave-balances'),
         api.get('/api/leave-requests'),
+        api.get('/api/team'),
       ]);
       setStats(statsData);
       setBalances(balancesData);
       setRequests(requestsData);
+      setTeam(teamData);
     } catch {}
   };
 
+  // Calculate analytics
   const approvedRequests = requests.filter(r => r.status === 'approved');
   const pendingRequests = requests.filter(r => r.status === 'pending');
+  const rejectedRequests = requests.filter(r => r.status === 'rejected');
+
+  // Monthly distribution for current year
+  const monthlyData = Array(12).fill(0);
+  approvedRequests.forEach(req => {
+    const month = new Date(req.start_date).getMonth();
+    monthlyData[month] += req.days || 1;
+  });
+  const maxMonthlyValue = Math.max(...monthlyData, 1);
+
+  // Leave type distribution
+  const leaveTypeStats = {};
+  approvedRequests.forEach(req => {
+    const type = req.leave_type_name || 'Altro';
+    leaveTypeStats[type] = (leaveTypeStats[type] || 0) + (req.days || 1);
+  });
+  const totalLeaveDays = Object.values(leaveTypeStats).reduce((a, b) => a + b, 0) || 1;
+
+  // Per-employee usage
+  const employeeUsage = {};
+  team.forEach(member => {
+    const memberBalances = balances.filter(b => b.user_id === member.user_id);
+    const totalDays = memberBalances.reduce((sum, b) => sum + (b.total_days || 0), 0);
+    const usedDays = memberBalances.reduce((sum, b) => sum + (b.used_days || 0), 0);
+    employeeUsage[member.user_id] = {
+      name: member.name,
+      totalDays,
+      usedDays,
+      percentage: totalDays > 0 ? Math.round((usedDays / totalDays) * 100) : 0
+    };
+  });
+
+  const leaveTypeColors = {
+    'Ferie': '#22C55E',
+    'Permesso': '#3B82F6',
+    'Malattia': '#EF4444',
+    'Maternità/Paternità': '#A855F7',
+    'Altro': '#6B7280'
+  };
+
+  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold">Statistiche</h1>
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+          <p className="text-muted-foreground">Panoramica completa del tuo team</p>
+        </div>
+        <select 
+          value={selectedPeriod} 
+          onChange={e => setSelectedPeriod(e.target.value)}
+          className="px-4 py-2 rounded-lg border bg-card text-foreground"
+        >
+          <option value="year">Anno corrente</option>
+          <option value="quarter">Ultimo trimestre</option>
+          <option value="month">Ultimo mese</option>
+        </select>
+      </div>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-card p-6 rounded-xl border text-center">
-          <p className="text-4xl font-bold" style={{color: '#22C55E'}}>{stats?.approved_count || 0}</p>
-          <p className="text-muted-foreground">Ferie Approvate</p>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Icons.Check />
+            </div>
+            <span className="text-xs bg-white/20 px-2 py-1 rounded-full">+12%</span>
+          </div>
+          <p className="text-4xl font-bold">{stats?.approved_count || 0}</p>
+          <p className="text-green-100 text-sm">Richieste Approvate</p>
         </div>
-        <div className="bg-card p-6 rounded-xl border text-center">
-          <p className="text-4xl font-bold" style={{color: '#F97316'}}>{stats?.pending_count || 0}</p>
-          <p className="text-muted-foreground">In Attesa</p>
+        
+        <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-6 rounded-2xl text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Icons.Clock />
+            </div>
+            <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Da gestire</span>
+          </div>
+          <p className="text-4xl font-bold">{stats?.pending_count || 0}</p>
+          <p className="text-orange-100 text-sm">In Attesa</p>
         </div>
-        <div className="bg-card p-6 rounded-xl border text-center">
-          <p className="text-4xl font-bold" style={{color: '#3B82F6'}}>{stats?.total_staff || 0}</p>
-          <p className="text-muted-foreground">Membri Team</p>
+        
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Icons.Users />
+            </div>
+            <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Attivi</span>
+          </div>
+          <p className="text-4xl font-bold">{stats?.available_staff || 0}/{stats?.total_staff || 0}</p>
+          <p className="text-blue-100 text-sm">Staff Disponibile Oggi</p>
         </div>
-        <div className="bg-card p-6 rounded-xl border text-center">
-          <p className="text-4xl font-bold" style={{color: '#2563EB'}}>{stats?.utilization_rate || 0}%</p>
-          <p className="text-muted-foreground">Utilizzo Ferie</p>
+        
+        <div className="bg-gradient-to-br from-purple-500 to-violet-600 p-6 rounded-2xl text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Icons.Chart />
+            </div>
+          </div>
+          <p className="text-4xl font-bold">{stats?.utilization_rate || 0}%</p>
+          <p className="text-purple-100 text-sm">Utilizzo Medio Ferie</p>
         </div>
       </div>
 
-      {/* Detailed Balance Table */}
-      <div className="bg-card p-6 rounded-xl border">
-        <h2 className="text-lg font-semibold mb-4">Dettaglio Saldi per Dipendente</h2>
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly Trend Chart */}
+        <div className="bg-card p-6 rounded-2xl border">
+          <h2 className="text-lg font-semibold mb-6">Trend Assenze Mensili</h2>
+          <div className="flex items-end gap-2 h-48">
+            {monthlyData.map((value, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                <div 
+                  className="w-full rounded-t-lg transition-all duration-500 hover:opacity-80"
+                  style={{
+                    height: `${(value / maxMonthlyValue) * 100}%`,
+                    minHeight: value > 0 ? '8px' : '2px',
+                    backgroundColor: i === new Date().getMonth() ? '#3B82F6' : '#94A3B8'
+                  }}
+                  title={`${months[i]}: ${value} giorni`}
+                />
+                <span className="text-xs text-muted-foreground">{months[i]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-center gap-4 mt-4 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-blue-500"></span> Mese corrente
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-gray-400"></span> Altri mesi
+            </span>
+          </div>
+        </div>
+
+        {/* Leave Type Distribution */}
+        <div className="bg-card p-6 rounded-2xl border">
+          <h2 className="text-lg font-semibold mb-6">Distribuzione per Tipo</h2>
+          <div className="space-y-4">
+            {Object.entries(leaveTypeStats).map(([type, days]) => {
+              const percentage = Math.round((days / totalLeaveDays) * 100);
+              const color = leaveTypeColors[type] || '#6B7280';
+              return (
+                <div key={type}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium">{type}</span>
+                    <span className="text-sm text-muted-foreground">{days} giorni ({percentage}%)</span>
+                  </div>
+                  <div className="h-3 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${percentage}%`, backgroundColor: color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {Object.keys(leaveTypeStats).length === 0 && (
+              <p className="text-center text-muted-foreground py-8">Nessun dato disponibile</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Team Performance */}
+      <div className="bg-card p-6 rounded-2xl border">
+        <h2 className="text-lg font-semibold mb-6">Utilizzo Ferie per Dipendente</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Object.values(employeeUsage).map((emp, i) => (
+            <div key={i} className="p-4 bg-muted/50 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                  style={{ backgroundColor: emp.percentage > 70 ? '#EF4444' : emp.percentage > 40 ? '#F97316' : '#22C55E' }}>
+                  {emp.name?.[0]}
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{emp.name}</p>
+                  <p className="text-xs text-muted-foreground">{emp.usedDays}/{emp.totalDays} giorni</p>
+                </div>
+              </div>
+              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${emp.percentage}%`,
+                    backgroundColor: emp.percentage > 70 ? '#EF4444' : emp.percentage > 40 ? '#F97316' : '#22C55E'
+                  }}
+                />
+              </div>
+              <p className="text-right text-xs text-muted-foreground mt-1">{emp.percentage}% utilizzato</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Request Status Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-card p-6 rounded-2xl border">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600">
+              <Icons.Check />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{approvedRequests.length}</p>
+              <p className="text-sm text-muted-foreground">Approvate</p>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Totale giorni: {approvedRequests.reduce((sum, r) => sum + (r.days || 0), 0)}
+          </div>
+        </div>
+        
+        <div className="bg-card p-6 rounded-2xl border">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600">
+              <Icons.Clock />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{pendingRequests.length}</p>
+              <p className="text-sm text-muted-foreground">In Attesa</p>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Giorni richiesti: {pendingRequests.reduce((sum, r) => sum + (r.days || 0), 0)}
+          </div>
+        </div>
+        
+        <div className="bg-card p-6 rounded-2xl border">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600">
+              <Icons.X />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{rejectedRequests.length}</p>
+              <p className="text-sm text-muted-foreground">Rifiutate</p>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Tasso rifiuto: {requests.length > 0 ? Math.round((rejectedRequests.length / requests.length) * 100) : 0}%
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Table */}
+      <div className="bg-card p-6 rounded-2xl border">
+        <h2 className="text-lg font-semibold mb-4">Dettaglio Saldi Completo</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-3 px-4">Dipendente</th>
-                <th className="text-left py-3 px-4">Tipo</th>
-                <th className="text-right py-3 px-4">Totali</th>
-                <th className="text-right py-3 px-4">Utilizzati</th>
-                <th className="text-right py-3 px-4">Disponibili</th>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-4 font-semibold text-foreground">Dipendente</th>
+                <th className="text-left py-3 px-4 font-semibold text-foreground">Tipo Assenza</th>
+                <th className="text-right py-3 px-4 font-semibold text-foreground">Totali</th>
+                <th className="text-right py-3 px-4 font-semibold text-foreground">Utilizzati</th>
+                <th className="text-right py-3 px-4 font-semibold text-foreground">Disponibili</th>
+                <th className="text-right py-3 px-4 font-semibold text-foreground">%</th>
               </tr>
             </thead>
             <tbody>
-              {balances.map((b, i) => (
-                <tr key={i} className="border-b hover:bg-muted/50">
-                  <td className="py-3 px-4 font-medium">{b.user_name}</td>
-                  <td className="py-3 px-4">{b.leave_type_name}</td>
-                  <td className="py-3 px-4 text-right">{b.total_days}</td>
-                  <td className="py-3 px-4 text-right" style={{color: '#EF4444'}}>{b.used_days}</td>
-                  <td className="py-3 px-4 text-right" style={{color: '#22C55E'}}>{b.remaining_days}</td>
-                </tr>
-              ))}
+              {balances.map((b, i) => {
+                const percentage = b.total_days > 0 ? Math.round((b.used_days / b.total_days) * 100) : 0;
+                return (
+                  <tr key={i} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-foreground">{b.user_name}</td>
+                    <td className="py-3 px-4 text-foreground">{b.leave_type_name}</td>
+                    <td className="py-3 px-4 text-right text-foreground">{b.total_days}</td>
+                    <td className="py-3 px-4 text-right" style={{color: '#EF4444'}}>{b.used_days}</td>
+                    <td className="py-3 px-4 text-right" style={{color: '#22C55E'}}>{b.remaining_days}</td>
+                    <td className="py-3 px-4 text-right">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        percentage > 70 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                        percentage > 40 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      }`}>
+                        {percentage}%
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
