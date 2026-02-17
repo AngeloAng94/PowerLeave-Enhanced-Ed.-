@@ -840,14 +840,15 @@ function Dashboard() {
       <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-card border-r transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform`}>
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">P</span>
-            </div>
-            <span className="font-bold text-lg">PowerLeave</span>
+            <RocketLogo size={36} />
+            <span className="font-bold text-lg" style={{fontFamily: 'Inter, sans-serif'}}>
+              <span style={{fontWeight: 600}}>Power</span>
+              <span style={{fontWeight: 700}}>Leave</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg mb-6">
-            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
               <span className="text-primary font-semibold">{user?.name?.[0] || 'U'}</span>
             </div>
             <div className="flex-1 min-w-0">
