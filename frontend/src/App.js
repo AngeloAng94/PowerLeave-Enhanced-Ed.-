@@ -612,12 +612,12 @@ function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)'}}>
       <div className="w-full max-w-md">
         <div className="bg-card p-8 rounded-2xl border shadow-lg">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-primary-foreground font-bold text-2xl">P</span>
+            <div className="mx-auto mb-4">
+              <RocketLogo size={64} />
             </div>
             <h1 className="text-2xl font-bold">Crea il tuo account</h1>
             <p className="text-muted-foreground">Inizia a gestire le ferie del tuo team</p>
