@@ -976,6 +976,8 @@ function Dashboard() {
         {currentPage === 'calendar' && <CalendarPage />}
         {currentPage === 'stats' && <StatsPage />}
         {currentPage === 'requests' && <RequestsPage user={user} />}
+        {currentPage === 'announcements' && <AnnouncementsPage user={user} />}
+        {currentPage === 'closures' && <ClosuresPage user={user} />}
         {currentPage === 'team' && <TeamPage />}
         {currentPage === 'settings' && <SettingsPage />}
         </div>
