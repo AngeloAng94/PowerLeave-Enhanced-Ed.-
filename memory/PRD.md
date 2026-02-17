@@ -4,59 +4,56 @@
 Convertire il progetto PowerLeave (sistema gestione ferie) in una piattaforma SaaS moderna e vendibile per PMI italiane, con:
 - Autenticazione JWT + Google OAuth
 - Database MongoDB
-- Design moderno e mobile responsive
+- Design moderno con logo razzo blu e colori brand (#0F172A navy, #2563EB blue)
 - Supporto multi-tenant
-- Integrazione calendario (Google + Outlook)
+- Utenti demo per presentazioni
 
 ## Architecture
-- **Frontend**: React 18 + CSS Custom Properties (no Tailwind build issues)
-- **Backend**: FastAPI + Motor (async MongoDB driver)
+- **Frontend**: React 18 + CSS Custom (Inter font)
+- **Backend**: FastAPI + Motor (async MongoDB)
 - **Database**: MongoDB (multi-tenant con org_id)
 - **Auth**: JWT tokens + Emergent Google OAuth
 
 ## User Personas
-1. **Admin HR**: Gestisce richieste ferie del team, invita membri, configura azienda
+1. **Admin HR**: Gestisce richieste ferie, approva/rifiuta, invita membri
 2. **Dipendente**: Richiede ferie, visualizza saldi, consulta calendario team
 
-## Core Requirements (Static)
-- [x] Registrazione utente con creazione organizzazione
-- [x] Login con JWT
-- [x] Google OAuth (Emergent-managed)
-- [x] Dashboard con statistiche
-- [x] Creazione richieste ferie
-- [x] Workflow approvazione/rifiuto
-- [x] Calendario mensile con visualizzazione ferie
-- [x] Gestione team (inviti, ruoli)
-- [x] Saldi ferie per tipo
-- [x] Festività italiane precaricate
+## Demo Users
+| Email | Password | Ruolo | Nome |
+|-------|----------|-------|------|
+| admin@demo.it | demo123 | Admin | Marco Rossi |
+| mario@demo.it | demo123 | User | Mario Bianchi |
+| anna@demo.it | demo123 | User | Anna Verdi |
+| luigi@demo.it | demo123 | User | Luigi Neri |
 
 ## What's Been Implemented (Feb 2026)
+
 ### Backend (server.py)
-- Auth endpoints: register, login, logout, session (OAuth)
-- Leave types CRUD
-- Leave requests CRUD + approval workflow
-- Statistics endpoint
-- Calendar monthly view
-- Team management (list, invite, remove)
-- Leave balances with optimized queries (no N+1)
-- Company closures (holidays)
+- ✅ Auth: register, login, logout, OAuth session
+- ✅ Leave types CRUD
+- ✅ Leave requests CRUD + approval workflow
+- ✅ Statistics endpoint
+- ✅ Calendar monthly view
+- ✅ Team management (list, invite, remove)
+- ✅ Leave balances (optimized queries)
+- ✅ Company closures (Italian holidays 2026)
+- ✅ Demo users auto-seeding
 
 ### Frontend (App.js)
-- Landing page con pricing e features
-- Login/Register forms + Google OAuth button
-- Dashboard con stats cards
-- Calendario interattivo
-- Team management table
-- Settings page
-- Mobile responsive design
-- Dark/Light theme toggle
+- ✅ Landing page con logo razzo, pricing, demo banner
+- ✅ Login/Register con colori brand blue
+- ✅ Dashboard con stats cards
+- ✅ Calendario interattivo
+- ✅ Team management
+- ✅ Settings
+- ✅ Dark/Light theme
 
 ## Prioritized Backlog
 
-### P0 (Critical)
+### P0 (Done)
 - ✅ Auth flow completo
 - ✅ Leave request workflow
-- ✅ Calendar view
+- ✅ Demo users
 
 ### P1 (Important)
 - [ ] Notifiche email (SendGrid/Resend)
@@ -66,16 +63,8 @@ Convertire il progetto PowerLeave (sistema gestione ferie) in una piattaforma Sa
 ### P2 (Nice to have)
 - [ ] Outlook Calendar sync
 - [ ] Push notifications
-- [ ] Advanced analytics
-- [ ] Bulk operations
+- [ ] Analytics avanzate
 
-## Next Tasks
-1. Aggiungere notifiche email per approvazioni/rifiuti
-2. Implementare export CSV delle richieste
-3. Aggiungere validazione email per inviti team
-4. Dashboard analytics avanzate
-
-## Test Credentials
-- Email: test2@test.it
-- Password: test123
-- Role: Admin
+## Notes
+- Preview URL potrebbe essere in cold start - aprire dalla dashboard Emergent
+- Tutti i test backend passano 100%
