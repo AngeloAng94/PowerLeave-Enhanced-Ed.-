@@ -1055,7 +1055,107 @@ async def update_organization(
     
     return {"success": True}
 
-# ============== COMPANY CLOSURES ==============
+# ============== ANNOUNCEMENTS (BACHECA) ==============
+
+@app.get("/api/announcements")
+async def get_announcements(current_user: dict = Depends(get_current_user)):
+    """Get all announcements for the organization"""
+    org_id = current_user["org_id"]
+    
+    announcements = await db.announcements.find(
+        {"org_id": org_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return announcements
+
+@app.post("/api/announcements")
+async def create_announcement(
+    announcement_data: dict,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Create a new announcement (admin only)"""
+    org_id = current_user["org_id"]
+    now = datetime.now(timezone.utc)
+    
+    announcement = {
+        "id": str(uuid.uuid4()),
+        "org_id": org_id,
+        "title": announcement_data.get("title"),
+        "content": announcement_data.get("content"),
+        "priority": announcement_data.get("priority", "normal"),  # low, normal, high
+        "author_id": current_user["user_id"],
+        "author_name": current_user["name"],
+        "created_at": now,
+        "expires_at": announcement_data.get("expires_at")  # optional
+    }
+    
+    await db.announcements.insert_one(announcement)
+    return {"success": True, "id": announcement["id"]}
+
+@app.put("/api/announcements/{announcement_id}")
+async def update_announcement(
+    announcement_id: str,
+    update_data: dict,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Update an announcement (admin only)"""
+    org_id = current_user["org_id"]
+    
+    update_fields = {}
+    for field in ["title", "content", "priority", "expires_at"]:
+        if field in update_data:
+            update_fields[field] = update_data[field]
+    
+    if update_fields:
+        result = await db.announcements.update_one(
+            {"id": announcement_id, "org_id": org_id},
+            {"$set": update_fields}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Annuncio non trovato")
+    
+    return {"success": True}
+
+@app.delete("/api/announcements/{announcement_id}")
+async def delete_announcement(
+    announcement_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Delete an announcement (admin only)"""
+    org_id = current_user["org_id"]
+    
+    result = await db.announcements.delete_one({
+        "id": announcement_id,
+        "org_id": org_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Annuncio non trovato")
+    
+    return {"success": True}
+
+# ============== COMPANY CLOSURES (CHIUSURE AZIENDALI) ==============
+
+@app.get("/api/closures")
+async def get_closures(
+    year: Optional[int] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get company closures/shutdowns"""
+    org_id = current_user["org_id"]
+    
+    query = {"$or": [{"org_id": None}, {"org_id": org_id}]}
+    
+    if year:
+        query["date"] = {"$regex": f"^{year}"}
+    
+    closures = await db.company_closures.find(
+        query,
+        {"_id": 0}
+    ).sort("date", 1).to_list(500)
+    
+    return closures
 
 @app.post("/api/closures")
 async def create_closure(
