@@ -969,6 +969,7 @@ function Dashboard() {
         {currentPage === 'requests' && <RequestsPage user={user} />}
         {currentPage === 'team' && <TeamPage />}
         {currentPage === 'settings' && <SettingsPage />}
+        </div>
       </main>
 
       {/* Request Modal */}
