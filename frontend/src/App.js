@@ -239,12 +239,12 @@ function LandingPage() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Icons.Plane />
-              <span className="text-primary-foreground font-bold">P</span>
-            </div>
-            <span className="text-xl font-bold font-heading">PowerLeave</span>
+          <div className="flex items-center gap-3">
+            <RocketLogo size={40} />
+            <span className="text-xl font-bold" style={{fontFamily: 'Inter, sans-serif'}}>
+              <span style={{fontWeight: 600}}>Power</span>
+              <span style={{fontWeight: 700}}>Leave</span>
+            </span>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -266,15 +266,15 @@ function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4">
+      <section className="pt-32 pb-20 px-4" style={{background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)'}}>
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white">
                 Gestisci le ferie del tuo team con{' '}
-                <span className="text-primary">semplicità</span>
+                <span style={{color: '#3B82F6'}}>semplicità</span>
               </h1>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-xl mb-8 leading-relaxed" style={{color: '#94A3B8'}}>
                 PowerLeave è la piattaforma moderna per le PMI italiane. 
                 Richieste, approvazioni e calendario in un'unica soluzione intuitiva.
               </p>
@@ -283,41 +283,51 @@ function LandingPage() {
                   data-testid="cta-start-free"
                   onClick={() => window.location.hash = '#/register'}
                   className="btn-primary text-lg"
+                  style={{backgroundColor: '#2563EB'}}
                 >
                   Inizia Gratis
                 </button>
                 <button
                   data-testid="cta-google"
                   onClick={loginWithGoogle}
-                  className="btn-outline flex items-center justify-center gap-2"
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium border-2"
+                  style={{borderColor: '#3B82F6', color: '#3B82F6', backgroundColor: 'transparent'}}
                 >
                   <Icons.Google />
                   Continua con Google
                 </button>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
+              <p className="mt-6 text-sm" style={{color: '#64748B'}}>
                 ✓ Gratis fino a 5 dipendenti · ✓ Nessuna carta richiesta
               </p>
+              <div className="mt-6 p-4 rounded-lg" style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)'}}>
+                <p className="text-sm" style={{color: '#93C5FD'}}>
+                  <strong>🎯 Demo:</strong> Accedi con <strong>admin@demo.it</strong> / <strong>demo123</strong>
+                </p>
+              </div>
             </div>
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=400&fit=crop"
-                alt="Team collaboration"
-                className="rounded-2xl shadow-2xl"
-              />
-              <div className="absolute -bottom-6 -left-6 bg-card p-4 rounded-xl shadow-lg border">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                    <Icons.Check />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Ferie Approvate</p>
-                    <p className="text-sm text-muted-foreground">15-22 Agosto</p>
-                  </div>
-                </div>
+            <div className="relative hidden md:block">
+              <div className="p-8 rounded-2xl" style={{backgroundColor: 'rgba(30, 41, 59, 0.8)', border: '1px solid rgba(59, 130, 246, 0.2)'}}>
+                <img
+                  src={LOGO_URL}
+                  alt="PowerLeave Logo"
+                  className="w-full max-w-md mx-auto rounded-xl"
+                  style={{boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.25)'}}
+                />
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Demo Credentials Banner */}
+      <section className="py-4" style={{backgroundColor: '#2563EB'}}>
+        <div className="container mx-auto text-center">
+          <p className="text-white font-medium">
+            🚀 Prova subito! Login demo: <strong>admin@demo.it</strong> | Password: <strong>demo123</strong>
+          </p>
+        </div>
+      </section>
         </div>
       </section>
 
