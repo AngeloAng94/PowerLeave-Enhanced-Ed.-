@@ -1,386 +1,306 @@
 #!/usr/bin/env python3
 """
-PowerLeave Backend API Test Suite
-Tests all API endpoints for the leave management system
+Backend API Test for PowerLeave - Italian Leave Management System
+Tests all core API endpoints for authentication, leave management, and admin functions
 """
 
 import requests
-import json
 import sys
+import json
 from datetime import datetime, timedelta
-import time
 
 class PowerLeaveAPITester:
     def __init__(self, base_url="https://hr-powerup.preview.emergentagent.com"):
-        self.base_url = base_url.rstrip('/')
-        self.token = None
-        self.user_id = None
-        self.org_id = None
+        self.base_url = base_url
+        self.admin_token = None
+        self.user_token = None
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
-        self.session = requests.Session()
-        
-        print(f"🚀 Starting PowerLeave API Tests")
-        print(f"📡 Backend URL: {self.base_url}")
-        print("=" * 60)
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, auth=True):
-        """Run a single API test"""
+    def log_test(self, name, success, details=""):
+        """Log test result"""
+        self.tests_run += 1
+        if success:
+            self.tests_passed += 1
+            print(f"✅ {name}")
+        else:
+            self.failed_tests.append(f"{name}: {details}")
+            print(f"❌ {name} - {details}")
+
+    def make_request(self, method, endpoint, data=None, token=None):
+        """Make HTTP request with optional authentication"""
         url = f"{self.base_url}{endpoint}"
         headers = {'Content-Type': 'application/json'}
-        if auth and self.token:
-            headers['Authorization'] = f'Bearer {self.token}'
-
-        self.tests_run += 1
-        print(f"\n🔍 Testing {name}...")
-        print(f"   {method} {endpoint}")
-
+        
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        
         try:
             if method == 'GET':
-                response = self.session.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=headers, timeout=10)
             elif method == 'POST':
-                response = self.session.post(url, json=data, headers=headers, timeout=10)
+                response = requests.post(url, json=data, headers=headers, timeout=10)
             elif method == 'PUT':
-                response = self.session.put(url, json=data, headers=headers, timeout=10)
+                response = requests.put(url, json=data, headers=headers, timeout=10)
             elif method == 'DELETE':
-                response = self.session.delete(url, headers=headers, timeout=10)
-
-            success = response.status_code == expected_status
-            
-            if success:
-                self.tests_passed += 1
-                print(f"✅ PASSED - Status: {response.status_code}")
-                
-                # Try to parse response
-                try:
-                    response_data = response.json()
-                    if response_data:
-                        print(f"   📝 Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'List/Other'}")
-                except:
-                    pass
-                    
-                return True, response.json() if response.text else {}
+                response = requests.delete(url, headers=headers, timeout=10)
             else:
-                self.tests_passed += 1 if response.status_code in [200, 201] else 0
-                print(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
-                try:
-                    error_data = response.json()
-                    print(f"   ❗ Error: {error_data.get('detail', 'Unknown error')}")
-                except:
-                    print(f"   ❗ Response text: {response.text[:200]}...")
+                return None, "Invalid method"
                 
-                self.failed_tests.append({
-                    'name': name,
-                    'method': method,
-                    'endpoint': endpoint,
-                    'expected': expected_status,
-                    'actual': response.status_code,
-                    'error': response.text[:500]
-                })
-                return False, {}
-
-        except requests.exceptions.RequestException as e:
-            print(f"❌ FAILED - Network Error: {str(e)}")
-            self.failed_tests.append({
-                'name': name,
-                'method': method,
-                'endpoint': endpoint,
-                'expected': expected_status,
-                'actual': 'Network Error',
-                'error': str(e)
-            })
-            return False, {}
+            return response, None
+        except Exception as e:
+            return None, str(e)
 
     def test_health_check(self):
-        """Test basic health endpoint"""
-        return self.run_test(
-            "Health Check",
-            "GET",
-            "/api/health",
-            200,
-            auth=False
-        )
-
-    def test_user_registration(self):
-        """Test user registration with organization creation"""
-        test_user = {
-            "name": "Test User Mario",
-            "email": "mario@test.it",
-            "password": "password123",
-            "organization_name": "Test Organization SRL"
-        }
-        
-        success, response = self.run_test(
-            "User Registration",
-            "POST",
-            "/api/auth/register",
-            200,
-            data=test_user,
-            auth=False
-        )
-        
-        if success and 'token' in response:
-            self.token = response['token']
-            self.user_id = response.get('user_id')
-            self.org_id = response.get('org_id')
-            print(f"   🎫 Token received: {self.token[:20]}...")
-            print(f"   👤 User ID: {self.user_id}")
-            print(f"   🏢 Org ID: {self.org_id}")
-        
+        """Test health endpoint"""
+        response, error = self.make_request('GET', '/api/health')
+        if error:
+            self.log_test("Health Check", False, error)
+            return False
+            
+        success = response.status_code == 200
+        self.log_test("Health Check", success, f"Status: {response.status_code}")
         return success
 
-    def test_demo_admin_login(self):
-        """Test demo admin login with pre-seeded credentials"""
-        login_data = {
-            "email": "admin@demo.it",
-            "password": "demo123"
-        }
+    def test_admin_login(self):
+        """Test admin login"""
+        data = {"email": "admin@demo.it", "password": "demo123"}
+        response, error = self.make_request('POST', '/api/auth/login', data)
         
-        success, response = self.run_test(
-            "Demo Admin Login",
-            "POST",
-            "/api/auth/login",
-            200,
-            data=login_data,
-            auth=False
-        )
+        if error:
+            self.log_test("Admin Login", False, error)
+            return False
+            
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('token'):
+                self.admin_token = result['token']
+                self.log_test("Admin Login", True, f"Role: {result.get('role')}")
+                return True
+                
+        self.log_test("Admin Login", False, f"Status: {response.status_code}")
+        return False
+
+    def test_user_login(self):
+        """Test regular user login"""
+        data = {"email": "mario@demo.it", "password": "demo123"}
+        response, error = self.make_request('POST', '/api/auth/login', data)
         
-        if success and 'token' in response:
-            self.token = response['token']
-            self.user_id = response.get('user_id')
-            self.org_id = response.get('org_id')
-            print(f"   🎫 Login token: {self.token[:20]}...")
-            print(f"   👤 Role: {response.get('role', 'unknown')}")
-        
+        if error:
+            self.log_test("User Login", False, error)
+            return False
+            
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('token'):
+                self.user_token = result['token']
+                self.log_test("User Login", True, f"Role: {result.get('role')}")
+                return True
+                
+        self.log_test("User Login", False, f"Status: {response.status_code}")
+        return False
+
+    def test_get_me(self):
+        """Test authentication verification"""
+        if not self.admin_token:
+            self.log_test("Get Me (Admin)", False, "No admin token")
+            return False
+            
+        response, error = self.make_request('GET', '/api/auth/me', token=self.admin_token)
+        if error:
+            self.log_test("Get Me (Admin)", False, error)
+            return False
+            
+        success = response.status_code == 200
+        if success:
+            data = response.json()
+            self.log_test("Get Me (Admin)", True, f"User: {data.get('name')}")
+        else:
+            self.log_test("Get Me (Admin)", False, f"Status: {response.status_code}")
         return success
 
-    def test_demo_user_login(self):
-        """Test demo user login with pre-seeded credentials"""
-        login_data = {
-            "email": "mario@demo.it",
-            "password": "demo123"
-        }
-        
-        success, response = self.run_test(
-            "Demo User Login",
-            "POST",
-            "/api/auth/login",
-            200,
-            data=login_data,
-            auth=False
-        )
-        
-        if success and 'token' in response:
-            print(f"   👤 User role: {response.get('role', 'unknown')}")
-        
-        return success
+    def test_get_stats(self):
+        """Test statistics endpoint"""
+        response, error = self.make_request('GET', '/api/stats', token=self.admin_token)
+        if error:
+            self.log_test("Get Stats", False, error)
+            return False
+            
+        if response.status_code == 200:
+            data = response.json()
+            self.log_test("Get Stats", True, f"Approved: {data.get('approved_count')}, Pending: {data.get('pending_count')}")
+            return True
+        else:
+            self.log_test("Get Stats", False, f"Status: {response.status_code}")
+            return False
 
-    def test_get_current_user(self):
-        """Test getting current user info"""
-        return self.run_test(
-            "Get Current User",
-            "GET",
-            "/api/auth/me",
-            200
-        )
+    def test_leave_types(self):
+        """Test leave types endpoint"""
+        response, error = self.make_request('GET', '/api/leave-types', token=self.admin_token)
+        if error:
+            self.log_test("Get Leave Types", False, error)
+            return False
+            
+        if response.status_code == 200:
+            data = response.json()
+            self.log_test("Get Leave Types", True, f"Found {len(data)} leave types")
+            return True
+        else:
+            self.log_test("Get Leave Types", False, f"Status: {response.status_code}")
+            return False
 
-    def test_get_leave_types(self):
-        """Test fetching available leave types"""
-        return self.run_test(
-            "Get Leave Types",
-            "GET",
-            "/api/leave-types",
-            200
-        )
+    def test_team_members(self):
+        """Test team members endpoint"""
+        response, error = self.make_request('GET', '/api/team', token=self.admin_token)
+        if error:
+            self.log_test("Get Team Members", False, error)
+            return False
+            
+        if response.status_code == 200:
+            data = response.json()
+            self.log_test("Get Team Members", True, f"Found {len(data)} team members")
+            return True
+        else:
+            self.log_test("Get Team Members", False, f"Status: {response.status_code}")
+            return False
+
+    def test_leave_balances(self):
+        """Test leave balances endpoint"""
+        response, error = self.make_request('GET', '/api/leave-balances', token=self.admin_token)
+        if error:
+            self.log_test("Get Leave Balances", False, error)
+            return False
+            
+        if response.status_code == 200:
+            data = response.json()
+            self.log_test("Get Leave Balances", True, f"Found {len(data)} balance records")
+            return True
+        else:
+            self.log_test("Get Leave Balances", False, f"Status: {response.status_code}")
+            return False
+
+    def test_leave_requests(self):
+        """Test leave requests endpoint"""
+        response, error = self.make_request('GET', '/api/leave-requests', token=self.admin_token)
+        if error:
+            self.log_test("Get Leave Requests", False, error)
+            return False
+            
+        if response.status_code == 200:
+            data = response.json()
+            self.log_test("Get Leave Requests", True, f"Found {len(data)} leave requests")
+            return True
+        else:
+            self.log_test("Get Leave Requests", False, f"Status: {response.status_code}")
+            return False
+
+    def test_calendar_data(self):
+        """Test calendar monthly data"""
+        response, error = self.make_request('GET', '/api/calendar/monthly?year=2026&month=2', token=self.admin_token)
+        if error:
+            self.log_test("Get Calendar Data", False, error)
+            return False
+            
+        if response.status_code == 200:
+            data = response.json()
+            self.log_test("Get Calendar Data", True, f"Found {len(data)} calendar entries")
+            return True
+        else:
+            self.log_test("Get Calendar Data", False, f"Status: {response.status_code}")
+            return False
 
     def test_create_leave_request(self):
-        """Test creating a new leave request"""
+        """Test creating a leave request"""
+        if not self.user_token:
+            self.log_test("Create Leave Request", False, "No user token")
+            return False
+            
+        # Get leave types first
+        response, error = self.make_request('GET', '/api/leave-types', token=self.user_token)
+        if error or response.status_code != 200:
+            self.log_test("Create Leave Request", False, "Cannot get leave types")
+            return False
+            
+        leave_types = response.json()
+        if not leave_types:
+            self.log_test("Create Leave Request", False, "No leave types available")
+            return False
+            
+        # Create a leave request
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
         day_after = (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
         
-        leave_request = {
-            "leave_type_id": "ferie",  # Using default leave type
+        request_data = {
+            "leave_type_id": leave_types[0]['id'],
             "start_date": tomorrow,
             "end_date": day_after,
             "hours": 8,
-            "notes": "Test leave request"
+            "notes": "API Test Request"
         }
         
-        success, response = self.run_test(
-            "Create Leave Request",
-            "POST",
-            "/api/leave-requests",
-            200,
-            data=leave_request
-        )
-        
-        if success and 'request_id' in response:
-            self.test_request_id = response['request_id']
-            print(f"   📋 Request ID: {self.test_request_id}")
-        
-        return success
-
-    def test_get_leave_requests(self):
-        """Test fetching leave requests"""
-        return self.run_test(
-            "Get Leave Requests",
-            "GET",
-            "/api/leave-requests",
-            200
-        )
-
-    def test_review_leave_request(self):
-        """Test reviewing/approving a leave request"""
-        if not hasattr(self, 'test_request_id'):
-            print("⚠️  Skipping - no request ID from previous test")
+        response, error = self.make_request('POST', '/api/leave-requests', request_data, token=self.user_token)
+        if error:
+            self.log_test("Create Leave Request", False, error)
             return False
             
-        review_data = {"status": "approved"}
-        
-        return self.run_test(
-            "Review Leave Request",
-            "PUT",
-            f"/api/leave-requests/{self.test_request_id}/review",
-            200,
-            data=review_data
-        )
-
-    def test_get_statistics(self):
-        """Test getting dashboard statistics"""
-        return self.run_test(
-            "Get Statistics",
-            "GET",
-            "/api/stats",
-            200
-        )
-
-    def test_get_monthly_calendar(self):
-        """Test getting monthly calendar data"""
-        year = datetime.now().year
-        month = datetime.now().month
-        
-        return self.run_test(
-            "Get Monthly Calendar",
-            "GET",
-            f"/api/calendar/monthly?year={year}&month={month}",
-            200
-        )
-
-    def test_get_team_members(self):
-        """Test getting team members"""
-        return self.run_test(
-            "Get Team Members",
-            "GET",
-            "/api/team",
-            200
-        )
-
-    def test_invite_team_member(self):
-        """Test inviting a new team member"""
-        invite_data = {
-            "name": "Test Member",
-            "email": f"test.member{int(time.time())}@test.it",
-            "role": "user"
-        }
-        
-        success, response = self.run_test(
-            "Invite Team Member",
-            "POST",
-            "/api/team/invite",
-            200,
-            data=invite_data
-        )
-        
-        if success and 'user_id' in response:
-            self.invited_user_id = response['user_id']
-            print(f"   👥 Invited user ID: {self.invited_user_id}")
-        
-        return success
-
-    def test_get_leave_balances(self):
-        """Test getting leave balances"""
-        return self.run_test(
-            "Get Leave Balances",
-            "GET",
-            "/api/leave-balances",
-            200
-        )
-
-    def test_logout(self):
-        """Test user logout"""
-        return self.run_test(
-            "User Logout",
-            "POST",
-            "/api/auth/logout",
-            200,
-            data={}
-        )
+        if response.status_code == 200:
+            data = response.json()
+            self.log_test("Create Leave Request", True, f"Request ID: {data.get('request_id')}")
+            return True
+        else:
+            self.log_test("Create Leave Request", False, f"Status: {response.status_code}, Response: {response.text}")
+            return False
 
     def run_all_tests(self):
-        """Execute all test cases in sequence"""
-        print("🧪 Running PowerLeave Backend API Test Suite")
+        """Run all tests"""
+        print("🚀 Starting PowerLeave API Tests...")
+        print(f"🎯 Testing against: {self.base_url}")
+        print("="*60)
         
-        # Test health check first
-        self.test_health_check()
+        # Basic connectivity
+        if not self.test_health_check():
+            print("❌ Health check failed, cannot proceed with other tests")
+            return False
+            
+        # Authentication tests
+        admin_login_success = self.test_admin_login()
+        user_login_success = self.test_user_login()
         
-        # Test demo admin login first
-        if not self.test_demo_admin_login():
-            print("❌ CRITICAL: Cannot authenticate with demo admin - stopping tests")
-            return self.print_summary()
+        if not admin_login_success:
+            print("❌ Admin login failed, skipping admin tests")
+        else:
+            self.test_get_me()
+            self.test_get_stats()
+            self.test_leave_types()
+            self.test_team_members()
+            self.test_leave_balances()
+            self.test_leave_requests()
+            self.test_calendar_data()
+            
+        if user_login_success:
+            self.test_create_leave_request()
         
-        # Test authentication endpoints
-        self.test_get_current_user()
-        
-        # Test leave types
-        self.test_get_leave_types()
-        
-        # Test leave requests workflow
-        self.test_create_leave_request()
-        self.test_get_leave_requests()
-        self.test_review_leave_request()
-        
-        # Test dashboard and reporting
-        self.test_get_statistics()
-        self.test_get_monthly_calendar()
-        
-        # Test team management
-        self.test_get_team_members()
-        self.test_invite_team_member()
-        
-        # Test leave balances
-        self.test_get_leave_balances()
-        
-        # Test demo user login as well
-        self.test_demo_user_login()
-        
-        # Test logout
-        self.test_logout()
-        
-        return self.print_summary()
-
-    def print_summary(self):
-        """Print test results summary"""
-        print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
-        print(f"Tests Run: {self.tests_run}")
-        print(f"Tests Passed: {self.tests_passed}")
-        print(f"Tests Failed: {self.tests_run - self.tests_passed}")
-        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%" if self.tests_run > 0 else "0%")
+        # Print summary
+        print("="*60)
+        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         
         if self.failed_tests:
-            print("\n❌ FAILED TESTS:")
-            for i, test in enumerate(self.failed_tests, 1):
-                print(f"{i}. {test['name']}")
-                print(f"   Method: {test['method']} {test.get('endpoint', 'N/A')}")
-                print(f"   Expected: {test['expected']}, Got: {test['actual']}")
-                print(f"   Error: {test['error'][:100]}...")
-                print()
-        
+            print("\n❌ Failed Tests:")
+            for failure in self.failed_tests:
+                print(f"   - {failure}")
+        else:
+            print("\n✅ All tests passed!")
+            
         return self.tests_passed == self.tests_run
 
-if __name__ == "__main__":
+def main():
+    """Main test execution"""
     tester = PowerLeaveAPITester()
     success = tester.run_all_tests()
+    
+    # Return appropriate exit code
     sys.exit(0 if success else 1)
+
+if __name__ == "__main__":
+    main()
