@@ -974,8 +974,8 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-card border-r transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform flex flex-col`}>
+      {/* Sidebar - Always visible on desktop, hidden on mobile */}
+      <aside className={`fixed md:relative inset-y-0 left-0 z-50 w-64 bg-card border-r transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform flex flex-col shrink-0`}>
         <div className="p-6 flex-1 overflow-y-auto">
           <div className="flex items-center gap-3 mb-8">
             <RocketLogo size={36} />
@@ -1000,7 +1000,7 @@ function Dashboard() {
               <button
                 key={item.id}
                 data-testid={`nav-${item.id}`}
-                onClick={() => setCurrentPage(item.id)}
+                onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
                   currentPage === item.id
                     ? 'bg-primary text-primary-foreground'
