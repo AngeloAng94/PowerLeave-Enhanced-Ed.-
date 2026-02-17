@@ -936,8 +936,20 @@ function Dashboard() {
 
   const handleReview = async (requestId, status) => {
     try {
+      // Find the request to get user info
+      const request = pendingRequests.find(r => r.id === requestId);
       await api.put(`/api/leave-requests/${requestId}/review`, { status });
-      toast.success(status === 'approved' ? 'Richiesta approvata!' : 'Richiesta rifiutata');
+      
+      // Send notification
+      const dates = request ? `${request.start_date} - ${request.end_date}` : '';
+      const userName = request?.user_name || 'Dipendente';
+      
+      if (status === 'approved') {
+        NotificationService.leaveApproved(userName, dates);
+      } else {
+        NotificationService.leaveRejected(userName, dates);
+      }
+      
       loadData();
     } catch (err) {
       toast.error(err.message);
