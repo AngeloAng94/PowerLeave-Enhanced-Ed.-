@@ -952,6 +952,8 @@ function Dashboard() {
               {currentPage === 'calendar' && 'Calendario'}
               {currentPage === 'stats' && 'Statistiche'}
               {currentPage === 'requests' && 'Richieste Ferie'}
+              {currentPage === 'announcements' && 'Bacheca Annunci'}
+              {currentPage === 'closures' && 'Chiusure Aziendali'}
               {currentPage === 'team' && 'Team'}
               {currentPage === 'settings' && 'Impostazioni'}
             </h2>
