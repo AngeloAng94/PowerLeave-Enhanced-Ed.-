@@ -926,6 +926,8 @@ function Dashboard() {
           />
         )}
         {currentPage === 'calendar' && <CalendarPage />}
+        {currentPage === 'stats' && <StatsPage />}
+        {currentPage === 'requests' && <RequestsPage user={user} />}
         {currentPage === 'team' && <TeamPage />}
         {currentPage === 'settings' && <SettingsPage />}
       </main>
