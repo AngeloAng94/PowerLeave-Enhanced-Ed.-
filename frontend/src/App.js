@@ -344,8 +344,6 @@ function LandingPage() {
           </p>
         </div>
       </section>
-        </div>
-      </section>
 
       {/* Features */}
       <section id="features" className="py-20 bg-muted/50">
