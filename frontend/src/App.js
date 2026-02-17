@@ -1364,56 +1364,6 @@ function DashboardContent({ stats, pendingRequests, myRequests, user, onReview }
     </div>
   );
 }
-                        className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                      >
-                        <Icons.X />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">Nessuna richiesta in attesa</p>
-            )}
-          </div>
-        ) : (
-          <div className="bg-card p-6 rounded-xl border">
-            <h2 className="text-lg font-semibold mb-4">Le Mie Richieste</h2>
-            {myRequests?.length > 0 ? (
-              <div className="space-y-4">
-                {myRequests.slice(0, 5).map((req) => (
-                  <div key={req.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="font-medium">{req.leave_type_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {req.start_date} - {req.end_date} · {req.hours}h/giorno
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      req.status === 'approved' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' :
-                      req.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/30 text-red-600' :
-                      'bg-orange-100 dark:bg-orange-900/30 text-orange-600'
-                    }`}>
-                      {req.status === 'approved' ? 'Approvata' : req.status === 'rejected' ? 'Rifiutata' : 'In Attesa'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">Nessuna richiesta</p>
-            )}
-          </div>
-        )}
-
-        {/* Quick Calendar Preview */}
-        <div className="bg-card p-6 rounded-xl border">
-          <h2 className="text-lg font-semibold mb-4">Prossime Assenze</h2>
-          <MiniCalendar />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ============== MINI CALENDAR ==============
 function MiniCalendar() {
