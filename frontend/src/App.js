@@ -973,56 +973,109 @@ function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar - Always visible on desktop, hidden drawer on mobile */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-card border-r flex flex-col
-        transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0 md:static md:z-auto
-      `}>
-        <div className="p-6 flex-1 overflow-y-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <RocketLogo size={36} />
-            <span className="font-bold text-lg" style={{fontFamily: 'Inter, sans-serif'}}>
-              <span style={{fontWeight: 600}}>Power</span>
-              <span style={{fontWeight: 700}}>Leave</span>
-            </span>
+    <div className="min-h-screen bg-background">
+      {/* Desktop Layout with Sidebar */}
+      <div className="hidden md:flex">
+        {/* Desktop Sidebar - Always visible */}
+        <aside className="w-64 h-screen bg-card border-r flex flex-col sticky top-0">
+          <div className="p-6 flex-1 overflow-y-auto">
+            <div className="flex items-center gap-3 mb-8">
+              <RocketLogo size={36} />
+              <span className="font-bold text-lg" style={{fontFamily: 'Inter, sans-serif'}}>
+                <span style={{fontWeight: 600}}>Power</span>
+                <span style={{fontWeight: 700}}>Leave</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg mb-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
+                <span className="text-white font-semibold">{user?.name?.[0] || 'U'}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{user?.name}</p>
+                <p className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+              </div>
+            </div>
+
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  data-testid={`nav-${item.id}`}
+                  onClick={() => setCurrentPage(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                    currentPage === item.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </nav>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-muted rounded-lg mb-6">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
-              <span className="text-white font-semibold">{user?.name?.[0] || 'U'}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+          <div className="p-4 border-t shrink-0">
+            <button
+              data-testid="new-request-btn"
+              onClick={() => setShowRequestForm(true)}
+              className="w-full btn-primary flex items-center justify-center gap-2 mb-3"
+            >
+              <Icons.Plus />
+              Nuova Richiesta
+            </button>
+            <button
+              data-testid="logout-btn"
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Icons.Logout />
+              Esci
+            </button>
+          </div>
+        </aside>
+
+        {/* Desktop Main Content */}
+        <main className="flex-1 flex flex-col min-h-screen">
+          <div className="flex items-center justify-between px-8 py-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-30">
+            <h2 className="text-lg font-semibold text-foreground">
+              {currentPage === 'dashboard' && 'Dashboard'}
+              {currentPage === 'calendar' && 'Calendario'}
+              {currentPage === 'stats' && 'Statistiche'}
+              {currentPage === 'requests' && 'Richieste Ferie'}
+              {currentPage === 'announcements' && 'Bacheca Annunci'}
+              {currentPage === 'closures' && 'Chiusure Aziendali'}
+              {currentPage === 'team' && 'Team'}
+              {currentPage === 'settings' && 'Impostazioni'}
+            </h2>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">Ciao, {user?.name?.split(' ')[0]}</span>
+              <ThemeToggle />
             </div>
           </div>
+          <div className="flex-1 overflow-auto p-8">
+            {currentPage === 'dashboard' && <DashboardContent stats={stats} pendingRequests={pendingRequests} myRequests={myRequests} user={user} onReview={handleReview} />}
+            {currentPage === 'calendar' && <CalendarPage />}
+            {currentPage === 'stats' && <StatsPage />}
+            {currentPage === 'requests' && <RequestsPage user={user} />}
+            {currentPage === 'announcements' && <AnnouncementsPage user={user} />}
+            {currentPage === 'closures' && <ClosuresPage user={user} />}
+            {currentPage === 'team' && <TeamPage />}
+            {currentPage === 'settings' && <SettingsPage />}
+          </div>
+        </main>
+      </div>
 
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                data-testid={`nav-${item.id}`}
-                onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                  currentPage === item.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="p-4 border-t shrink-0">
-          <button
-            data-testid="new-request-btn"
-            onClick={() => setShowRequestForm(true)}
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
+        )}
+        
+        {/* Mobile Sidebar Drawer */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r flex flex-col transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             className="w-full btn-primary flex items-center justify-center gap-2 mb-3"
           >
             <Icons.Plus />
