@@ -1021,21 +1021,96 @@ function Dashboard() {
   );
 }
 
-// ============== DASHBOARD CONTENT ==============
+// ============== DASHBOARD CONTENT (Full Design) ==============
 function DashboardContent({ stats, pendingRequests, myRequests, user, onReview }) {
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [balances, setBalances] = useState([]);
+  const [allRequests, setAllRequests] = useState([]);
+  const [team, setTeam] = useState([]);
+  const [formData, setFormData] = useState({
+    leave_type_id: '',
+    start_date: '',
+    end_date: '',
+    hours: '8',
+    notes: '',
+  });
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [monthLeaves, setMonthLeaves] = useState([]);
+
+  useEffect(() => {
+    loadExtraData();
+  }, []);
+
+  useEffect(() => {
+    loadCalendarData();
+  }, [currentMonth]);
+
+  const loadExtraData = async () => {
+    try {
+      const [typesData, balancesData, teamData, requestsData] = await Promise.all([
+        api.get('/api/leave-types'),
+        api.get('/api/leave-balances'),
+        api.get('/api/team'),
+        api.get('/api/leave-requests'),
+      ]);
+      setLeaveTypes(typesData);
+      setBalances(balancesData);
+      setTeam(teamData);
+      setAllRequests(requestsData);
+    } catch {}
+  };
+
+  const loadCalendarData = async () => {
+    try {
+      const data = await api.get(`/api/calendar/monthly?year=${currentMonth.getFullYear()}&month=${currentMonth.getMonth() + 1}`);
+      setMonthLeaves(data);
+    } catch {}
+  };
+
+  const handleSubmitRequest = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/leave-requests', formData);
+      toast.success('Richiesta inviata con successo!');
+      setFormData({ leave_type_id: '', start_date: '', end_date: '', hours: '8', notes: '' });
+      loadExtraData();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+  // Get balances per user (aggregated)
+  const userBalances = team.map(member => {
+    const memberBalances = balances.filter(b => b.user_id === member.user_id);
+    const totalDays = memberBalances.reduce((sum, b) => sum + (b.total_days || 0), 0);
+    const usedDays = memberBalances.reduce((sum, b) => sum + (b.used_days || 0), 0);
+    return {
+      ...member,
+      totalDays,
+      usedDays,
+      availableDays: totalDays - usedDays
+    };
+  });
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">Bentornato, {user?.name?.split(' ')[0]}!</h1>
-        <p className="text-muted-foreground">Ecco la panoramica delle ferie del tuo team</p>
+        <h1 className="text-4xl font-bold mb-2">Power Leave</h1>
+        <p className="text-muted-foreground">Pianifica, visualizza e approva le ferie del tuo team con facilità.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div data-testid="stat-approved" className="bg-card p-6 rounded-xl border">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600">
-              <Icons.Check />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="bg-card p-6 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg" style={{backgroundColor: 'rgba(59, 130, 246, 0.1)'}}>
+              <Icons.Plane />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Ferie Approvate</p>
@@ -1043,81 +1118,252 @@ function DashboardContent({ stats, pendingRequests, myRequests, user, onReview }
             </div>
           </div>
         </div>
-        <div data-testid="stat-pending" className="bg-card p-6 rounded-xl border">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center text-orange-600">
+        <div className="bg-card p-6 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg" style={{backgroundColor: 'rgba(249, 115, 22, 0.1)'}}>
               <Icons.Clock />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">In Attesa</p>
+              <p className="text-sm text-muted-foreground">Richieste in Sospeso</p>
               <p className="text-2xl font-bold">{stats?.pending_count || 0}</p>
             </div>
           </div>
         </div>
-        <div data-testid="stat-available" className="bg-card p-6 rounded-xl border">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-600">
+        <div className="bg-card p-6 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg" style={{backgroundColor: 'rgba(34, 197, 94, 0.1)'}}>
               <Icons.Users />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Staff Disponibile</p>
+              <p className="text-sm text-muted-foreground">Staff Disponibile Oggi</p>
               <p className="text-2xl font-bold">{stats?.available_staff || 0}/{stats?.total_staff || 0}</p>
             </div>
           </div>
         </div>
-        <div data-testid="stat-utilization" className="bg-card p-6 rounded-xl border">
+        <div className="bg-card p-6 rounded-xl border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Utilizzo Ferie</p>
+              <p className="text-sm text-muted-foreground">Utilizzo Ferie Team</p>
               <p className="text-2xl font-bold">{stats?.utilization_rate || 0}%</p>
             </div>
-            <div className="relative w-14 h-14">
+            <div className="relative w-12 h-12">
               <svg className="w-full h-full -rotate-90">
-                <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted opacity-20" />
-                <circle
-                  cx="28" cy="28" r="24"
-                  fill="none" stroke="currentColor" strokeWidth="4"
-                  strokeDasharray={`${((stats?.utilization_rate || 0) / 100) * 150.8} 150.8`}
-                  className="text-primary"
-                  strokeLinecap="round"
-                />
+                <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted opacity-20" />
+                <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4"
+                  strokeDasharray={`${((stats?.utilization_rate || 0) / 100) * 125.6} 125.6`}
+                  className="text-primary" strokeLinecap="round" />
               </svg>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Approvals (Admin) or My Requests (User) */}
-        {user?.role === 'admin' ? (
-          <div className="bg-card p-6 rounded-xl border">
-            <h2 className="text-lg font-semibold mb-4">Richieste da Approvare</h2>
-            {pendingRequests?.length > 0 ? (
-              <div className="space-y-4">
-                {pendingRequests.slice(0, 5).map((req) => (
-                  <div key={req.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                        <span className="text-primary font-semibold">{req.user_name?.[0]}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">{req.user_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {req.leave_type_name} · {req.start_date} - {req.end_date}
-                        </p>
-                      </div>
+      {/* Request Form + Pending Approvals */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Request Form */}
+        <div className="xl:col-span-2 bg-card p-6 rounded-xl border">
+          <h2 className="text-lg font-semibold mb-4">Invia una richiesta</h2>
+          <form onSubmit={handleSubmitRequest}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Tipo di assenza</label>
+                <select
+                  value={formData.leave_type_id}
+                  onChange={(e) => setFormData({...formData, leave_type_id: e.target.value})}
+                  className="w-full px-4 py-2 rounded-lg border bg-background"
+                  required
+                >
+                  <option value="">Seleziona tipo</option>
+                  {leaveTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Data Inizio</label>
+                <input type="date" value={formData.start_date}
+                  onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                  className="w-full px-4 py-2 rounded-lg border bg-background" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Data Fine</label>
+                <input type="date" value={formData.end_date}
+                  onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                  className="w-full px-4 py-2 rounded-lg border bg-background" required />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Ore per giorno</label>
+                <select value={formData.hours}
+                  onChange={(e) => setFormData({...formData, hours: e.target.value})}
+                  className="w-full px-4 py-2 rounded-lg border bg-background">
+                  <option value="2">2 ore</option>
+                  <option value="4">4 ore (mezza giornata)</option>
+                  <option value="8">8 ore (giornata intera)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Note aggiuntive</label>
+                <input type="text" value={formData.notes}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  className="w-full px-4 py-2 rounded-lg border bg-background"
+                  placeholder="Opzionale..." />
+              </div>
+            </div>
+            <button type="submit" className="btn-primary flex items-center gap-2">
+              <Icons.Plane /> Invia Richiesta
+            </button>
+          </form>
+        </div>
+
+        {/* Pending Approvals */}
+        <div className="bg-card p-6 rounded-xl border">
+          <h2 className="text-lg font-semibold mb-4">Richieste da Approvare</h2>
+          {pendingRequests?.length > 0 ? (
+            <div className="space-y-3">
+              {pendingRequests.map(req => (
+                <div key={req.id} className="p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
+                      <span className="text-white text-sm font-semibold">{req.user_name?.[0]}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        data-testid={`approve-${req.id}`}
-                        onClick={() => onReview(req.id, 'approved')}
-                        className="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                      >
-                        <Icons.Check />
-                      </button>
-                      <button
-                        data-testid={`reject-${req.id}`}
-                        onClick={() => onReview(req.id, 'rejected')}
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{req.user_name}</p>
+                      <p className="text-xs text-muted-foreground">{req.leave_type_name}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{req.start_date} → {req.end_date}</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => onReview(req.id, 'approved')}
+                      className="flex-1 py-2 rounded-lg text-sm font-medium text-white"
+                      style={{backgroundColor: '#22C55E'}}>
+                      Approva
+                    </button>
+                    <button onClick={() => onReview(req.id, 'rejected')}
+                      className="flex-1 py-2 rounded-lg text-sm font-medium text-white"
+                      style={{backgroundColor: '#EF4444'}}>
+                      Rifiuta
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-4">Nessuna richiesta in attesa</p>
+          )}
+        </div>
+      </div>
+
+      {/* Team Balances */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Il mio saldo ferie</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {userBalances.map(member => (
+            <div key={member.user_id} className="bg-card p-4 rounded-xl border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
+                  <span className="text-white font-semibold">{member.name?.[0]}</span>
+                </div>
+                <div>
+                  <p className="font-medium">{member.name}</p>
+                  <p className="text-xs text-muted-foreground">{member.role === 'admin' ? 'Team Leader' : 'Team Member'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-xs text-muted-foreground">In Cda</p>
+                  <p className="text-lg font-bold" style={{color: '#3B82F6'}}>{member.totalDays}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Usate</p>
+                  <p className="text-lg font-bold" style={{color: '#EF4444'}}>{member.usedDays}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Disponibili</p>
+                  <p className="text-lg font-bold" style={{color: '#22C55E'}}>{member.availableDays}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="bg-card p-6 rounded-xl border">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Calendario {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+              className="p-2 hover:bg-muted rounded-lg"><Icons.ChevronLeft /></button>
+            <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+              className="p-2 hover:bg-muted rounded-lg"><Icons.ChevronRight /></button>
+          </div>
+        </div>
+        
+        {/* Calendar Legend */}
+        <div className="flex flex-wrap gap-4 mb-4 text-xs">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{backgroundColor: '#22C55E'}}></span> Approvate</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{backgroundColor: '#F97316'}}></span> In Attesa</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{backgroundColor: '#EF4444'}}></span> Rifiutate</span>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map(d => (
+            <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2">{d}</div>
+          ))}
+          {Array.from({ length: startOffset }).map((_, i) => <div key={`e-${i}`} />)}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1;
+            const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayLeaves = monthLeaves.filter(l => l.start_date <= dateStr && l.end_date >= dateStr);
+            const isToday = day === new Date().getDate() && currentMonth.getMonth() === new Date().getMonth();
+            const isWeekend = (startOffset + i) % 7 >= 5;
+
+            return (
+              <div key={day} className={`min-h-[60px] p-1 rounded border text-xs ${isToday ? 'ring-2 ring-primary' : ''} ${isWeekend ? 'bg-muted/30' : ''}`}>
+                <span className={`font-medium ${isToday ? 'text-primary' : ''}`}>{day}</span>
+                {dayLeaves.slice(0, 2).map((l, idx) => (
+                  <div key={idx} className="mt-1 px-1 py-0.5 rounded truncate text-white text-[10px]"
+                    style={{backgroundColor: l.status === 'approved' ? '#22C55E' : l.status === 'pending' ? '#F97316' : '#9CA3AF'}}>
+                    {l.user_name?.split(' ')[0]}
+                  </div>
+                ))}
+                {dayLeaves.length > 2 && <div className="text-[10px] text-muted-foreground">+{dayLeaves.length - 2}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Usage Summary Table */}
+      <div className="bg-card p-6 rounded-xl border">
+        <h2 className="text-lg font-semibold mb-4">Riepilogo Utilizzo Ferie</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-3 px-4">Dipendente</th>
+                <th className="text-left py-3 px-4">Tipo Assenza</th>
+                <th className="text-right py-3 px-4">Giorni Utilizzati</th>
+                <th className="text-right py-3 px-4">Giorni Residui</th>
+              </tr>
+            </thead>
+            <tbody>
+              {balances.map((b, i) => (
+                <tr key={i} className="border-b hover:bg-muted/50">
+                  <td className="py-3 px-4">{b.user_name}</td>
+                  <td className="py-3 px-4">{b.leave_type_name}</td>
+                  <td className="py-3 px-4 text-right" style={{color: '#EF4444'}}>{b.used_days}</td>
+                  <td className="py-3 px-4 text-right" style={{color: '#22C55E'}}>{b.remaining_days}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
                         className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                       >
                         <Icons.X />
