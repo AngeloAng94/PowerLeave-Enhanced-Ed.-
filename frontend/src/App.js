@@ -2045,6 +2045,529 @@ function SettingsPage() {
   );
 }
 
+// ============== ANNOUNCEMENTS PAGE (BACHECA) ==============
+function AnnouncementsPage({ user }) {
+  const [announcements, setAnnouncements] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ title: '', content: '', priority: 'normal' });
+  const [editingId, setEditingId] = useState(null);
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+
+  const loadAnnouncements = async () => {
+    try {
+      const data = await api.get('/api/announcements');
+      setAnnouncements(data);
+    } catch (err) {
+      toast.error('Errore nel caricamento annunci');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await api.put(`/api/announcements/${editingId}`, formData);
+        toast.success('Annuncio aggiornato!');
+      } else {
+        await api.post('/api/announcements', formData);
+        toast.success('Annuncio pubblicato!');
+      }
+      setShowForm(false);
+      setFormData({ title: '', content: '', priority: 'normal' });
+      setEditingId(null);
+      loadAnnouncements();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Eliminare questo annuncio?')) return;
+    try {
+      await api.delete(`/api/announcements/${id}`);
+      toast.success('Annuncio eliminato');
+      loadAnnouncements();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleEdit = (announcement) => {
+    setFormData({
+      title: announcement.title,
+      content: announcement.content,
+      priority: announcement.priority
+    });
+    setEditingId(announcement.id);
+    setShowForm(true);
+  };
+
+  const priorityColors = {
+    high: 'bg-red-500',
+    normal: 'bg-blue-500',
+    low: 'bg-gray-500'
+  };
+
+  const priorityLabels = {
+    high: 'Urgente',
+    normal: 'Normale',
+    low: 'Bassa'
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold">Bacheca Annunci</h1>
+          <p className="text-muted-foreground">Comunicazioni aziendali e avvisi importanti</p>
+        </div>
+        {user?.role === 'admin' && (
+          <button
+            data-testid="new-announcement-btn"
+            onClick={() => { setShowForm(true); setEditingId(null); setFormData({ title: '', content: '', priority: 'normal' }); }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Icons.Plus /> Nuovo Annuncio
+          </button>
+        )}
+      </div>
+
+      {/* Announcements list */}
+      <div className="space-y-4">
+        {announcements.length === 0 ? (
+          <div className="bg-card p-8 rounded-xl border text-center">
+            <p className="text-muted-foreground">Nessun annuncio presente</p>
+          </div>
+        ) : (
+          announcements.map((announcement) => (
+            <div key={announcement.id} className="bg-card p-6 rounded-xl border relative overflow-hidden">
+              <div className={`absolute top-0 left-0 w-1 h-full ${priorityColors[announcement.priority]}`}></div>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pl-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`px-2 py-0.5 rounded text-xs text-white ${priorityColors[announcement.priority]}`}>
+                      {priorityLabels[announcement.priority]}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(announcement.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{announcement.title}</h3>
+                  <p className="text-muted-foreground whitespace-pre-wrap">{announcement.content}</p>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Pubblicato da {announcement.author_name}
+                  </p>
+                </div>
+                {user?.role === 'admin' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(announcement)}
+                      className="p-2 hover:bg-muted rounded-lg text-muted-foreground"
+                      title="Modifica"
+                    >
+                      <Icons.Settings />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(announcement.id)}
+                      className="p-2 hover:bg-destructive/10 rounded-lg text-destructive"
+                      title="Elimina"
+                    >
+                      <Icons.X />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-2xl w-full max-w-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">{editingId ? 'Modifica Annuncio' : 'Nuovo Annuncio'}</h2>
+              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-muted rounded-lg">
+                <Icons.X />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Titolo</label>
+                <input
+                  data-testid="announcement-title"
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border bg-background"
+                  placeholder="Oggetto dell'annuncio"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Contenuto</label>
+                <textarea
+                  data-testid="announcement-content"
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border bg-background resize-none"
+                  rows={5}
+                  placeholder="Scrivi il messaggio..."
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Priorità</label>
+                <select
+                  data-testid="announcement-priority"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border bg-background"
+                >
+                  <option value="low">Bassa</option>
+                  <option value="normal">Normale</option>
+                  <option value="high">Urgente</option>
+                </select>
+              </div>
+              <button type="submit" className="w-full btn-primary">
+                {editingId ? 'Salva Modifiche' : 'Pubblica Annuncio'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============== CLOSURES PAGE (CHIUSURE AZIENDALI) ==============
+function ClosuresPage({ user }) {
+  const [closures, setClosures] = useState([]);
+  const [exceptions, setExceptions] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [showExceptionForm, setShowExceptionForm] = useState(false);
+  const [selectedClosureId, setSelectedClosureId] = useState(null);
+  const [formData, setFormData] = useState({
+    start_date: '',
+    end_date: '',
+    reason: '',
+    type: 'shutdown',
+    auto_leave: true,
+    allow_exceptions: true
+  });
+  const [exceptionReason, setExceptionReason] = useState('');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const year = new Date().getFullYear();
+      const [closuresData, exceptionsData] = await Promise.all([
+        api.get(`/api/closures?year=${year}`),
+        api.get('/api/closures/exceptions')
+      ]);
+      setClosures(closuresData);
+      setExceptions(exceptionsData);
+    } catch (err) {
+      toast.error('Errore nel caricamento');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/closures', formData);
+      toast.success('Chiusura aziendale creata!');
+      setShowForm(false);
+      setFormData({
+        start_date: '',
+        end_date: '',
+        reason: '',
+        type: 'shutdown',
+        auto_leave: true,
+        allow_exceptions: true
+      });
+      loadData();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Eliminare questa chiusura?')) return;
+    try {
+      await api.delete(`/api/closures/${id}`);
+      toast.success('Chiusura eliminata');
+      loadData();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleRequestException = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/api/closures/${selectedClosureId}/exception`, { reason: exceptionReason });
+      toast.success('Richiesta di deroga inviata!');
+      setShowExceptionForm(false);
+      setExceptionReason('');
+      loadData();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleReviewException = async (exceptionId, status) => {
+    try {
+      await api.put(`/api/closures/exceptions/${exceptionId}/review`, { status });
+      toast.success(status === 'approved' ? 'Deroga approvata!' : 'Deroga rifiutata');
+      loadData();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const typeLabels = {
+    shutdown: 'Chiusura Aziendale',
+    holiday: 'Festività'
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold">Chiusure Aziendali</h1>
+          <p className="text-muted-foreground">Periodi di ferie obbligatorie e festività</p>
+        </div>
+        {user?.role === 'admin' && (
+          <button
+            data-testid="new-closure-btn"
+            onClick={() => setShowForm(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Icons.Plus /> Nuova Chiusura
+          </button>
+        )}
+      </div>
+
+      {/* Closures list */}
+      <div className="space-y-4 mb-8">
+        <h2 className="text-lg font-semibold">Prossime Chiusure</h2>
+        {closures.filter(c => c.org_id || c.type === 'shutdown').length === 0 ? (
+          <div className="bg-card p-8 rounded-xl border text-center">
+            <p className="text-muted-foreground">Nessuna chiusura programmata</p>
+          </div>
+        ) : (
+          closures.filter(c => c.org_id || c.type === 'shutdown').map((closure) => (
+            <div key={closure.id} className="bg-card p-6 rounded-xl border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-lg" style={{ backgroundColor: closure.type === 'holiday' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(249, 115, 22, 0.1)' }}>
+                    <Icons.Calendar />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{closure.reason}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {closure.start_date === closure.end_date 
+                        ? formatDate(closure.start_date || closure.date)
+                        : `${formatDate(closure.start_date || closure.date)} - ${formatDate(closure.end_date || closure.date)}`}
+                    </p>
+                    <span className={`text-xs px-2 py-0.5 rounded mt-1 inline-block ${
+                      closure.type === 'holiday' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                    }`}>
+                      {typeLabels[closure.type]}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {user?.role !== 'admin' && closure.allow_exceptions && closure.org_id && (
+                    <button
+                      onClick={() => { setSelectedClosureId(closure.id); setShowExceptionForm(true); }}
+                      className="btn-outline text-sm py-2 px-4"
+                    >
+                      Richiedi Deroga
+                    </button>
+                  )}
+                  {user?.role === 'admin' && closure.org_id && (
+                    <button
+                      onClick={() => handleDelete(closure.id)}
+                      className="p-2 hover:bg-destructive/10 rounded-lg text-destructive"
+                    >
+                      <Icons.X />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Holidays */}
+      <div className="space-y-4 mb-8">
+        <h2 className="text-lg font-semibold">Festività Nazionali {new Date().getFullYear()}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {closures.filter(c => !c.org_id && c.type === 'holiday').map((holiday) => (
+            <div key={holiday.id} className="bg-card p-4 rounded-xl border flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                <Icons.Calendar />
+              </div>
+              <div>
+                <p className="font-medium text-sm">{holiday.reason}</p>
+                <p className="text-xs text-muted-foreground">{formatDate(holiday.date)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Exception Requests (Admin view) */}
+      {user?.role === 'admin' && exceptions.filter(e => e.status === 'pending').length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Richieste di Deroga</h2>
+          {exceptions.filter(e => e.status === 'pending').map((exception) => (
+            <div key={exception.id} className="bg-card p-4 rounded-xl border flex items-center justify-between">
+              <div>
+                <p className="font-medium">{exception.user_name}</p>
+                <p className="text-sm text-muted-foreground">{exception.reason}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleReviewException(exception.id, 'approved')}
+                  className="py-2 px-4 rounded-lg text-sm font-medium text-white bg-green-500 hover:bg-green-600"
+                >
+                  Approva
+                </button>
+                <button
+                  onClick={() => handleReviewException(exception.id, 'rejected')}
+                  className="py-2 px-4 rounded-lg text-sm font-medium text-white bg-red-500 hover:bg-red-600"
+                >
+                  Rifiuta
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* New Closure Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-2xl w-full max-w-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">Nuova Chiusura Aziendale</h2>
+              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-muted rounded-lg">
+                <Icons.X />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Motivo</label>
+                <input
+                  data-testid="closure-reason"
+                  type="text"
+                  value={formData.reason}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border bg-background"
+                  placeholder="Es: Chiusura estiva"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Data Inizio</label>
+                  <input
+                    data-testid="closure-start"
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border bg-background"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Data Fine</label>
+                  <input
+                    data-testid="closure-end"
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border bg-background"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.auto_leave}
+                    onChange={(e) => setFormData({ ...formData, auto_leave: e.target.checked })}
+                    className="w-5 h-5 rounded border-gray-300"
+                  />
+                  <span className="text-sm">Crea automaticamente richieste ferie per tutti</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.allow_exceptions}
+                    onChange={(e) => setFormData({ ...formData, allow_exceptions: e.target.checked })}
+                    className="w-5 h-5 rounded border-gray-300"
+                  />
+                  <span className="text-sm">Permetti richieste di deroga</span>
+                </label>
+              </div>
+              <button type="submit" className="w-full btn-primary">
+                Crea Chiusura
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Exception Request Modal */}
+      {showExceptionForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-2xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">Richiedi Deroga</h2>
+              <button onClick={() => setShowExceptionForm(false)} className="p-2 hover:bg-muted rounded-lg">
+                <Icons.X />
+              </button>
+            </div>
+            <form onSubmit={handleRequestException} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Motivazione</label>
+                <textarea
+                  value={exceptionReason}
+                  onChange={(e) => setExceptionReason(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border bg-background resize-none"
+                  rows={4}
+                  placeholder="Spiega perché hai bisogno di lavorare durante la chiusura..."
+                  required
+                />
+              </div>
+              <button type="submit" className="w-full btn-primary">
+                Invia Richiesta
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ============== MAIN APP ==============
 function App() {
   return (
