@@ -1,18 +1,107 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { Toaster, toast } from 'sonner';
 
 // ============== CONSTANTS ==============
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const LOGO_URL = 'https://customer-assets.emergentagent.com/job_hr-powerup/artifacts/roxglb36_ChatGPT%20Image%2017%20feb%202026%2C%2010_27_22.png';
 
+// ============== NOTIFICATION SYSTEM ==============
+const NotificationService = {
+  permission: 'default',
+  
+  async requestPermission() {
+    if (!('Notification' in window)) {
+      console.log('Browser non supporta notifiche');
+      return false;
+    }
+    
+    if (Notification.permission === 'granted') {
+      this.permission = 'granted';
+      return true;
+    }
+    
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      this.permission = permission;
+      return permission === 'granted';
+    }
+    
+    return false;
+  },
+  
+  async sendNotification(title, options = {}) {
+    // Always show toast
+    const toastType = options.type || 'info';
+    if (toastType === 'success') {
+      toast.success(title, { description: options.body });
+    } else if (toastType === 'error') {
+      toast.error(title, { description: options.body });
+    } else {
+      toast(title, { description: options.body });
+    }
+    
+    // Try browser notification
+    if (this.permission === 'granted' || await this.requestPermission()) {
+      try {
+        new Notification(title, {
+          body: options.body,
+          icon: LOGO_URL,
+          badge: LOGO_URL,
+          tag: options.tag || 'powerleave',
+          ...options
+        });
+      } catch (e) {
+        console.log('Notifica browser non disponibile:', e);
+      }
+    }
+  },
+  
+  // Specific notification types
+  leaveApproved(userName, dates) {
+    this.sendNotification('✅ Richiesta Approvata!', {
+      body: `La richiesta ferie di ${userName} (${dates}) è stata approvata`,
+      type: 'success',
+      tag: 'leave-approved'
+    });
+  },
+  
+  leaveRejected(userName, dates) {
+    this.sendNotification('❌ Richiesta Rifiutata', {
+      body: `La richiesta ferie di ${userName} (${dates}) è stata rifiutata`,
+      type: 'error', 
+      tag: 'leave-rejected'
+    });
+  },
+  
+  newLeaveRequest(userName, dates) {
+    this.sendNotification('📋 Nuova Richiesta Ferie', {
+      body: `${userName} ha richiesto ferie per ${dates}`,
+      type: 'info',
+      tag: 'new-leave'
+    });
+  },
+  
+  closureException(userName, status) {
+    const approved = status === 'approved';
+    this.sendNotification(approved ? '✅ Deroga Approvata' : '❌ Deroga Rifiutata', {
+      body: `La richiesta di deroga di ${userName} è stata ${approved ? 'approvata' : 'rifiutata'}`,
+      type: approved ? 'success' : 'error',
+      tag: 'closure-exception'
+    });
+  }
+};
+
 // ============== CONTEXT ==============
 const AuthContext = createContext(null);
+const NotificationContext = createContext(NotificationService);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
+
+export const useNotifications = () => useContext(NotificationContext);
 
 // ============== API HELPERS ==============
 const api = {
