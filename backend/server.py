@@ -62,11 +62,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS - Allow all origins for flexibility
+# CORS - Allow credentials for session persistence
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://powerleave-staging.preview.emergentagent.com"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

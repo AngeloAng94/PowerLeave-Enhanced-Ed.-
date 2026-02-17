@@ -27,6 +27,7 @@ const api = {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
+      credentials: 'include',
     });
 
     if (!response.ok) {
