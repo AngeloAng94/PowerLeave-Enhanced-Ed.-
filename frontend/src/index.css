@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   --radius: 0.5rem;
@@ -8,41 +8,45 @@
   --card-foreground: #0F172A;
   --popover: #FFFFFF;
   --popover-foreground: #0F172A;
-  --primary: #0F4C5C;
-  --primary-foreground: #F8FAFC;
-  --secondary: #E07A5F;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --secondary: #0F172A;
   --secondary-foreground: #FFFFFF;
   --muted: #F1F5F9;
   --muted-foreground: #64748B;
-  --accent: #F8FAFC;
-  --accent-foreground: #0F4C5C;
+  --accent: #EFF6FF;
+  --accent-foreground: #2563EB;
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
   --border: #E2E8F0;
   --input: #E2E8F0;
-  --ring: #0F4C5C;
+  --ring: #2563EB;
+  --navy: #0F172A;
+  --blue: #2563EB;
 }
 
 .dark {
-  --background: #020617;
+  --background: #0F172A;
   --foreground: #F8FAFC;
-  --card: #0F172A;
+  --card: #1E293B;
   --card-foreground: #F8FAFC;
-  --popover: #0F172A;
+  --popover: #1E293B;
   --popover-foreground: #F8FAFC;
-  --primary: #14B8A6;
-  --primary-foreground: #020617;
-  --secondary: #E07A5F;
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2563EB;
   --secondary-foreground: #FFFFFF;
-  --muted: #1E293B;
+  --muted: #334155;
   --muted-foreground: #94A3B8;
-  --accent: #1E293B;
+  --accent: #1E3A5F;
   --accent-foreground: #F8FAFC;
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
-  --border: #1E293B;
-  --input: #1E293B;
-  --ring: #14B8A6;
+  --border: #334155;
+  --input: #334155;
+  --ring: #3B82F6;
+  --navy: #0F172A;
+  --blue: #3B82F6;
 }
 
 * {
