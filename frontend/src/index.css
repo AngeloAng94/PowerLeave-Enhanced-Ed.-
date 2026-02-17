@@ -448,6 +448,18 @@ input:focus, select:focus, textarea:focus {
 .dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.2); }
 .dark .bg-amber-100 { background-color: rgba(245, 158, 11, 0.2); }
 
+/* Dark mode text colors with better contrast */
+.dark .text-green-600 { color: #4ADE80; }
+.dark .text-orange-600 { color: #FB923C; }
+.dark .text-blue-600 { color: #60A5FA; }
+.dark .text-red-600 { color: #F87171; }
+.dark .text-amber-600 { color: #FBBF24; }
+.dark .text-green-700 { color: #4ADE80; }
+.dark .text-orange-700 { color: #FB923C; }
+.dark .text-red-700 { color: #F87171; }
+.dark .text-amber-700 { color: #FBBF24; }
+.dark .text-gray-900 { color: #1F2937; }
+
 .ring-2 { box-shadow: 0 0 0 2px var(--ring); }
 .ring-primary { --ring: var(--primary); }
 
