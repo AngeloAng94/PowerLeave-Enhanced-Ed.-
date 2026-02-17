@@ -1,13 +1,14 @@
 # PowerLeave - Product Requirements Document
 
 ## Original Problem Statement
-Convertire PowerLeave in una piattaforma SaaS moderna per PMI italiane, replicando fedelmente il design originale di Manus con tutte le funzionalità.
+Convertire PowerLeave in una piattaforma SaaS moderna per PMI italiane con design raffinato, sistema di gestione ferie completo, bacheca annunci e gestione chiusure aziendali.
 
 ## Architecture
 - **Frontend**: React 18 + CSS Custom (Inter font, colori brand)
 - **Backend**: FastAPI + MongoDB (Motor async)
 - **Auth**: JWT + Emergent Google OAuth
 - **Design**: Navy (#0F172A) + Blue (#2563EB), logo razzo
+- **Theme**: Light/Dark mode con toggle animato
 
 ## Demo Users
 | Email | Password | Ruolo |
@@ -19,32 +20,86 @@ Convertire PowerLeave in una piattaforma SaaS moderna per PMI italiane, replican
 
 ## What's Been Implemented (Feb 2026)
 
-### Dashboard Completo (come originale Manus)
-- ✅ Header "Power Leave" con sottotitolo italiano
-- ✅ 4 Stats Cards: Ferie Approvate, Richieste in Sospeso, Staff Disponibile, Utilizzo
-- ✅ Form inline "Invia una richiesta" (Tipo, Date, Ore, Note)
-- ✅ Admin: "Richieste da Approvare" con pulsanti Approva/Rifiuta
-- ✅ User: "Le mie Richieste" (senza pulsanti approvazione)
-- ✅ "Saldo ferie Team" con cards per ogni dipendente (In Cda, Usate, Disponibili)
-- ✅ Calendario integrato con legenda
-- ✅ Tabella "Riepilogo Utilizzo Ferie"
+### Core Features
+- ✅ Sistema autenticazione JWT + Google OAuth
+- ✅ Persistenza sessione (credentials: include + CORS fix)
+- ✅ Dashboard completa con stats, form richieste, approvazioni
+- ✅ Calendario ferie condiviso
+- ✅ Gestione team (inviti, ruoli)
+- ✅ Saldo ferie per utente e tipo assenza
 
-### Pagine Aggiuntive
-- ✅ Calendario (full month view)
-- ✅ Stats (statistiche dettagliate)
-- ✅ Richieste Ferie (lista con filtri)
-- ✅ Team (gestione membri)
-- ✅ Impostazioni
+### New Features (Sessione Corrente)
+- ✅ **Toggle Light/Dark Mode** - Animato nell'header con icona luna/sole
+- ✅ **Bacheca Annunci** - CRUD completo, priorità (Urgente/Normale/Bassa), solo admin può creare
+- ✅ **Chiusure Aziendali** - Periodi di ferie obbligatorie con:
+  - Creazione automatica richieste ferie per tutti
+  - Sistema di deroghe (richiesta/approvazione)
+  - Festività italiane 2026 pre-caricate
+- ✅ **Tema Dark migliorato** - Colori più profondi e raffinati
 
-### Sidebar Menu
-- Dashboard, Calendario, Stats, Richieste Ferie, Team, Impostazioni
+### Pages
+- Dashboard (stats, form, approvazioni)
+- Calendario (vista mensile, legenda colori)
+- Richieste Ferie (lista con filtri)
+- Bacheca Annunci (comunicazioni aziendali)
+- Chiusure Aziendali (festività, shutdown, deroghe)
+- Team (gestione membri)
+- Statistiche (report utilizzo)
+- Impostazioni (profilo, organizzazione)
 
-## Test Results
-- Backend: 100% (11 endpoints)
-- Frontend: 95%
-- Integration: 100%
+## API Endpoints
 
-## Next Tasks
-- [ ] Notifiche email
+### Auth
+- POST /api/auth/register
+- POST /api/auth/login
+- POST /api/auth/session (OAuth)
+- GET /api/auth/me
+- POST /api/auth/logout
+
+### Leave Management
+- GET/POST /api/leave-requests
+- PUT /api/leave-requests/{id}/review
+- GET /api/leave-types
+- GET /api/leave-balances
+- GET /api/stats
+- GET /api/calendar/monthly
+
+### Announcements
+- GET /api/announcements
+- POST /api/announcements (admin)
+- PUT /api/announcements/{id} (admin)
+- DELETE /api/announcements/{id} (admin)
+
+### Closures
+- GET /api/closures
+- POST /api/closures (admin)
+- DELETE /api/closures/{id} (admin)
+- POST /api/closures/{id}/exception
+- GET /api/closures/exceptions
+- PUT /api/closures/exceptions/{id}/review (admin)
+
+### Team
+- GET /api/team
+- POST /api/team/invite (admin)
+- PUT /api/team/{id} (admin)
+- DELETE /api/team/{id} (admin)
+
+## Test Results (Sessione Corrente)
+- Backend: 100% (22 test passati)
+- Frontend: 100% (tutti i test E2E)
+- File test: /app/backend/tests/test_powerleave_api.py
+
+## Known Issues
+- Sidebar fuori viewport su alcune risoluzioni (issue CSS responsive minore)
+
+## Next Tasks (P1)
+- [ ] Migliorare layout sidebar responsive
 - [ ] Integrazione Google Calendar
-- [ ] Export CSV/PDF
+- [ ] Integrazione Outlook Calendar
+- [ ] Notifiche email (SendGrid)
+
+## Future Tasks (P2)
+- [ ] Export CSV/PDF report
+- [ ] App mobile PWA
+- [ ] Dashboard analytics avanzate
+- [ ] Multi-language support
