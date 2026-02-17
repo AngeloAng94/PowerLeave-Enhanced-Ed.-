@@ -874,8 +874,8 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-card border-r transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform`}>
-        <div className="p-6">
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-card border-r transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform flex flex-col`}>
+        <div className="p-6 flex-1 overflow-y-auto">
           <div className="flex items-center gap-3 mb-8">
             <RocketLogo size={36} />
             <span className="font-bold text-lg" style={{fontFamily: 'Inter, sans-serif'}}>
@@ -900,7 +900,7 @@ function Dashboard() {
                 key={item.id}
                 data-testid={`nav-${item.id}`}
                 onClick={() => setCurrentPage(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
                   currentPage === item.id
                     ? 'bg-primary text-primary-foreground'
                     : 'hover:bg-muted text-muted-foreground hover:text-foreground'
@@ -913,7 +913,7 @@ function Dashboard() {
           </nav>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t">
+        <div className="p-4 border-t shrink-0">
           <button
             data-testid="new-request-btn"
             onClick={() => setShowRequestForm(true)}
