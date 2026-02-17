@@ -934,7 +934,27 @@ function Dashboard() {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 p-6 md:p-8 pt-20 md:pt-8 overflow-auto">
+      <main className="flex-1 overflow-auto">
+        {/* Desktop header bar */}
+        <div className="hidden md:flex items-center justify-between px-8 py-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-30">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              {currentPage === 'dashboard' && 'Dashboard'}
+              {currentPage === 'calendar' && 'Calendario'}
+              {currentPage === 'stats' && 'Statistiche'}
+              {currentPage === 'requests' && 'Richieste Ferie'}
+              {currentPage === 'team' && 'Team'}
+              {currentPage === 'settings' && 'Impostazioni'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">Ciao, {user?.name?.split(' ')[0]}</span>
+            <ThemeToggle />
+          </div>
+        </div>
+        
+        {/* Page content */}
+        <div className="p-6 md:p-8 pt-20 md:pt-6">
         {currentPage === 'dashboard' && (
           <DashboardContent
             stats={stats}
