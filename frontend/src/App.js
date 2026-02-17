@@ -461,10 +461,10 @@ function LandingPage() {
               </button>
             </div>
             <div className="bg-primary text-primary-foreground p-8 rounded-2xl relative overflow-hidden">
-              <div className="absolute top-4 right-4 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-full">
+              <div className="absolute top-4 right-4 bg-yellow-400 text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                 POPOLARE
               </div>
-              <h3 className="text-xl font-semibold mb-2">Business</h3>
+              <h3 className="text-xl font-semibold mb-2 mt-6">Business</h3>
               <p className="opacity-80 mb-4">Per aziende in crescita</p>
               <div className="mb-6">
                 <span className="text-4xl font-bold">€4</span>
