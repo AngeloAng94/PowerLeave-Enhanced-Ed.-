@@ -1215,49 +1215,78 @@ function DashboardContent({ stats, pendingRequests, myRequests, user, onReview }
           </form>
         </div>
 
-        {/* Pending Approvals */}
-        <div className="bg-card p-6 rounded-xl border">
-          <h2 className="text-lg font-semibold mb-4">Richieste da Approvare</h2>
-          {pendingRequests?.length > 0 ? (
-            <div className="space-y-3">
-              {pendingRequests.map(req => (
-                <div key={req.id} className="p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
-                      <span className="text-white text-sm font-semibold">{req.user_name?.[0]}</span>
+        {/* Admin: Pending Approvals | User: My Requests */}
+        {user?.role === 'admin' ? (
+          <div className="bg-card p-6 rounded-xl border">
+            <h2 className="text-lg font-semibold mb-4">Richieste da Approvare</h2>
+            {pendingRequests?.length > 0 ? (
+              <div className="space-y-3">
+                {pendingRequests.map(req => (
+                  <div key={req.id} className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
+                        <span className="text-white text-sm font-semibold">{req.user_name?.[0]}</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{req.user_name}</p>
+                        <p className="text-xs text-muted-foreground">{req.leave_type_name}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{req.user_name}</p>
-                      <p className="text-xs text-muted-foreground">{req.leave_type_name}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{req.start_date} → {req.end_date}</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => onReview(req.id, 'approved')}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium text-white"
+                        style={{backgroundColor: '#22C55E'}}>
+                        Approva
+                      </button>
+                      <button onClick={() => onReview(req.id, 'rejected')}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium text-white"
+                        style={{backgroundColor: '#EF4444'}}>
+                        Rifiuta
+                      </button>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">{req.start_date} → {req.end_date}</p>
-                  <div className="flex gap-2">
-                    <button onClick={() => onReview(req.id, 'approved')}
-                      className="flex-1 py-2 rounded-lg text-sm font-medium text-white"
-                      style={{backgroundColor: '#22C55E'}}>
-                      Approva
-                    </button>
-                    <button onClick={() => onReview(req.id, 'rejected')}
-                      className="flex-1 py-2 rounded-lg text-sm font-medium text-white"
-                      style={{backgroundColor: '#EF4444'}}>
-                      Rifiuta
-                    </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">Nessuna richiesta in attesa</p>
+            )}
+          </div>
+        ) : (
+          <div className="bg-card p-6 rounded-xl border">
+            <h2 className="text-lg font-semibold mb-4">Le Mie Richieste</h2>
+            {myRequests?.length > 0 ? (
+              <div className="space-y-3">
+                {myRequests.slice(0, 5).map(req => (
+                  <div key={req.id} className="p-3 bg-muted/50 rounded-lg flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{req.leave_type_name}</p>
+                      <p className="text-xs text-muted-foreground">{req.start_date} → {req.end_date}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      req.status === 'approved' ? 'text-white' : 
+                      req.status === 'rejected' ? 'text-white' : 'text-white'
+                    }`} style={{
+                      backgroundColor: req.status === 'approved' ? '#22C55E' : 
+                                       req.status === 'rejected' ? '#EF4444' : '#F97316'
+                    }}>
+                      {req.status === 'approved' ? 'Approvata' : req.status === 'rejected' ? 'Rifiutata' : 'In Attesa'}
+                    </span>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-4">Nessuna richiesta in attesa</p>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">Nessuna richiesta</p>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Team Balances */}
+      {/* Team Balances - Admin vede tutti, User vede solo se stesso */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Il mio saldo ferie</h2>
+        <h2 className="text-lg font-semibold mb-4">{user?.role === 'admin' ? 'Saldo ferie Team' : 'Il mio saldo ferie'}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {userBalances.map(member => (
+          {(user?.role === 'admin' ? userBalances : userBalances.filter(m => m.user_id === user?.user_id)).map(member => (
             <div key={member.user_id} className="bg-card p-4 rounded-xl border">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
