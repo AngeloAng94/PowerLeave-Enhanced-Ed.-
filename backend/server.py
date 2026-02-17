@@ -549,7 +549,7 @@ async def create_leave_request(
 
 @app.get("/api/leave-requests")
 async def get_leave_requests(
-    status: Optional[str] = None,
+    filter_status: Optional[str] = None,
     user_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
