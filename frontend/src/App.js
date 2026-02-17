@@ -110,6 +110,22 @@ function AuthProvider({ children }) {
 }
 
 // ============== ICONS ==============
+// Rocket Logo Component (matching the PowerLeave brand)
+const RocketLogo = ({ size = 40, className = '' }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 100 100" 
+    className={className}
+    style={{filter: 'drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3))'}}
+  >
+    <path 
+      d="M45 85 L35 75 L40 65 L30 55 L35 45 L40 50 L50 30 L55 15 L60 30 L70 50 L65 45 L70 55 L60 65 L65 75 L55 85 L50 70 Z" 
+      fill="#2563EB"
+    />
+  </svg>
+);
+
 const Icons = {
   Calendar: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
