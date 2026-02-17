@@ -62,15 +62,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS
+# CORS - Allow all origins for flexibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://rfrytmiwfbxnp.stage-preview.emergentagent.com",
-        "https://rfrytmiwfbxnp-frontend-80.stage-preview.emergentagent.com"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
