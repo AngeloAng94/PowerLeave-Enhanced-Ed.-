@@ -319,17 +319,15 @@ class PowerLeaveAPITester:
 
     def run_all_tests(self):
         """Execute all test cases in sequence"""
-        print("🧪 Running Backend API Test Suite")
+        print("🧪 Running PowerLeave Backend API Test Suite")
         
         # Test health check first
         self.test_health_check()
         
-        # Try login first (user might already exist)
-        if not self.test_user_login():
-            # If login fails, try registration
-            if not self.test_user_registration():
-                print("❌ CRITICAL: Cannot authenticate - stopping tests")
-                return self.print_summary()
+        # Test demo admin login first
+        if not self.test_demo_admin_login():
+            print("❌ CRITICAL: Cannot authenticate with demo admin - stopping tests")
+            return self.print_summary()
         
         # Test authentication endpoints
         self.test_get_current_user()
@@ -352,6 +350,9 @@ class PowerLeaveAPITester:
         
         # Test leave balances
         self.test_get_leave_balances()
+        
+        # Test demo user login as well
+        self.test_demo_user_login()
         
         # Test logout
         self.test_logout()
