@@ -3,6 +3,7 @@ import { Toaster, toast } from 'sonner';
 
 // ============== CONSTANTS ==============
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+const LOGO_URL = 'https://customer-assets.emergentagent.com/job_hr-powerup/artifacts/roxglb36_ChatGPT%20Image%2017%20feb%202026%2C%2010_27_22.png';
 
 // ============== CONTEXT ==============
 const AuthContext = createContext(null);
