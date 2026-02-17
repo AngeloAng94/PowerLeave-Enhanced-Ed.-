@@ -853,9 +853,11 @@ function Dashboard() {
   const navItems = [
     { id: 'dashboard', icon: <Icons.Home />, label: 'Dashboard' },
     { id: 'calendar', icon: <Icons.Calendar />, label: 'Calendario' },
-    { id: 'stats', icon: <Icons.Chart />, label: 'Stats' },
     { id: 'requests', icon: <Icons.Plane />, label: 'Richieste Ferie' },
+    { id: 'announcements', icon: <Icons.Megaphone />, label: 'Bacheca' },
+    { id: 'closures', icon: <Icons.Lock />, label: 'Chiusure' },
     { id: 'team', icon: <Icons.Users />, label: 'Team' },
+    { id: 'stats', icon: <Icons.Chart />, label: 'Statistiche' },
     { id: 'settings', icon: <Icons.Settings />, label: 'Impostazioni' },
   ];
 
