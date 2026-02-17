@@ -910,17 +910,14 @@ function Dashboard() {
             <Icons.Plus />
             Nuova Richiesta
           </button>
-          <div className="flex items-center justify-between">
-            <ThemeToggle />
-            <button
-              data-testid="logout-btn"
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Icons.Logout />
-              Esci
-            </button>
-          </div>
+          <button
+            data-testid="logout-btn"
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Icons.Logout />
+            Esci
+          </button>
         </div>
       </aside>
 
