@@ -241,6 +241,147 @@ async def seed_default_data():
         {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-12-26", "reason": "Santo Stefano", "type": "holiday"},
     ]
     await db.company_closures.insert_many(holidays)
+    
+    # Create demo organization and users
+    await seed_demo_users()
+
+async def seed_demo_users():
+    """Create demo users for testing"""
+    # Check if demo org already exists
+    demo_org = await db.organizations.find_one({"org_id": "org_demo"})
+    if demo_org:
+        return  # Already seeded
+    
+    now = datetime.now(timezone.utc)
+    org_id = "org_demo"
+    
+    # Create demo organization
+    await db.organizations.insert_one({
+        "org_id": org_id,
+        "name": "PowerLeave Demo",
+        "created_at": now,
+        "owner_id": "user_admin"
+    })
+    
+    # Demo users
+    demo_users = [
+        {
+            "user_id": "user_admin",
+            "email": "admin@demo.it",
+            "name": "Marco Rossi",
+            "password_hash": pwd_context.hash("demo123"),
+            "role": "admin",
+            "org_id": org_id,
+            "picture": None,
+            "created_at": now
+        },
+        {
+            "user_id": "user_mario",
+            "email": "mario@demo.it",
+            "name": "Mario Bianchi",
+            "password_hash": pwd_context.hash("demo123"),
+            "role": "user",
+            "org_id": org_id,
+            "picture": None,
+            "created_at": now
+        },
+        {
+            "user_id": "user_anna",
+            "email": "anna@demo.it",
+            "name": "Anna Verdi",
+            "password_hash": pwd_context.hash("demo123"),
+            "role": "user",
+            "org_id": org_id,
+            "picture": None,
+            "created_at": now
+        },
+        {
+            "user_id": "user_luigi",
+            "email": "luigi@demo.it",
+            "name": "Luigi Neri",
+            "password_hash": pwd_context.hash("demo123"),
+            "role": "user",
+            "org_id": org_id,
+            "picture": None,
+            "created_at": now
+        }
+    ]
+    
+    await db.users.insert_many(demo_users)
+    
+    # Initialize leave balances for demo users
+    leave_types_list = await db.leave_types.find({"org_id": None}).to_list(100)
+    year = now.year
+    
+    for user in demo_users:
+        for lt in leave_types_list:
+            await db.leave_balances.insert_one({
+                "user_id": user["user_id"],
+                "org_id": org_id,
+                "leave_type_id": lt["id"],
+                "year": year,
+                "total_days": lt.get("days_per_year", 26),
+                "used_days": 0
+            })
+    
+    # Create some sample leave requests
+    sample_requests = [
+        {
+            "id": str(uuid.uuid4()),
+            "user_id": "user_mario",
+            "user_name": "Mario Bianchi",
+            "org_id": org_id,
+            "leave_type_id": "ferie",
+            "leave_type_name": "Ferie",
+            "start_date": "2026-03-15",
+            "end_date": "2026-03-20",
+            "days": 6,
+            "hours": 8,
+            "notes": "Vacanze di primavera",
+            "status": "approved",
+            "reviewed_by": "user_admin",
+            "reviewed_at": now,
+            "created_at": now - timedelta(days=5)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "user_id": "user_anna",
+            "user_name": "Anna Verdi",
+            "org_id": org_id,
+            "leave_type_id": "ferie",
+            "leave_type_name": "Ferie",
+            "start_date": "2026-08-10",
+            "end_date": "2026-08-21",
+            "days": 12,
+            "hours": 8,
+            "notes": "Ferie estive",
+            "status": "pending",
+            "created_at": now - timedelta(days=2)
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "user_id": "user_luigi",
+            "user_name": "Luigi Neri",
+            "org_id": org_id,
+            "leave_type_id": "permesso",
+            "leave_type_name": "Permesso",
+            "start_date": "2026-02-20",
+            "end_date": "2026-02-20",
+            "days": 1,
+            "hours": 4,
+            "notes": "Visita medica",
+            "status": "pending",
+            "created_at": now - timedelta(days=1)
+        }
+    ]
+    
+    await db.leave_requests.insert_many(sample_requests)
+    
+    # Update leave balances for approved requests
+    await db.leave_balances.update_one(
+        {"user_id": "user_mario", "leave_type_id": "ferie", "year": year},
+        {"$set": {"used_days": 6}}
+    )
 
 # ============== AUTH ENDPOINTS ==============
 
