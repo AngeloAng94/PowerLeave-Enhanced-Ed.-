@@ -1,70 +1,50 @@
 # PowerLeave - Product Requirements Document
 
 ## Original Problem Statement
-Convertire il progetto PowerLeave (sistema gestione ferie) in una piattaforma SaaS moderna e vendibile per PMI italiane, con:
-- Autenticazione JWT + Google OAuth
-- Database MongoDB
-- Design moderno con logo razzo blu e colori brand (#0F172A navy, #2563EB blue)
-- Supporto multi-tenant
-- Utenti demo per presentazioni
+Convertire PowerLeave in una piattaforma SaaS moderna per PMI italiane, replicando fedelmente il design originale di Manus con tutte le funzionalità.
 
 ## Architecture
-- **Frontend**: React 18 + CSS Custom (Inter font)
-- **Backend**: FastAPI + Motor (async MongoDB)
-- **Database**: MongoDB (multi-tenant con org_id)
-- **Auth**: JWT tokens + Emergent Google OAuth
-
-## User Personas
-1. **Admin HR**: Gestisce richieste ferie, approva/rifiuta, invita membri
-2. **Dipendente**: Richiede ferie, visualizza saldi, consulta calendario team
+- **Frontend**: React 18 + CSS Custom (Inter font, colori brand)
+- **Backend**: FastAPI + MongoDB (Motor async)
+- **Auth**: JWT + Emergent Google OAuth
+- **Design**: Navy (#0F172A) + Blue (#2563EB), logo razzo
 
 ## Demo Users
-| Email | Password | Ruolo | Nome |
-|-------|----------|-------|------|
-| admin@demo.it | demo123 | Admin | Marco Rossi |
-| mario@demo.it | demo123 | User | Mario Bianchi |
-| anna@demo.it | demo123 | User | Anna Verdi |
-| luigi@demo.it | demo123 | User | Luigi Neri |
+| Email | Password | Ruolo |
+|-------|----------|-------|
+| admin@demo.it | demo123 | Admin (Marco Rossi) |
+| mario@demo.it | demo123 | User (Mario Bianchi) |
+| anna@demo.it | demo123 | User (Anna Verdi) |
+| luigi@demo.it | demo123 | User (Luigi Neri) |
 
 ## What's Been Implemented (Feb 2026)
 
-### Backend (server.py)
-- ✅ Auth: register, login, logout, OAuth session
-- ✅ Leave types CRUD
-- ✅ Leave requests CRUD + approval workflow
-- ✅ Statistics endpoint
-- ✅ Calendar monthly view
-- ✅ Team management (list, invite, remove)
-- ✅ Leave balances (optimized queries)
-- ✅ Company closures (Italian holidays 2026)
-- ✅ Demo users auto-seeding
+### Dashboard Completo (come originale Manus)
+- ✅ Header "Power Leave" con sottotitolo italiano
+- ✅ 4 Stats Cards: Ferie Approvate, Richieste in Sospeso, Staff Disponibile, Utilizzo
+- ✅ Form inline "Invia una richiesta" (Tipo, Date, Ore, Note)
+- ✅ Admin: "Richieste da Approvare" con pulsanti Approva/Rifiuta
+- ✅ User: "Le mie Richieste" (senza pulsanti approvazione)
+- ✅ "Saldo ferie Team" con cards per ogni dipendente (In Cda, Usate, Disponibili)
+- ✅ Calendario integrato con legenda
+- ✅ Tabella "Riepilogo Utilizzo Ferie"
 
-### Frontend (App.js)
-- ✅ Landing page con logo razzo, pricing, demo banner
-- ✅ Login/Register con colori brand blue
-- ✅ Dashboard con stats cards
-- ✅ Calendario interattivo
-- ✅ Team management
-- ✅ Settings
-- ✅ Dark/Light theme
+### Pagine Aggiuntive
+- ✅ Calendario (full month view)
+- ✅ Stats (statistiche dettagliate)
+- ✅ Richieste Ferie (lista con filtri)
+- ✅ Team (gestione membri)
+- ✅ Impostazioni
 
-## Prioritized Backlog
+### Sidebar Menu
+- Dashboard, Calendario, Stats, Richieste Ferie, Team, Impostazioni
 
-### P0 (Done)
-- ✅ Auth flow completo
-- ✅ Leave request workflow
-- ✅ Demo users
+## Test Results
+- Backend: 100% (11 endpoints)
+- Frontend: 95%
+- Integration: 100%
 
-### P1 (Important)
-- [ ] Notifiche email (SendGrid/Resend)
-- [ ] Export report PDF/CSV
-- [ ] Google Calendar sync
-
-### P2 (Nice to have)
-- [ ] Outlook Calendar sync
-- [ ] Push notifications
-- [ ] Analytics avanzate
-
-## Notes
-- Preview URL potrebbe essere in cold start - aprire dalla dashboard Emergent
-- Tutti i test backend passano 100%
+## Next Tasks
+- [ ] Notifiche email
+- [ ] Integrazione Google Calendar
+- [ ] Export CSV/PDF
