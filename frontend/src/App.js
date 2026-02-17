@@ -1574,6 +1574,187 @@ function CalendarPage() {
   );
 }
 
+// ============== STATS PAGE ==============
+function StatsPage() {
+  const [stats, setStats] = useState(null);
+  const [balances, setBalances] = useState([]);
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const [statsData, balancesData, requestsData] = await Promise.all([
+        api.get('/api/stats'),
+        api.get('/api/leave-balances'),
+        api.get('/api/leave-requests'),
+      ]);
+      setStats(statsData);
+      setBalances(balancesData);
+      setRequests(requestsData);
+    } catch {}
+  };
+
+  const approvedRequests = requests.filter(r => r.status === 'approved');
+  const pendingRequests = requests.filter(r => r.status === 'pending');
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-8">
+      <h1 className="text-2xl font-bold">Statistiche</h1>
+
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-card p-6 rounded-xl border text-center">
+          <p className="text-4xl font-bold" style={{color: '#22C55E'}}>{stats?.approved_count || 0}</p>
+          <p className="text-muted-foreground">Ferie Approvate</p>
+        </div>
+        <div className="bg-card p-6 rounded-xl border text-center">
+          <p className="text-4xl font-bold" style={{color: '#F97316'}}>{stats?.pending_count || 0}</p>
+          <p className="text-muted-foreground">In Attesa</p>
+        </div>
+        <div className="bg-card p-6 rounded-xl border text-center">
+          <p className="text-4xl font-bold" style={{color: '#3B82F6'}}>{stats?.total_staff || 0}</p>
+          <p className="text-muted-foreground">Membri Team</p>
+        </div>
+        <div className="bg-card p-6 rounded-xl border text-center">
+          <p className="text-4xl font-bold" style={{color: '#2563EB'}}>{stats?.utilization_rate || 0}%</p>
+          <p className="text-muted-foreground">Utilizzo Ferie</p>
+        </div>
+      </div>
+
+      {/* Detailed Balance Table */}
+      <div className="bg-card p-6 rounded-xl border">
+        <h2 className="text-lg font-semibold mb-4">Dettaglio Saldi per Dipendente</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-3 px-4">Dipendente</th>
+                <th className="text-left py-3 px-4">Tipo</th>
+                <th className="text-right py-3 px-4">Totali</th>
+                <th className="text-right py-3 px-4">Utilizzati</th>
+                <th className="text-right py-3 px-4">Disponibili</th>
+              </tr>
+            </thead>
+            <tbody>
+              {balances.map((b, i) => (
+                <tr key={i} className="border-b hover:bg-muted/50">
+                  <td className="py-3 px-4 font-medium">{b.user_name}</td>
+                  <td className="py-3 px-4">{b.leave_type_name}</td>
+                  <td className="py-3 px-4 text-right">{b.total_days}</td>
+                  <td className="py-3 px-4 text-right" style={{color: '#EF4444'}}>{b.used_days}</td>
+                  <td className="py-3 px-4 text-right" style={{color: '#22C55E'}}>{b.remaining_days}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============== REQUESTS PAGE ==============
+function RequestsPage({ user }) {
+  const [requests, setRequests] = useState([]);
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    loadRequests();
+  }, []);
+
+  const loadRequests = async () => {
+    try {
+      const data = await api.get('/api/leave-requests');
+      setRequests(data);
+    } catch {}
+  };
+
+  const handleReview = async (requestId, status) => {
+    try {
+      await api.put(`/api/leave-requests/${requestId}/review`, { status });
+      toast.success(status === 'approved' ? 'Approvata!' : 'Rifiutata');
+      loadRequests();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const filteredRequests = filter === 'all' ? requests : requests.filter(r => r.status === filter);
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Richieste Ferie</h1>
+        <select value={filter} onChange={e => setFilter(e.target.value)}
+          className="px-4 py-2 rounded-lg border bg-background">
+          <option value="all">Tutte</option>
+          <option value="pending">In Attesa</option>
+          <option value="approved">Approvate</option>
+          <option value="rejected">Rifiutate</option>
+        </select>
+      </div>
+
+      <div className="bg-card rounded-xl border overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-muted">
+            <tr>
+              <th className="text-left px-4 py-3">Dipendente</th>
+              <th className="text-left px-4 py-3">Tipo</th>
+              <th className="text-left px-4 py-3">Date</th>
+              <th className="text-left px-4 py-3">Stato</th>
+              {user?.role === 'admin' && <th className="text-right px-4 py-3">Azioni</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRequests.map(req => (
+              <tr key={req.id} className="border-t hover:bg-muted/50">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
+                      <span className="text-white text-sm">{req.user_name?.[0]}</span>
+                    </div>
+                    {req.user_name}
+                  </div>
+                </td>
+                <td className="px-4 py-3">{req.leave_type_name}</td>
+                <td className="px-4 py-3 text-sm">{req.start_date} → {req.end_date}</td>
+                <td className="px-4 py-3">
+                  <span className="px-2 py-1 rounded text-xs font-medium text-white"
+                    style={{backgroundColor: req.status === 'approved' ? '#22C55E' : req.status === 'rejected' ? '#EF4444' : '#F97316'}}>
+                    {req.status === 'approved' ? 'Approvata' : req.status === 'rejected' ? 'Rifiutata' : 'In Attesa'}
+                  </span>
+                </td>
+                {user?.role === 'admin' && (
+                  <td className="px-4 py-3 text-right">
+                    {req.status === 'pending' && (
+                      <div className="flex gap-2 justify-end">
+                        <button onClick={() => handleReview(req.id, 'approved')}
+                          className="px-3 py-1 rounded text-sm text-white" style={{backgroundColor: '#22C55E'}}>
+                          Approva
+                        </button>
+                        <button onClick={() => handleReview(req.id, 'rejected')}
+                          className="px-3 py-1 rounded text-sm text-white" style={{backgroundColor: '#EF4444'}}>
+                          Rifiuta
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filteredRequests.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Nessuna richiesta trovata</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ============== TEAM PAGE ==============
 function TeamPage() {
   const { user } = useAuth();
