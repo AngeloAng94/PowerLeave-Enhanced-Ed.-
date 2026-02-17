@@ -855,7 +855,7 @@ function Dashboard() {
 
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg mb-6">
             <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
-              <span className="text-primary font-semibold">{user?.name?.[0] || 'U'}</span>
+              <span className="text-white font-semibold">{user?.name?.[0] || 'U'}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{user?.name}</p>
