@@ -1074,7 +1074,7 @@ function Dashboard() {
         </div>
         
         {/* Page content */}
-        <div className="p-6 md:p-8 pt-20 md:pt-6">
+        <div className="flex-1 overflow-auto p-6 md:p-8 pt-20 md:pt-6">
         {currentPage === 'dashboard' && (
           <DashboardContent
             stats={stats}
