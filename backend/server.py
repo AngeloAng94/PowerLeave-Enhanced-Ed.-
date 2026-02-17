@@ -124,7 +124,7 @@ class LeaveRequest(BaseModel):
     days: int
     hours: int
     notes: Optional[str] = None
-    status: str = "pending"  # pending, approved, rejected
+    request_status: str = "pending"  # pending, approved, rejected
     reviewed_by: Optional[str] = None
     reviewed_at: Optional[datetime] = None
     created_at: datetime
