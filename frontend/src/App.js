@@ -1034,19 +1034,27 @@ function Dashboard() {
         </div>
       </aside>
 
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-card border-b p-4 flex items-center justify-between">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-card border-b p-4 flex items-center justify-between">
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-muted rounded-lg">
           <Icons.Menu />
         </button>
         <span className="font-bold">PowerLeave</span>
         <ThemeToggle />
       </div>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      {/* Main content area */}
+      <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Desktop header bar */}
-        <div className="hidden md:flex items-center justify-between px-8 py-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-30">
+        <div className="hidden md:flex items-center justify-between px-8 py-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-30 shrink-0">
           <div>
             <h2 className="text-lg font-semibold text-foreground">
               {currentPage === 'dashboard' && 'Dashboard'}
