@@ -1083,26 +1083,28 @@ function Dashboard() {
       </div>
 
       {/* Mobile Layout */}
-      <div className="md:hidden min-h-screen flex flex-col">
+      <div className="md:hidden min-h-screen flex flex-col bg-background">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onClick={() => setSidebarOpen(false)} />
         )}
         
-        {/* Mobile Sidebar Drawer */}
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r flex flex-col transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-6 flex-1 overflow-y-auto">
-            <div className="flex items-center gap-3 mb-8">
-              <RocketLogo size={36} />
-              <span className="font-bold text-lg">PowerLeave</span>
+        {/* Mobile Sidebar Drawer - Modern */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-card flex flex-col transform transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-5 flex-1 overflow-y-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600">
+                <RocketLogo size={24} />
+              </div>
+              <span className="font-bold text-lg">Power<span className="text-primary">Leave</span></span>
             </div>
 
-            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg mb-6">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
-                <span className="text-white font-semibold">{user?.name?.[0] || 'U'}</span>
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <span className="text-white font-bold">{user?.name?.[0] || 'U'}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{user?.name}</p>
+                <p className="font-semibold truncate text-sm">{user?.name}</p>
                 <p className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
               </div>
             </div>
@@ -1112,35 +1114,35 @@ function Dashboard() {
                 <button
                   key={item.id}
                   onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     currentPage === item.id
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/30'
                       : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {item.icon}
-                  {item.label}
+                  <span className="font-medium">{item.label}</span>
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="p-4 border-t shrink-0">
-            <button onClick={() => { setShowRequestForm(true); setSidebarOpen(false); }} className="w-full btn-primary flex items-center justify-center gap-2 mb-3">
+          <div className="p-4 space-y-2">
+            <button onClick={() => { setShowRequestForm(true); setSidebarOpen(false); }} className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg">
               <Icons.Plus /> Nuova Richiesta
             </button>
-            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground">
-              <Icons.Logout /> Esci
+            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-2.5 text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50">
+              <Icons.Logout /> <span className="text-sm">Esci</span>
             </button>
           </div>
         </aside>
 
         {/* Mobile header */}
-        <div className="fixed top-0 left-0 right-0 z-30 bg-card border-b p-4 flex items-center justify-between">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-muted rounded-lg">
+        <div className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-md border-b px-4 py-3 flex items-center justify-between">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2.5 hover:bg-muted rounded-xl transition-colors">
             <Icons.Menu />
           </button>
-          <span className="font-bold">PowerLeave</span>
+          <span className="font-bold text-lg">Power<span className="text-primary">Leave</span></span>
           <ThemeToggle />
         </div>
 
