@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import time
 
 class PowerLeaveAPITester:
-    def __init__(self, base_url="https://rfrytmiwfbxnp-backend-80.stage-preview.emergentagent.com"):
+    def __init__(self, base_url="https://hr-powerup.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.token = None
         self.user_id = None
