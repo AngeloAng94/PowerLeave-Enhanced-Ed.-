@@ -1162,18 +1162,164 @@ async def create_closure(
     closure_data: dict,
     current_user: dict = Depends(get_admin_user)
 ):
+    """Create company closure period (admin only)"""
     org_id = current_user["org_id"]
+    now = datetime.now(timezone.utc)
+    
+    start_date = closure_data.get("start_date") or closure_data.get("date")
+    end_date = closure_data.get("end_date") or start_date
     
     closure = {
         "id": str(uuid.uuid4()),
         "org_id": org_id,
-        "date": closure_data.get("date"),
+        "start_date": start_date,
+        "end_date": end_date,
         "reason": closure_data.get("reason"),
-        "type": closure_data.get("type", "shutdown")
+        "type": closure_data.get("type", "shutdown"),  # shutdown, holiday
+        "auto_leave": closure_data.get("auto_leave", True),  # Auto-create leave requests
+        "allow_exceptions": closure_data.get("allow_exceptions", True),  # Allow override requests
+        "created_at": now,
+        "created_by": current_user["user_id"]
     }
     
     await db.company_closures.insert_one(closure)
+    
+    # If auto_leave is enabled, create leave requests for all employees
+    if closure_data.get("auto_leave", True):
+        team = await db.users.find({"org_id": org_id}, {"_id": 0}).to_list(500)
+        leave_type = await db.leave_types.find_one({"id": "ferie"}, {"_id": 0})
+        
+        for member in team:
+            # Calculate days
+            start = datetime.strptime(start_date, "%Y-%m-%d")
+            end = datetime.strptime(end_date, "%Y-%m-%d")
+            days = (end - start).days + 1
+            
+            # Create auto leave request
+            await db.leave_requests.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": member["user_id"],
+                "user_name": member["name"],
+                "org_id": org_id,
+                "leave_type_id": "ferie",
+                "leave_type_name": leave_type["name"] if leave_type else "Ferie",
+                "start_date": start_date,
+                "end_date": end_date,
+                "days": days,
+                "hours": 8,
+                "notes": f"Chiusura aziendale: {closure_data.get('reason', 'Periodo di chiusura')}",
+                "status": "approved",
+                "closure_id": closure["id"],
+                "is_closure_leave": True,
+                "reviewed_by": "system",
+                "reviewed_at": now,
+                "created_at": now
+            })
+    
     return {"success": True, "id": closure["id"]}
+
+@app.post("/api/closures/{closure_id}/exception")
+async def request_closure_exception(
+    closure_id: str,
+    exception_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Request exception from company closure"""
+    org_id = current_user["org_id"]
+    user_id = current_user["user_id"]
+    
+    # Find the closure
+    closure = await db.company_closures.find_one(
+        {"id": closure_id, "org_id": org_id},
+        {"_id": 0}
+    )
+    
+    if not closure:
+        raise HTTPException(status_code=404, detail="Chiusura non trovata")
+    
+    if not closure.get("allow_exceptions", True):
+        raise HTTPException(status_code=400, detail="Le deroghe non sono permesse per questa chiusura")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Create exception request
+    exception = {
+        "id": str(uuid.uuid4()),
+        "closure_id": closure_id,
+        "user_id": user_id,
+        "user_name": current_user["name"],
+        "org_id": org_id,
+        "reason": exception_data.get("reason"),
+        "status": "pending",  # pending, approved, rejected
+        "created_at": now
+    }
+    
+    await db.closure_exceptions.insert_one(exception)
+    return {"success": True, "id": exception["id"]}
+
+@app.get("/api/closures/exceptions")
+async def get_closure_exceptions(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get closure exception requests"""
+    org_id = current_user["org_id"]
+    
+    if current_user.get("role") == "admin":
+        # Admin sees all exceptions
+        exceptions = await db.closure_exceptions.find(
+            {"org_id": org_id},
+            {"_id": 0}
+        ).to_list(100)
+    else:
+        # User sees only own exceptions
+        exceptions = await db.closure_exceptions.find(
+            {"org_id": org_id, "user_id": current_user["user_id"]},
+            {"_id": 0}
+        ).to_list(100)
+    
+    return exceptions
+
+@app.put("/api/closures/exceptions/{exception_id}/review")
+async def review_closure_exception(
+    exception_id: str,
+    review_data: dict,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Approve or reject closure exception (admin only)"""
+    org_id = current_user["org_id"]
+    new_status = review_data.get("status")
+    
+    if new_status not in ["approved", "rejected"]:
+        raise HTTPException(status_code=400, detail="Stato non valido")
+    
+    now = datetime.now(timezone.utc)
+    
+    result = await db.closure_exceptions.update_one(
+        {"id": exception_id, "org_id": org_id},
+        {"$set": {
+            "status": new_status,
+            "reviewed_by": current_user["user_id"],
+            "reviewed_at": now
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Deroga non trovata")
+    
+    # If approved, cancel the auto-created leave request
+    if new_status == "approved":
+        exception = await db.closure_exceptions.find_one(
+            {"id": exception_id},
+            {"_id": 0}
+        )
+        if exception:
+            await db.leave_requests.delete_one({
+                "closure_id": exception["closure_id"],
+                "user_id": exception["user_id"],
+                "is_closure_leave": True
+            })
+    
+    return {"success": True}
 
 @app.delete("/api/closures/{closure_id}")
 async def delete_closure(
