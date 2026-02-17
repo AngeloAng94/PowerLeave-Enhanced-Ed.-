@@ -976,51 +976,66 @@ function Dashboard() {
     <div className="min-h-screen bg-background">
       {/* Desktop Layout with Sidebar */}
       <div className="hidden md:flex">
-        {/* Desktop Sidebar - Always visible */}
-        <aside className="w-64 h-screen bg-card border-r flex flex-col sticky top-0">
-          <div className="p-6 flex-1 overflow-y-auto">
-            <div className="flex items-center gap-3 mb-8">
-              <RocketLogo size={36} />
-              <span className="font-bold text-lg" style={{fontFamily: 'Inter, sans-serif'}}>
-                <span style={{fontWeight: 600}}>Power</span>
-                <span style={{fontWeight: 700}}>Leave</span>
+        {/* Desktop Sidebar - Modern design */}
+        <aside className="w-72 h-screen bg-gradient-to-b from-card to-card/95 border-r flex flex-col sticky top-0">
+          {/* Logo section */}
+          <div className="p-6 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+                <RocketLogo size={28} />
+              </div>
+              <span className="font-bold text-xl tracking-tight">
+                Power<span className="text-primary">Leave</span>
               </span>
             </div>
+          </div>
 
-            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg mb-6">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: '#2563EB'}}>
-                <span className="text-white font-semibold">{user?.name?.[0] || 'U'}</span>
+          {/* User profile card */}
+          <div className="px-4 mb-4">
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl border border-primary/10">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">{user?.name?.[0] || 'U'}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+                <p className="font-semibold truncate">{user?.name}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className={`w-2 h-2 rounded-full ${user?.role === 'admin' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
+                  {user?.role === 'admin' ? 'Amministratore' : 'Membro'}
+                </p>
               </div>
             </div>
+          </div>
 
+          {/* Navigation */}
+          <div className="flex-1 overflow-y-auto px-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-3">Menu</p>
             <nav className="space-y-1">
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   data-testid={`nav-${item.id}`}
                   onClick={() => setCurrentPage(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     currentPage === item.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-[1.02]'
+                      : 'hover:bg-muted/80 text-muted-foreground hover:text-foreground hover:translate-x-1'
                   }`}
                 >
-                  {item.icon}
-                  {item.label}
+                  <span className={`${currentPage === item.id ? 'scale-110' : ''} transition-transform`}>
+                    {item.icon}
+                  </span>
+                  <span className="font-medium">{item.label}</span>
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="p-4 border-t shrink-0">
+          {/* Bottom actions */}
+          <div className="p-4 space-y-3">
             <button
               data-testid="new-request-btn"
               onClick={() => setShowRequestForm(true)}
-              className="w-full btn-primary flex items-center justify-center gap-2 mb-3"
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3.5 px-4 rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02] transition-all duration-200"
             >
               <Icons.Plus />
               Nuova Richiesta
@@ -1028,18 +1043,18 @@ function Dashboard() {
             <button
               data-testid="logout-btn"
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all"
             >
               <Icons.Logout />
-              Esci
+              <span className="text-sm">Esci</span>
             </button>
           </div>
         </aside>
 
         {/* Desktop Main Content */}
-        <main className="flex-1 flex flex-col min-h-screen">
-          <div className="flex items-center justify-between px-8 py-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-30">
-            <h2 className="text-lg font-semibold text-foreground">
+        <main className="flex-1 flex flex-col min-h-screen bg-background">
+          <div className="flex items-center justify-between px-8 py-4 border-b bg-card/80 backdrop-blur-sm sticky top-0 z-30">
+            <h2 className="text-xl font-bold text-foreground">
               {currentPage === 'dashboard' && 'Dashboard'}
               {currentPage === 'calendar' && 'Calendario'}
               {currentPage === 'stats' && 'Statistiche'}
