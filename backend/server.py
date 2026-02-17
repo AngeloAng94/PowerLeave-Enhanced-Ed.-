@@ -562,8 +562,8 @@ async def get_leave_requests(
     elif user_id:
         query["user_id"] = user_id
     
-    if status:
-        query["status"] = status
+    if filter_status:
+        query["status"] = filter_status
     
     requests = await db.leave_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
     return requests
