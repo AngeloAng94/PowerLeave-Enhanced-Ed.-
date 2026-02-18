@@ -622,6 +622,120 @@ async def get_leave_types(current_user: dict = Depends(get_current_user)):
     ).to_list(100)
     return types
 
+@app.post("/api/leave-types")
+async def create_leave_type(
+    type_data: dict,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Create a new leave type (admin only)"""
+    org_id = current_user["org_id"]
+    
+    leave_type = {
+        "id": str(uuid.uuid4()),
+        "org_id": org_id,
+        "name": type_data.get("name"),
+        "days_per_year": type_data.get("days_per_year", 26),
+        "color": type_data.get("color", "#22C55E"),
+        "is_custom": True
+    }
+    
+    await db.leave_types.insert_one(leave_type)
+    return {"success": True, "id": leave_type["id"]}
+
+@app.put("/api/leave-types/{type_id}")
+async def update_leave_type(
+    type_id: str,
+    type_data: dict,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Update a leave type (admin only)"""
+    org_id = current_user["org_id"]
+    
+    update_fields = {}
+    for field in ["name", "days_per_year", "color"]:
+        if field in type_data:
+            update_fields[field] = type_data[field]
+    
+    if update_fields:
+        result = await db.leave_types.update_one(
+            {"id": type_id, "$or": [{"org_id": None}, {"org_id": org_id}]},
+            {"$set": update_fields}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Tipo assenza non trovato")
+    
+    return {"success": True}
+
+@app.delete("/api/leave-types/{type_id}")
+async def delete_leave_type(
+    type_id: str,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Delete a custom leave type (admin only)"""
+    org_id = current_user["org_id"]
+    
+    # Don't allow deleting default types
+    if type_id in ["ferie", "permesso", "malattia"]:
+        raise HTTPException(status_code=400, detail="Non puoi eliminare i tipi predefiniti")
+    
+    result = await db.leave_types.delete_one({
+        "id": type_id,
+        "org_id": org_id,
+        "is_custom": True
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Tipo assenza non trovato o non eliminabile")
+    
+    return {"success": True}
+
+# ============== SETTINGS/RULES ==============
+
+@app.get("/api/settings/rules")
+async def get_rules(current_user: dict = Depends(get_current_user)):
+    """Get organization rules"""
+    org_id = current_user["org_id"]
+    
+    rules = await db.org_settings.find_one(
+        {"org_id": org_id, "type": "rules"},
+        {"_id": 0}
+    )
+    
+    if not rules:
+        # Return defaults
+        return {
+            "min_notice_days": 7,
+            "max_consecutive_days": 15,
+            "auto_approve_under_days": 0,
+            "blocked_periods": []
+        }
+    
+    return rules
+
+@app.put("/api/settings/rules")
+async def update_rules(
+    rules_data: dict,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Update organization rules (admin only)"""
+    org_id = current_user["org_id"]
+    
+    await db.org_settings.update_one(
+        {"org_id": org_id, "type": "rules"},
+        {"$set": {
+            "org_id": org_id,
+            "type": "rules",
+            "min_notice_days": rules_data.get("min_notice_days", 7),
+            "max_consecutive_days": rules_data.get("max_consecutive_days", 15),
+            "auto_approve_under_days": rules_data.get("auto_approve_under_days", 0),
+            "blocked_periods": rules_data.get("blocked_periods", []),
+            "updated_at": datetime.now(timezone.utc)
+        }},
+        upsert=True
+    )
+    
+    return {"success": True}
+
 # ============== LEAVE REQUESTS ==============
 
 @app.post("/api/leave-requests")
