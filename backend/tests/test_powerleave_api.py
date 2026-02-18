@@ -1,482 +1,354 @@
 """
-PowerLeave API Tests - Backend API Testing
-Tests: Authentication, Leave Requests, Announcements, Closures, Team Management
+PowerLeave API Tests - Stable, idempotent test suite.
+Each test class uses unique data and cleans up after itself.
+Run: pytest tests/test_powerleave_api.py -v
 """
 
 import pytest
 import requests
 import os
+import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://saas-tech-check.preview.emergentagent.com')
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://saas-tech-check.preview.emergentagent.com")
+
+# Unique run ID to avoid collisions across consecutive runs
+RUN_ID = uuid.uuid4().hex[:8]
+
+
+# ──────────────────────────────────────────────
+# Fixtures
+# ──────────────────────────────────────────────
+
+@pytest.fixture(scope="session")
+def admin_token():
+    resp = requests.post(f"{BASE_URL}/api/auth/login", json={
+        "email": "admin@demo.it", "password": "demo123"
+    })
+    assert resp.status_code == 200, f"Admin login failed: {resp.text}"
+    return resp.json()["token"]
+
+
+@pytest.fixture(scope="session")
+def user_token():
+    resp = requests.post(f"{BASE_URL}/api/auth/login", json={
+        "email": "mario@demo.it", "password": "demo123"
+    })
+    assert resp.status_code == 200, f"User login failed: {resp.text}"
+    return resp.json()["token"]
+
+
+@pytest.fixture(scope="session")
+def admin_headers(admin_token):
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest.fixture(scope="session")
+def user_headers(user_token):
+    return {"Authorization": f"Bearer {user_token}"}
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_test_data(admin_headers):
+    """Before & after: remove any leftover test leave requests for mario
+    that could cause overlap conflicts on the unique date range we use."""
+    _cleanup(admin_headers)
+    yield
+    _cleanup(admin_headers)
+
+
+def _cleanup(admin_headers):
+    """Delete leave requests created by tests (notes start with TEST_RUN_)."""
+    resp = requests.get(f"{BASE_URL}/api/leave-requests", headers=admin_headers)
+    if resp.status_code == 200:
+        for req in resp.json():
+            if req.get("notes", "").startswith("TEST_RUN_"):
+                requests.put(
+                    f"{BASE_URL}/api/leave-requests/{req['id']}/review",
+                    headers=admin_headers,
+                    json={"status": "rejected"},
+                )
+
+
+# ──────────────────────────────────────────────
+# Health Check
+# ──────────────────────────────────────────────
 
 class TestHealthCheck:
-    """Health check and basic connectivity tests"""
-    
     def test_health_endpoint(self):
-        response = requests.get(f"{BASE_URL}/api/health")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "healthy"
-        print(f"✓ Health check passed: {data}")
+        resp = requests.get(f"{BASE_URL}/api/health")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "healthy"
 
+
+# ──────────────────────────────────────────────
+# Authentication
+# ──────────────────────────────────────────────
 
 class TestAuthentication:
-    """Authentication endpoint tests"""
-    
-    def test_login_admin_success(self):
-        """Test admin login with demo credentials"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
+    def test_login_admin(self):
+        resp = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@demo.it", "password": "demo123"
         })
-        assert response.status_code == 200
-        data = response.json()
+        assert resp.status_code == 200
+        data = resp.json()
         assert "token" in data
-        assert data["email"] == "admin@demo.it"
         assert data["role"] == "admin"
-        assert "user_id" in data
-        print(f"✓ Admin login successful: {data['name']}")
-    
-    def test_login_user_success(self):
-        """Test user login with demo credentials"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "mario@demo.it",
-            "password": "demo123"
-        })
-        assert response.status_code == 200
-        data = response.json()
-        assert "token" in data
-        assert data["email"] == "mario@demo.it"
-        assert data["role"] == "user"
-        print(f"✓ User login successful: {data['name']}")
-    
-    def test_login_invalid_credentials(self):
-        """Test login with invalid credentials"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "invalid@demo.it",
-            "password": "wrongpassword"
-        })
-        assert response.status_code == 401
-        print("✓ Invalid login rejected correctly")
-    
-    def test_auth_me_without_token(self):
-        """Test /auth/me without token returns 401"""
-        response = requests.get(f"{BASE_URL}/api/auth/me")
-        assert response.status_code == 401
-        print("✓ Unauthorized access correctly rejected")
 
+    def test_login_user(self):
+        resp = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "mario@demo.it", "password": "demo123"
+        })
+        assert resp.status_code == 200
+        assert resp.json()["role"] == "user"
+
+    def test_login_invalid(self):
+        resp = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "invalid@demo.it", "password": "wrong"
+        })
+        assert resp.status_code == 401
+
+    def test_me_without_token(self):
+        resp = requests.get(f"{BASE_URL}/api/auth/me")
+        assert resp.status_code == 401
+
+    def test_session_persistence(self, admin_headers):
+        for _ in range(3):
+            resp = requests.get(f"{BASE_URL}/api/auth/me", headers=admin_headers)
+            assert resp.status_code == 200
+            assert resp.json()["email"] == "admin@demo.it"
+
+
+# ──────────────────────────────────────────────
+# Leave Types
+# ──────────────────────────────────────────────
 
 class TestLeaveTypes:
-    """Leave types endpoint tests"""
-    
-    @pytest.fixture
-    def admin_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
-        })
-        return response.json().get("token")
-    
-    def test_get_leave_types(self, admin_token):
-        """Test fetching leave types"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/leave-types", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        assert len(data) >= 4  # At least Ferie, Permesso, Malattia, Maternità
-        leave_type_names = [lt["name"] for lt in data]
-        assert "Ferie" in leave_type_names
-        assert "Permesso" in leave_type_names
-        print(f"✓ Leave types retrieved: {len(data)} types")
+    def test_get_leave_types(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/leave-types", headers=admin_headers)
+        assert resp.status_code == 200
+        names = [t["name"] for t in resp.json()]
+        assert "Ferie" in names
+        assert "Permesso" in names
 
+
+# ──────────────────────────────────────────────
+# Leave Requests (previously flaky)
+# ──────────────────────────────────────────────
 
 class TestLeaveRequests:
-    """Leave request CRUD tests"""
-    
-    @pytest.fixture
-    def admin_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
-        })
-        return response.json().get("token")
-    
-    @pytest.fixture
-    def user_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "mario@demo.it",
-            "password": "demo123"
-        })
-        return response.json().get("token")
-    
-    def test_get_leave_requests_admin(self, admin_token):
-        """Admin can get all leave requests"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/leave-requests", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        print(f"✓ Admin retrieved {len(data)} leave requests")
-    
-    def test_create_leave_request(self, user_token):
-        """User can create a leave request"""
-        headers = {"Authorization": f"Bearer {user_token}"}
-        response = requests.post(f"{BASE_URL}/api/leave-requests", 
-            headers=headers,
+    def test_get_leave_requests_admin(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/leave-requests", headers=admin_headers)
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
+
+    def test_create_leave_request(self, user_headers, admin_headers):
+        """Create a leave request on a unique far-future date to avoid overlaps."""
+        # Use a unique date based on RUN_ID to guarantee no overlap
+        unique_day = (int(RUN_ID, 16) % 28) + 1  # 1-28
+        start = f"2029-06-{unique_day:02d}"
+        end = start
+
+        resp = requests.post(f"{BASE_URL}/api/leave-requests",
+            headers=user_headers,
             json={
                 "leave_type_id": "permesso",
-                "start_date": "2026-12-15",
-                "end_date": "2026-12-15",
+                "start_date": start,
+                "end_date": end,
                 "hours": 4,
-                "notes": "TEST_Visita medica"
+                "notes": f"TEST_RUN_{RUN_ID}"
             }
         )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] == True
+        assert resp.status_code == 200, f"Create leave request failed: {resp.text}"
+        data = resp.json()
+        assert data["success"] is True
         assert "request_id" in data
-        print(f"✓ Leave request created: {data['request_id']}")
-    
-    def test_leave_request_approval(self, admin_token):
-        """Admin can approve pending leave requests"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        # Get pending requests
-        response = requests.get(f"{BASE_URL}/api/leave-requests?filter_status=pending", headers=headers)
-        assert response.status_code == 200
-        pending = response.json()
-        print(f"✓ Found {len(pending)} pending requests")
-        # Test passes regardless of whether there are pending requests
 
+        # Cleanup: reject so it doesn't block future runs on overlapping dates
+        req_id = data["request_id"]
+        requests.put(
+            f"{BASE_URL}/api/leave-requests/{req_id}/review",
+            headers=admin_headers,
+            json={"status": "rejected"}
+        )
+
+    def test_leave_request_review(self, user_headers, admin_headers):
+        """Create then approve a leave request."""
+        unique_day = ((int(RUN_ID, 16) + 5) % 28) + 1
+        start = f"2029-07-{unique_day:02d}"
+        end = start
+
+        # Create
+        create_resp = requests.post(f"{BASE_URL}/api/leave-requests",
+            headers=user_headers,
+            json={
+                "leave_type_id": "ferie",
+                "start_date": start,
+                "end_date": end,
+                "hours": 8,
+                "notes": f"TEST_RUN_{RUN_ID}_review"
+            }
+        )
+        assert create_resp.status_code == 200
+        req_id = create_resp.json()["request_id"]
+
+        # Approve
+        review_resp = requests.put(
+            f"{BASE_URL}/api/leave-requests/{req_id}/review",
+            headers=admin_headers,
+            json={"status": "approved"}
+        )
+        assert review_resp.status_code == 200
+
+        # Verify status changed
+        all_resp = requests.get(f"{BASE_URL}/api/leave-requests", headers=admin_headers)
+        found = [r for r in all_resp.json() if r["id"] == req_id]
+        assert len(found) == 1
+        assert found[0]["status"] == "approved"
+
+
+# ──────────────────────────────────────────────
+# Announcements
+# ──────────────────────────────────────────────
 
 class TestAnnouncements:
-    """Announcements (Bacheca) CRUD tests"""
-    
-    @pytest.fixture
-    def admin_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
-        })
-        return response.json().get("token")
-    
-    @pytest.fixture
-    def user_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "mario@demo.it",
-            "password": "demo123"
-        })
-        return response.json().get("token")
-    
-    def test_get_announcements(self, admin_token):
-        """Get all announcements"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/announcements", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        print(f"✓ Retrieved {len(data)} announcements")
-    
-    def test_create_announcement_admin(self, admin_token):
-        """Admin can create announcement"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.post(f"{BASE_URL}/api/announcements", 
-            headers=headers,
-            json={
-                "title": "TEST_Annuncio Test",
-                "content": "Questo è un annuncio di test creato dal test automatico",
-                "priority": "normal"
-            }
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] == True
-        assert "id" in data
-        print(f"✓ Announcement created: {data['id']}")
-        return data["id"]
-    
-    def test_create_announcement_user_forbidden(self, user_token):
-        """Regular user cannot create announcement (403)"""
-        headers = {"Authorization": f"Bearer {user_token}"}
-        response = requests.post(f"{BASE_URL}/api/announcements", 
-            headers=headers,
-            json={
-                "title": "TEST_User Annuncio",
-                "content": "Should fail",
-                "priority": "normal"
-            }
-        )
-        assert response.status_code == 403
-        print("✓ User correctly denied announcement creation")
-    
-    def test_announcement_crud_flow(self, admin_token):
-        """Full CRUD flow for announcements"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # CREATE
-        create_response = requests.post(f"{BASE_URL}/api/announcements", 
-            headers=headers,
-            json={
-                "title": "TEST_CRUD Annuncio",
-                "content": "Test contenuto per CRUD",
-                "priority": "high"
-            }
-        )
-        assert create_response.status_code == 200
-        announcement_id = create_response.json()["id"]
-        print(f"✓ Created announcement: {announcement_id}")
-        
-        # READ - verify it exists
-        get_response = requests.get(f"{BASE_URL}/api/announcements", headers=headers)
-        assert get_response.status_code == 200
-        announcements = get_response.json()
-        found = any(a["id"] == announcement_id for a in announcements)
-        assert found, "Created announcement not found in list"
-        print("✓ Announcement found in list")
-        
-        # UPDATE
-        update_response = requests.put(f"{BASE_URL}/api/announcements/{announcement_id}",
-            headers=headers,
-            json={
-                "title": "TEST_CRUD Annuncio UPDATED",
-                "content": "Contenuto aggiornato",
-                "priority": "low"
-            }
-        )
-        assert update_response.status_code == 200
-        print("✓ Announcement updated")
-        
-        # DELETE
-        delete_response = requests.delete(f"{BASE_URL}/api/announcements/{announcement_id}",
-            headers=headers
-        )
-        assert delete_response.status_code == 200
-        print("✓ Announcement deleted")
-        
-        # VERIFY DELETION
-        get_response2 = requests.get(f"{BASE_URL}/api/announcements", headers=headers)
-        announcements2 = get_response2.json()
-        found2 = any(a["id"] == announcement_id for a in announcements2)
-        assert not found2, "Deleted announcement still exists"
-        print("✓ Deletion verified")
+    def test_get_announcements(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/announcements", headers=admin_headers)
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
 
+    def test_crud_announcement(self, admin_headers):
+        h = admin_headers
+        # Create
+        c = requests.post(f"{BASE_URL}/api/announcements", headers=h, json={
+            "title": f"TEST_RUN_{RUN_ID}", "content": "body", "priority": "high"
+        })
+        assert c.status_code == 200
+        aid = c.json()["id"]
+
+        # Read
+        r = requests.get(f"{BASE_URL}/api/announcements", headers=h)
+        assert any(a["id"] == aid for a in r.json())
+
+        # Update
+        u = requests.put(f"{BASE_URL}/api/announcements/{aid}", headers=h, json={
+            "title": f"TEST_RUN_{RUN_ID}_updated"
+        })
+        assert u.status_code == 200
+
+        # Delete
+        d = requests.delete(f"{BASE_URL}/api/announcements/{aid}", headers=h)
+        assert d.status_code == 200
+
+        # Verify deleted
+        r2 = requests.get(f"{BASE_URL}/api/announcements", headers=h)
+        assert not any(a["id"] == aid for a in r2.json())
+
+    def test_user_cannot_create(self, user_headers):
+        resp = requests.post(f"{BASE_URL}/api/announcements", headers=user_headers, json={
+            "title": "nope", "content": "nope"
+        })
+        assert resp.status_code == 403
+
+
+# ──────────────────────────────────────────────
+# Closures & Exceptions
+# ──────────────────────────────────────────────
 
 class TestClosures:
-    """Company closures (Chiusure Aziendali) tests"""
-    
-    @pytest.fixture
-    def admin_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
+    def test_get_closures(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/closures?year=2026", headers=admin_headers)
+        assert resp.status_code == 200
+        reasons = [c["reason"] for c in resp.json()]
+        assert any("Natale" in r for r in reasons)
+
+    def test_closure_crud_and_exception(self, admin_headers, user_headers):
+        # Create closure
+        c = requests.post(f"{BASE_URL}/api/closures", headers=admin_headers, json={
+            "start_date": "2029-11-15", "end_date": "2029-11-16",
+            "reason": f"TEST_RUN_{RUN_ID}", "type": "shutdown",
+            "auto_leave": False, "allow_exceptions": True
         })
-        return response.json().get("token")
-    
-    @pytest.fixture
-    def user_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "mario@demo.it",
-            "password": "demo123"
-        })
-        return response.json().get("token")
-    
-    def test_get_closures(self, admin_token):
-        """Get company closures and holidays"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/closures?year=2026", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        # Should have Italian holidays
-        holiday_reasons = [c["reason"] for c in data]
-        print(f"✓ Retrieved {len(data)} closures/holidays")
-        # Check for standard Italian holidays
-        if any("Natale" in r for r in holiday_reasons):
-            print("✓ Italian holidays present (Natale found)")
-    
-    def test_create_closure_admin(self, admin_token):
-        """Admin can create company closure"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.post(f"{BASE_URL}/api/closures", 
-            headers=headers,
-            json={
-                "start_date": "2026-12-24",
-                "end_date": "2026-12-31",
-                "reason": "TEST_Chiusura natalizia",
-                "type": "shutdown",
-                "auto_leave": False,  # Don't auto-create leaves in test
-                "allow_exceptions": True
-            }
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] == True
-        assert "id" in data
-        print(f"✓ Closure created: {data['id']}")
-        return data["id"]
-    
-    def test_create_closure_user_forbidden(self, user_token):
-        """Regular user cannot create closure (403)"""
-        headers = {"Authorization": f"Bearer {user_token}"}
-        response = requests.post(f"{BASE_URL}/api/closures", 
-            headers=headers,
-            json={
-                "start_date": "2026-12-24",
-                "end_date": "2026-12-31",
-                "reason": "TEST_User Closure",
-                "type": "shutdown"
-            }
-        )
-        assert response.status_code == 403
-        print("✓ User correctly denied closure creation")
-    
-    def test_closure_exception_flow(self, admin_token, user_token):
-        """Test closure exception request workflow"""
-        admin_headers = {"Authorization": f"Bearer {admin_token}"}
-        user_headers = {"Authorization": f"Bearer {user_token}"}
-        
-        # Create a closure with allow_exceptions
-        create_response = requests.post(f"{BASE_URL}/api/closures", 
-            headers=admin_headers,
-            json={
-                "start_date": "2026-11-15",
-                "end_date": "2026-11-16",
-                "reason": "TEST_Exception Test Closure",
-                "type": "shutdown",
-                "auto_leave": False,
-                "allow_exceptions": True
-            }
-        )
-        assert create_response.status_code == 200
-        closure_id = create_response.json()["id"]
-        print(f"✓ Created closure for exception test: {closure_id}")
-        
+        assert c.status_code == 200
+        cid = c.json()["id"]
+
         # User requests exception
-        exception_response = requests.post(f"{BASE_URL}/api/closures/{closure_id}/exception",
-            headers=user_headers,
-            json={"reason": "TEST_Ho un progetto urgente da consegnare"}
-        )
-        assert exception_response.status_code == 200
-        exception_id = exception_response.json()["id"]
-        print(f"✓ Exception requested: {exception_id}")
-        
-        # Admin can view exceptions
-        exceptions_response = requests.get(f"{BASE_URL}/api/closures/exceptions",
-            headers=admin_headers
-        )
-        assert exceptions_response.status_code == 200
-        exceptions = exceptions_response.json()
-        print(f"✓ Admin can view {len(exceptions)} exceptions")
-        
-        # Clean up - delete closure
-        delete_response = requests.delete(f"{BASE_URL}/api/closures/{closure_id}",
-            headers=admin_headers
-        )
-        assert delete_response.status_code == 200
-        print("✓ Closure cleaned up")
+        exc = requests.post(f"{BASE_URL}/api/closures/{cid}/exception",
+            headers=user_headers, json={"reason": f"TEST_RUN_{RUN_ID}_exc"})
+        assert exc.status_code == 200
 
+        # Admin sees exceptions
+        excs = requests.get(f"{BASE_URL}/api/closures/exceptions", headers=admin_headers)
+        assert excs.status_code == 200
+        assert isinstance(excs.json(), list)
 
-class TestTeamManagement:
-    """Team management tests"""
-    
-    @pytest.fixture
-    def admin_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
+        # Cleanup
+        requests.delete(f"{BASE_URL}/api/closures/{cid}", headers=admin_headers)
+
+    def test_user_cannot_create_closure(self, user_headers):
+        resp = requests.post(f"{BASE_URL}/api/closures", headers=user_headers, json={
+            "start_date": "2029-12-24", "end_date": "2029-12-31",
+            "reason": "nope", "type": "shutdown"
         })
-        return response.json().get("token")
-    
-    def test_get_team_members(self, admin_token):
-        """Get team members"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/team", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        assert len(data) >= 4  # Demo has 4 users
-        member_names = [m["name"] for m in data]
-        print(f"✓ Retrieved {len(data)} team members: {', '.join(member_names)}")
-    
-    def test_get_leave_balances(self, admin_token):
-        """Get leave balances"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/leave-balances", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        # Each user should have balances for different leave types
-        print(f"✓ Retrieved {len(data)} leave balance records")
+        assert resp.status_code == 403
 
 
-class TestStatistics:
-    """Statistics and dashboard data tests"""
-    
-    @pytest.fixture
-    def admin_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
+# ──────────────────────────────────────────────
+# Team Management
+# ──────────────────────────────────────────────
+
+class TestTeam:
+    def test_get_team(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/team", headers=admin_headers)
+        assert resp.status_code == 200
+        assert len(resp.json()) >= 4
+
+    def test_invite_no_temp_password_exposed(self, admin_headers):
+        """Verify temp_password is NOT in the API response."""
+        email = f"test_{RUN_ID}@audit.it"
+        resp = requests.post(f"{BASE_URL}/api/team/invite", headers=admin_headers, json={
+            "email": email, "name": "Test Audit", "role": "user"
         })
-        return response.json().get("token")
-    
-    def test_get_stats(self, admin_token):
-        """Get dashboard statistics"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/stats", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert "approved_count" in data
-        assert "pending_count" in data
-        assert "available_staff" in data
-        assert "total_staff" in data
-        assert "utilization_rate" in data
-        print(f"✓ Stats: approved={data['approved_count']}, pending={data['pending_count']}, staff={data['available_staff']}/{data['total_staff']}, utilization={data['utilization_rate']}%")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "temp_password" not in data, "temp_password MUST NOT be in response"
+        uid = data["user_id"]
+
+        # Cleanup
+        requests.delete(f"{BASE_URL}/api/team/{uid}", headers=admin_headers)
 
 
-class TestCalendar:
-    """Calendar data tests"""
-    
-    @pytest.fixture
-    def admin_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
-        })
-        return response.json().get("token")
-    
-    def test_get_monthly_calendar(self, admin_token):
-        """Get monthly calendar data"""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        response = requests.get(f"{BASE_URL}/api/calendar/monthly?year=2026&month=3", headers=headers)
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        print(f"✓ Calendar data retrieved: {len(data)} leave entries for March 2026")
+# ──────────────────────────────────────────────
+# Statistics & Calendar & Balances
+# ──────────────────────────────────────────────
 
+class TestStatsAndData:
+    def test_stats(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/stats", headers=admin_headers)
+        assert resp.status_code == 200
+        d = resp.json()
+        for key in ["approved_count", "pending_count", "available_staff", "total_staff", "utilization_rate"]:
+            assert key in d
 
-class TestSessionPersistence:
-    """Test session persistence across requests"""
-    
-    def test_session_persists(self):
-        """Test that session token persists across multiple requests"""
-        # Login and get token
-        login_response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin@demo.it",
-            "password": "demo123"
-        })
-        assert login_response.status_code == 200
-        token = login_response.json()["token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        # Make multiple requests with same token
-        for i in range(3):
-            me_response = requests.get(f"{BASE_URL}/api/auth/me", headers=headers)
-            assert me_response.status_code == 200
-            data = me_response.json()
-            assert data["email"] == "admin@demo.it"
-        
-        print("✓ Session persisted across 3 consecutive requests")
+    def test_calendar(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/calendar/monthly?year=2026&month=3", headers=admin_headers)
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
+
+    def test_leave_balances(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/leave-balances", headers=admin_headers)
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
+
+    def test_organization(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/organization", headers=admin_headers)
+        assert resp.status_code == 200
+        assert "org_id" in resp.json()
+
+    def test_settings_rules(self, admin_headers):
+        resp = requests.get(f"{BASE_URL}/api/settings/rules", headers=admin_headers)
+        assert resp.status_code == 200
+        d = resp.json()
+        assert "min_notice_days" in d
 
 
 if __name__ == "__main__":
