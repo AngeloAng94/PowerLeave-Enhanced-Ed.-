@@ -1,13 +1,13 @@
 # PowerLeave - Product Requirements Document
 
 ## Original Problem Statement
-Sistema di gestione ferie per PMI italiane con design moderno, configurabile dalle aziende.
+Sistema di gestione ferie per PMI italiane con design moderno, configurabile dalle aziende. Trasformare il progetto GitHub PowerLeave in un'applicazione SaaS production-ready.
 
 ## Architecture
-- **Frontend**: React 18 + Tailwind CSS + Sonner
-- **Backend**: FastAPI + MongoDB
-- **Auth**: JWT + Google OAuth
-- **Theme**: Light/Dark mode
+- **Frontend**: React 18 + CSS Custom (variabili CSS per tema) + Sonner
+- **Backend**: FastAPI + MongoDB (Motor async)
+- **Auth**: JWT + Google OAuth (predisposto via Emergent)
+- **Theme**: Light/Dark mode con persistenza localStorage
 
 ## Demo Users
 | Email | Password | Ruolo |
@@ -19,61 +19,48 @@ Sistema di gestione ferie per PMI italiane con design moderno, configurabile dal
 
 ## What's Been Implemented
 
-### Session 4 - Feb 2026 (Configurabilità)
-- ✅ **Pagina Impostazioni Completa** con 4 tab:
-  - **Organizzazione**: Nome azienda, Email HR
-  - **Tipi Assenza**: CRUD completo, colori, giorni/anno
-  - **Regole**: Preavviso minimo, max consecutivi, auto-approvazione
-  - **Team**: Inviti email, gestione ruoli (Admin/Manager/Membro)
-- ✅ **Fix Hover Sidebar**: Testo blu su hover (non bianco)
-- ✅ **API Backend nuove**: /api/leave-types CRUD, /api/settings/rules
+### Session 5 - 18 Feb 2026 (Audit Tecnico)
+- Audit tecnico completo generato: `/app/AUDIT_TECNICO_POWERLEAVE.md` (1023 righe)
+- Copre: Architettura, Sicurezza, Backend, Frontend, DB Schema, API Reference (35 endpoint), Testing, CI/CD, Performance, Istruzioni Riproduzione, Debito Tecnico, Roadmap
+
+### Session 4 - Feb 2026 (Configurabilita)
+- Pagina Impostazioni Completa con 4 tab (Org, Leave Types, Rules, Team)
+- Fix Hover Sidebar
+- API Backend nuove: /api/leave-types CRUD, /api/settings/rules
 
 ### Session 3 - Feb 2026
-- ✅ Fix contrasti dark mode
-- ✅ Sidebar moderna con gradienti
-- ✅ Tabella riepilogo team compatta
+- Fix contrasti dark mode
+- Sidebar moderna con gradienti
+- Tabella riepilogo team compatta
 
 ### Session 2 - Feb 2026
-- ✅ Analytics Dashboard avanzate
-- ✅ Notifiche push (toast + browser)
+- Analytics Dashboard avanzate
+- Notifiche push (toast + browser)
 
 ### Session 1 - Feb 2026
-- ✅ Autenticazione JWT
-- ✅ Dashboard, Calendario, Richieste
-- ✅ Bacheca Annunci, Chiusure Aziendali
+- Autenticazione JWT
+- Dashboard, Calendario, Richieste
+- Bacheca Annunci, Chiusure Aziendali
 
-## Impostazioni Configurabili (Solo Admin)
+## Key Stats
+- Backend: server.py (1463 righe, monolite)
+- Frontend: App.js (3533 righe, monolite)
+- CSS: index.css (541 righe)
+- DB: 8 collections, 5 indici, 35 API endpoints
+- Test: 95.5% backend, 100% frontend (4 iterazioni)
 
-### 1. Organizzazione
-- Nome azienda
-- Email HR/Contatto
+## Next Tasks (P0 - Prima del lancio)
+- [ ] Rendere il progetto completamente funzionante e privo di bug
+- [ ] Refactoring backend (server.py -> moduli)
+- [ ] Refactoring frontend (App.js -> componenti separati)
+- [ ] Fix sicurezza (SECRET_KEY, rate limiting)
+- [ ] Dockerizzazione
+- [ ] README.md professionale
 
-### 2. Tipi di Assenza
-- Ferie (26gg, verde)
-- Permesso (32gg, blu)
-- Malattia (180gg, rosso)
-- Maternità/Paternità (150gg, viola)
-- + Tipi custom con colore e giorni personalizzabili
-
-### 3. Regole Richieste
-- Preavviso minimo (default: 7gg)
-- Max giorni consecutivi (default: 15gg)
-- Auto-approvazione sotto X giorni (default: 0 = disabilitato)
-
-### 4. Team
-- Invito membri via email
-- Ruoli: Admin, Manager, Membro
-- Rimozione membri
-
-## Test Status
-- Backend: 95%+ API funzionanti
-- Frontend: 100% UI testata
-
-## Next Tasks (P1)
-- [ ] Integrazione Google Calendar
-- [ ] Notifiche email
+## Future (P1-P2)
+- [ ] Integrazione Google Calendar (on hold)
+- [ ] Notifiche email SendGrid (on hold)
 - [ ] Export report
-
-## Future (P2)
+- [ ] Grafici interattivi (recharts)
 - [ ] Multi-livello approvazioni
 - [ ] App mobile PWA
