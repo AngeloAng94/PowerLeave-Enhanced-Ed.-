@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt pytest requests
+
+      - name: Start backend server
+        working-directory: backend
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: powerleave_ci
+          SECRET_KEY: ci-test-secret-key-not-for-production
+        run: |
+          uvicorn server:app --host 0.0.0.0 --port 8001 &
+          sleep 5
+          curl -f http://localhost:8001/api/health
+
+      - name: Run pytest
+        working-directory: backend
+        env:
+          REACT_APP_BACKEND_URL: http://localhost:8001
+        run: pytest tests/ -v --tb=short --junitxml=../test_reports/ci_results.xml
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        working-directory: frontend
+        env:
+          REACT_APP_BACKEND_URL: https://placeholder.example.com
+          CI: "true"
+        run: yarn build
