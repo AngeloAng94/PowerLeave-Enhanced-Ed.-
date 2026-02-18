@@ -1062,11 +1062,13 @@ async def invite_team_member(
             "used_days": 0
         })
     
+    # Log temp password server-side only (TODO: send via email)
+    logger.info("Invited user %s (%s) with temp password: %s", name, email, temp_password)
+    
     return {
         "success": True,
         "user_id": user_id,
-        "temp_password": temp_password,
-        "message": f"Utente creato. Password temporanea: {temp_password}"
+        "message": f"Utente {name} invitato con successo. La password temporanea è stata generata."
     }
 
 @app.put("/api/team/{user_id}")
