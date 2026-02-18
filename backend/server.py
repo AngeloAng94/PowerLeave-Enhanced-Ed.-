@@ -411,7 +411,7 @@ async def seed_demo_users():
 # ============== AUTH ENDPOINTS ==============
 
 @app.post("/api/auth/register")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def register(request: Request, user_data: UserCreate, response: Response):
     # Check if email exists
     existing = await db.users.find_one({"email": user_data.email})
@@ -482,7 +482,7 @@ async def register(request: Request, user_data: UserCreate, response: Response):
     }
 
 @app.post("/api/auth/login")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def login(request: Request, credentials: UserLogin, response: Response):
     user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
     if not user:
