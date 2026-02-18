@@ -1117,7 +1117,7 @@ function Dashboard() {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     currentPage === item.id
                       ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                      : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
                   }`}
                 >
                   {item.icon}
