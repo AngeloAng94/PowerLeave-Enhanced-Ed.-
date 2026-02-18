@@ -4,7 +4,9 @@ Multi-tenant SaaS with JWT + Google OAuth authentication
 """
 
 import os
+import sys
 import uuid
+import logging
 import httpx
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
@@ -18,15 +20,31 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 load_dotenv()
 
 # Configuration
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-DB_NAME = os.environ.get("DB_NAME", "powerleave")
-SECRET_KEY = os.environ.get("SECRET_KEY", "powerleave-secret-key-change-in-production")
+MONGO_URL = os.environ.get("MONGO_URL")
+DB_NAME = os.environ.get("DB_NAME")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+if not MONGO_URL:
+    sys.exit("FATAL: MONGO_URL environment variable is not set.")
+if not DB_NAME:
+    sys.exit("FATAL: DB_NAME environment variable is not set.")
+if not SECRET_KEY:
+    sys.exit("FATAL: SECRET_KEY environment variable is not set. Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(48))\"")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
+logger = logging.getLogger("powerleave")
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -61,6 +79,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Rate limiter state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS - Allow credentials for session persistence
 app.add_middleware(
@@ -389,7 +411,8 @@ async def seed_demo_users():
 # ============== AUTH ENDPOINTS ==============
 
 @app.post("/api/auth/register")
-async def register(user_data: UserCreate, response: Response):
+@limiter.limit("5/minute")
+async def register(request: Request, user_data: UserCreate, response: Response):
     # Check if email exists
     existing = await db.users.find_one({"email": user_data.email})
     if existing:
@@ -459,7 +482,8 @@ async def register(user_data: UserCreate, response: Response):
     }
 
 @app.post("/api/auth/login")
-async def login(credentials: UserLogin, response: Response):
+@limiter.limit("5/minute")
+async def login(request: Request, credentials: UserLogin, response: Response):
     user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=401, detail="Credenziali non valide")
