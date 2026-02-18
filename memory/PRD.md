@@ -5,7 +5,7 @@ Sistema di gestione ferie per PMI italiane con design moderno, configurabile dal
 
 ## Architecture
 - **Frontend**: React 18 + CSS Custom (variabili CSS per tema) + Sonner
-- **Backend**: FastAPI + MongoDB (Motor async)
+- **Backend**: FastAPI + MongoDB (Motor async) + slowapi (rate limiting)
 - **Auth**: JWT + Google OAuth (predisposto via Emergent)
 - **Theme**: Light/Dark mode con persistenza localStorage
 
@@ -19,42 +19,38 @@ Sistema di gestione ferie per PMI italiane con design moderno, configurabile dal
 
 ## What's Been Implemented
 
+### Session 6 - 18 Feb 2026 (P0 Security & CI)
+- SECRET_KEY fail-fast: app crasha all'avvio se manca in .env
+- Rate limiting (slowapi) su /api/auth/login e /api/auth/register: 10/min per IP
+- temp_password rimossa dalla response di POST /api/team/invite (log solo server-side)
+- Test suite riscritta: 23 test idempotenti, 100% stabili su run consecutivi (3x verified)
+- CI GitHub Actions: .github/workflows/ci.yml (backend pytest + frontend build)
+
 ### Session 5 - 18 Feb 2026 (Audit Tecnico)
-- Audit tecnico completo generato: `/app/AUDIT_TECNICO_POWERLEAVE.md` (1023 righe)
-- Copre: Architettura, Sicurezza, Backend, Frontend, DB Schema, API Reference (35 endpoint), Testing, CI/CD, Performance, Istruzioni Riproduzione, Debito Tecnico, Roadmap
+- Audit tecnico completo: /app/AUDIT_TECNICO_POWERLEAVE.md (1023 righe)
 
 ### Session 4 - Feb 2026 (Configurabilita)
-- Pagina Impostazioni Completa con 4 tab (Org, Leave Types, Rules, Team)
-- Fix Hover Sidebar
-- API Backend nuove: /api/leave-types CRUD, /api/settings/rules
+- Pagina Impostazioni (4 tab), Leave Types CRUD, Settings Rules API
 
 ### Session 3 - Feb 2026
-- Fix contrasti dark mode
-- Sidebar moderna con gradienti
-- Tabella riepilogo team compatta
+- Fix contrasti dark mode, Sidebar moderna, Tabella team compatta
 
 ### Session 2 - Feb 2026
-- Analytics Dashboard avanzate
-- Notifiche push (toast + browser)
+- Analytics Dashboard, Notifiche push (toast + browser)
 
 ### Session 1 - Feb 2026
-- Autenticazione JWT
-- Dashboard, Calendario, Richieste
-- Bacheca Annunci, Chiusure Aziendali
+- Auth JWT, Dashboard, Calendario, Richieste, Bacheca Annunci, Chiusure Aziendali
 
 ## Key Stats
-- Backend: server.py (1463 righe, monolite)
+- Backend: server.py (1480 righe, monolite)
 - Frontend: App.js (3533 righe, monolite)
-- CSS: index.css (541 righe)
-- DB: 8 collections, 5 indici, 35 API endpoints
-- Test: 95.5% backend, 100% frontend (4 iterazioni)
+- DB: 8+ collections, 5 indici, 35 API endpoints
+- Test: 23/23 passed (100%, 3 run consecutivi verificati)
 
 ## Next Tasks (P0 - Prima del lancio)
-- [ ] Rendere il progetto completamente funzionante e privo di bug
 - [ ] Refactoring backend (server.py -> moduli)
 - [ ] Refactoring frontend (App.js -> componenti separati)
-- [ ] Fix sicurezza (SECRET_KEY, rate limiting)
-- [ ] Dockerizzazione
+- [ ] Dockerizzazione (Dockerfile + docker-compose)
 - [ ] README.md professionale
 
 ## Future (P1-P2)
