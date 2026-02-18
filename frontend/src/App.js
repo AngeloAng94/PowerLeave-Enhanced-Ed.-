@@ -2464,88 +2464,488 @@ function TeamPage() {
 // ============== SETTINGS PAGE ==============
 function SettingsPage() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('organization');
   const [org, setOrg] = useState(null);
-  const [orgName, setOrgName] = useState('');
-  const [balances, setBalances] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [rules, setRules] = useState({});
+  const [team, setTeam] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Form states
+  const [orgForm, setOrgForm] = useState({ name: '', email: '' });
+  const [newLeaveType, setNewLeaveType] = useState({ name: '', days_per_year: 26, color: '#22C55E' });
+  const [editingLeaveType, setEditingLeaveType] = useState(null);
+  const [rulesForm, setRulesForm] = useState({
+    min_notice_days: 7,
+    max_consecutive_days: 15,
+    auto_approve_under_days: 0,
+    blocked_periods: []
+  });
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [editingMember, setEditingMember] = useState(null);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
+    setLoading(true);
     try {
-      const [orgData, balancesData] = await Promise.all([
+      const [orgData, typesData, teamData] = await Promise.all([
         api.get('/api/organization'),
-        api.get('/api/leave-balances'),
+        api.get('/api/leave-types'),
+        api.get('/api/team'),
       ]);
       setOrg(orgData);
-      setOrgName(orgData?.name || '');
-      setBalances(balancesData);
-    } catch {}
+      setOrgForm({ name: orgData?.name || '', email: orgData?.email || '' });
+      setLeaveTypes(typesData || []);
+      setTeam(teamData || []);
+      
+      // Try to load rules
+      try {
+        const rulesData = await api.get('/api/settings/rules');
+        setRules(rulesData || {});
+        setRulesForm({
+          min_notice_days: rulesData?.min_notice_days || 7,
+          max_consecutive_days: rulesData?.max_consecutive_days || 15,
+          auto_approve_under_days: rulesData?.auto_approve_under_days || 0,
+          blocked_periods: rulesData?.blocked_periods || []
+        });
+      } catch {}
+    } catch (err) {
+      toast.error('Errore caricamento impostazioni');
+    }
+    setLoading(false);
   };
 
+  // Organization handlers
   const handleUpdateOrg = async (e) => {
     e.preventDefault();
     try {
-      await api.put('/api/organization', { name: orgName });
-      toast.success('Azienda aggiornata');
+      await api.put('/api/organization', orgForm);
+      toast.success('Dati azienda aggiornati!');
+      loadSettings();
     } catch (err) {
       toast.error(err.message);
     }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold">Impostazioni</h1>
+  // Leave Types handlers
+  const handleCreateLeaveType = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/leave-types', newLeaveType);
+      toast.success('Tipo assenza creato!');
+      setNewLeaveType({ name: '', days_per_year: 26, color: '#22C55E' });
+      loadSettings();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
 
-      {/* Organization Settings */}
-      {user?.role === 'admin' && (
-        <div className="bg-card p-6 rounded-xl border">
-          <h2 className="text-lg font-semibold mb-4">Dati Azienda</h2>
-          <form onSubmit={handleUpdateOrg} className="flex gap-4">
-            <input
-              data-testid="org-name-input"
-              type="text"
-              value={orgName}
-              onChange={(e) => setOrgName(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-lg border bg-background"
-              placeholder="Nome azienda"
-            />
-            <button data-testid="save-org-btn" type="submit" className="btn-primary">
-              Salva
-            </button>
-          </form>
+  const handleUpdateLeaveType = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/api/leave-types/${editingLeaveType.id}`, editingLeaveType);
+      toast.success('Tipo assenza aggiornato!');
+      setEditingLeaveType(null);
+      loadSettings();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleDeleteLeaveType = async (id) => {
+    if (!window.confirm('Eliminare questo tipo di assenza?')) return;
+    try {
+      await api.delete(`/api/leave-types/${id}`);
+      toast.success('Tipo assenza eliminato');
+      loadSettings();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Rules handlers
+  const handleUpdateRules = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put('/api/settings/rules', rulesForm);
+      toast.success('Regole aggiornate!');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Team handlers
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/team/invite', { email: inviteEmail });
+      toast.success('Invito inviato!');
+      setInviteEmail('');
+      loadSettings();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleUpdateMember = async (memberId, updates) => {
+    try {
+      await api.put(`/api/team/${memberId}`, updates);
+      toast.success('Membro aggiornato!');
+      setEditingMember(null);
+      loadSettings();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    if (!window.confirm('Rimuovere questo membro dal team?')) return;
+    try {
+      await api.delete(`/api/team/${memberId}`);
+      toast.success('Membro rimosso');
+      loadSettings();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const tabs = [
+    { id: 'organization', label: 'Organizzazione', icon: <Icons.Settings /> },
+    { id: 'leave-types', label: 'Tipi Assenza', icon: <Icons.Plane /> },
+    { id: 'rules', label: 'Regole', icon: <Icons.Lock /> },
+    { id: 'team', label: 'Team', icon: <Icons.Users /> },
+  ];
+
+  const colorOptions = [
+    { value: '#22C55E', label: 'Verde' },
+    { value: '#3B82F6', label: 'Blu' },
+    { value: '#EF4444', label: 'Rosso' },
+    { value: '#F97316', label: 'Arancione' },
+    { value: '#A855F7', label: 'Viola' },
+    { value: '#EC4899', label: 'Rosa' },
+    { value: '#6B7280', label: 'Grigio' },
+  ];
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">Impostazioni</h1>
+        <div className="bg-card p-8 rounded-2xl border text-center">
+          <Icons.Lock />
+          <p className="text-muted-foreground mt-4">Solo gli amministratori possono accedere alle impostazioni.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Impostazioni</h1>
+      
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium whitespace-nowrap transition-all ${
+              activeTab === tab.id
+                ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                : 'bg-card border hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Organization Tab */}
+      {activeTab === 'organization' && (
+        <div className="space-y-6">
+          <div className="bg-card p-6 rounded-2xl border">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icons.Settings /> Dati Azienda
+            </h2>
+            <form onSubmit={handleUpdateOrg} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Nome Azienda</label>
+                <input
+                  type="text"
+                  value={orgForm.name}
+                  onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border bg-background"
+                  placeholder="La Tua Azienda Srl"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Email HR / Contatto</label>
+                <input
+                  type="email"
+                  value={orgForm.email}
+                  onChange={(e) => setOrgForm({ ...orgForm, email: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border bg-background"
+                  placeholder="hr@azienda.it"
+                />
+              </div>
+              <button type="submit" className="btn-primary">
+                Salva Modifiche
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* Leave Balances */}
-      <div className="bg-card p-6 rounded-xl border">
-        <h2 className="text-lg font-semibold mb-4">Saldi Ferie {new Date().getFullYear()}</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr>
-                <th className="text-left px-4 py-3 font-semibold">Dipendente</th>
-                <th className="text-left px-4 py-3 font-semibold">Tipo</th>
-                <th className="text-right px-4 py-3 font-semibold">Totali</th>
-                <th className="text-right px-4 py-3 font-semibold">Usati</th>
-                <th className="text-right px-4 py-3 font-semibold">Residui</th>
-              </tr>
-            </thead>
-            <tbody>
-              {balances.map((b, i) => (
-                <tr key={i} className="border-t">
-                  <td className="px-4 py-3 font-medium">{b.user_name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{b.leave_type_name}</td>
-                  <td className="px-4 py-3 text-right">{b.total_days}</td>
-                  <td className="px-4 py-3 text-right">{b.used_days}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-green-600">{b.remaining_days}</td>
-                </tr>
+      {/* Leave Types Tab */}
+      {activeTab === 'leave-types' && (
+        <div className="space-y-6">
+          {/* Existing types */}
+          <div className="bg-card p-6 rounded-2xl border">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icons.Plane /> Tipi di Assenza Configurati
+            </h2>
+            <div className="space-y-3">
+              {leaveTypes.map(type => (
+                <div key={type.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: type.color || '#22C55E' }}></div>
+                    <div>
+                      <p className="font-medium">{type.name}</p>
+                      <p className="text-sm text-muted-foreground">{type.days_per_year || 26} giorni/anno</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingLeaveType(type)}
+                      className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground"
+                    >
+                      <Icons.Settings />
+                    </button>
+                    {!['ferie', 'permesso', 'malattia'].includes(type.id) && (
+                      <button
+                        onClick={() => handleDeleteLeaveType(type.id)}
+                        className="p-2 hover:bg-destructive/10 rounded-lg text-destructive"
+                      >
+                        <Icons.X />
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* Add new type */}
+          <div className="bg-card p-6 rounded-2xl border">
+            <h2 className="text-lg font-semibold mb-4">Aggiungi Nuovo Tipo</h2>
+            <form onSubmit={handleCreateLeaveType} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <input
+                type="text"
+                value={newLeaveType.name}
+                onChange={(e) => setNewLeaveType({ ...newLeaveType, name: e.target.value })}
+                className="px-4 py-3 rounded-xl border bg-background"
+                placeholder="Nome (es: ROL)"
+                required
+              />
+              <input
+                type="number"
+                value={newLeaveType.days_per_year}
+                onChange={(e) => setNewLeaveType({ ...newLeaveType, days_per_year: parseInt(e.target.value) })}
+                className="px-4 py-3 rounded-xl border bg-background"
+                placeholder="Giorni/anno"
+                min="0"
+              />
+              <select
+                value={newLeaveType.color}
+                onChange={(e) => setNewLeaveType({ ...newLeaveType, color: e.target.value })}
+                className="px-4 py-3 rounded-xl border bg-background"
+              >
+                {colorOptions.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              <button type="submit" className="btn-primary">
+                Aggiungi
+              </button>
+            </form>
+          </div>
+
+          {/* Edit modal */}
+          {editingLeaveType && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-card rounded-2xl w-full max-w-md p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold">Modifica Tipo Assenza</h2>
+                  <button onClick={() => setEditingLeaveType(null)} className="p-2 hover:bg-muted rounded-lg">
+                    <Icons.X />
+                  </button>
+                </div>
+                <form onSubmit={handleUpdateLeaveType} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Nome</label>
+                    <input
+                      type="text"
+                      value={editingLeaveType.name}
+                      onChange={(e) => setEditingLeaveType({ ...editingLeaveType, name: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border bg-background"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Giorni per Anno</label>
+                    <input
+                      type="number"
+                      value={editingLeaveType.days_per_year || 26}
+                      onChange={(e) => setEditingLeaveType({ ...editingLeaveType, days_per_year: parseInt(e.target.value) })}
+                      className="w-full px-4 py-3 rounded-xl border bg-background"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Colore Calendario</label>
+                    <div className="flex gap-2">
+                      {colorOptions.map(c => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => setEditingLeaveType({ ...editingLeaveType, color: c.value })}
+                          className={`w-8 h-8 rounded-full border-2 ${editingLeaveType.color === c.value ? 'border-foreground scale-110' : 'border-transparent'}`}
+                          style={{ backgroundColor: c.value }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <button type="submit" className="w-full btn-primary">Salva</button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {/* Rules Tab */}
+      {activeTab === 'rules' && (
+        <div className="space-y-6">
+          <div className="bg-card p-6 rounded-2xl border">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icons.Lock /> Regole Richieste Ferie
+            </h2>
+            <form onSubmit={handleUpdateRules} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Preavviso Minimo (giorni)</label>
+                  <input
+                    type="number"
+                    value={rulesForm.min_notice_days}
+                    onChange={(e) => setRulesForm({ ...rulesForm, min_notice_days: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border bg-background"
+                    min="0"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Quanti giorni prima deve essere fatta la richiesta</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Max Giorni Consecutivi</label>
+                  <input
+                    type="number"
+                    value={rulesForm.max_consecutive_days}
+                    onChange={(e) => setRulesForm({ ...rulesForm, max_consecutive_days: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border bg-background"
+                    min="1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Massimo di giorni consecutivi richiedibili</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Auto-Approva sotto X giorni</label>
+                  <input
+                    type="number"
+                    value={rulesForm.auto_approve_under_days}
+                    onChange={(e) => setRulesForm({ ...rulesForm, auto_approve_under_days: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border bg-background"
+                    min="0"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">0 = disabilitato. Richieste sotto questo numero vengono approvate automaticamente</p>
+                </div>
+              </div>
+              <button type="submit" className="btn-primary">Salva Regole</button>
+            </form>
+          </div>
+
+          <div className="bg-card p-6 rounded-2xl border">
+            <h2 className="text-lg font-semibold mb-4">Periodi di Blocco</h2>
+            <p className="text-muted-foreground mb-4">Periodi in cui non è possibile richiedere ferie (es: chiusura bilancio)</p>
+            <div className="bg-muted/30 p-4 rounded-xl text-center text-muted-foreground">
+              <p>Usa la sezione "Chiusure Aziendali" per gestire i periodi di blocco</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Team Tab */}
+      {activeTab === 'team' && (
+        <div className="space-y-6">
+          {/* Invite */}
+          <div className="bg-card p-6 rounded-2xl border">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icons.Plus /> Invita Nuovo Membro
+            </h2>
+            <form onSubmit={handleInvite} className="flex gap-4">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-xl border bg-background"
+                placeholder="email@collaboratore.it"
+                required
+              />
+              <button type="submit" className="btn-primary whitespace-nowrap">
+                Invia Invito
+              </button>
+            </form>
+          </div>
+
+          {/* Team list */}
+          <div className="bg-card p-6 rounded-2xl border">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icons.Users /> Membri del Team ({team.length})
+            </h2>
+            <div className="space-y-3">
+              {team.map(member => (
+                <div key={member.user_id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold">
+                      {member.name?.[0]}
+                    </div>
+                    <div>
+                      <p className="font-medium">{member.name}</p>
+                      <p className="text-sm text-muted-foreground">{member.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={member.role}
+                      onChange={(e) => handleUpdateMember(member.user_id, { role: e.target.value })}
+                      className="px-3 py-2 rounded-lg border bg-background text-sm"
+                    >
+                      <option value="user">Membro</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    {member.user_id !== user?.user_id && (
+                      <button
+                        onClick={() => handleRemoveMember(member.user_id)}
+                        className="p-2 hover:bg-destructive/10 rounded-lg text-destructive"
+                      >
+                        <Icons.X />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
