@@ -1018,7 +1018,7 @@ function Dashboard() {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     currentPage === item.id
                       ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-[1.02]'
-                      : 'hover:bg-muted/80 text-muted-foreground hover:text-foreground hover:translate-x-1'
+                      : 'text-muted-foreground hover:bg-primary/10 hover:text-primary hover:translate-x-1'
                   }`}
                 >
                   <span className={`${currentPage === item.id ? 'scale-110' : ''} transition-transform`}>
