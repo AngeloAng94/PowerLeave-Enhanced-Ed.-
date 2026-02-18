@@ -67,7 +67,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://powerleave-staging.preview.emergentagent.com"
+        "https://saas-tech-check.preview.emergentagent.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
