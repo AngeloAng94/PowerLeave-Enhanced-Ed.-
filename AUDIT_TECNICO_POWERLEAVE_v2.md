@@ -80,7 +80,7 @@
 
 ## 2. STRUTTURA DEL CODICE
 
-### 2.1 Directory Tree (come è oggi)
+### 2.1 Directory Tree (Struttura Attuale Post-Refactoring)
 
 ```
 /app/
@@ -89,108 +89,91 @@
 │       └── ci.yml                       # CI: pytest backend + yarn build frontend
 ├── backend/
 │   ├── .env                             # MONGO_URL, DB_NAME, SECRET_KEY
-│   ├── requirements.txt                 # 127 righe (pip freeze completo)
-│   ├── server.py                        # ★ MONOLITE: 1 489 righe, TUTTO il backend
+│   ├── requirements.txt                 # Dipendenze Python
+│   ├── server.py                        # Entry point (~50 righe)
+│   ├── config.py                        # Configurazione env vars
+│   ├── models.py                        # Modelli Pydantic
+│   ├── auth.py                          # Helpers autenticazione
+│   ├── database.py                      # Connessione DB + lifespan
+│   ├── seed.py                          # Seed data demo
+│   ├── routes/                          # Router FastAPI per dominio
+│   │   ├── auth.py
+│   │   ├── leave.py
+│   │   ├── team.py
+│   │   ├── organization.py
+│   │   ├── announcements.py
+│   │   ├── closures.py
+│   │   └── stats.py
 │   └── tests/
-│       └── test_powerleave_api.py       # 355 righe, 23 test, 8 classi
+│       └── test_powerleave_api.py       # 30 test, stabile
 ├── frontend/
 │   ├── .env                             # REACT_APP_BACKEND_URL
-│   ├── package.json                     # 7 dipendenze dirette
+│   ├── package.json
 │   ├── yarn.lock
 │   ├── public/
 │   │   └── index.html
 │   └── src/
-│       ├── index.js                     # Entry point, 12 righe
-│       ├── index.css                    # ★ 540 righe: variabili tema + utility manuali
-│       ├── App.js                       # ★ MONOLITE: 3 533 righe, 19 componenti React
-│       ├── App.css                      # Vuoto, non usato
-│       └── components/
-│           └── ui/                      # Shadcn components (non usati da App.js)
+│       ├── index.js                     # Entry point
+│       ├── index.css                    # Variabili tema + utility CSS
+│       ├── App.js                       # Router + providers (~60 righe)
+│       ├── lib/
+│       │   └── api.js                   # Client API axios
+│       ├── context/
+│       │   ├── AuthContext.js
+│       │   └── NotificationContext.js
+│       ├── components/
+│       │   ├── Icons.js                 # Logo + icone SVG
+│       │   ├── ThemeToggle.js           # Switch dark/light
+│       │   └── ui/                      # Shadcn components
+│       └── pages/                       # Pagine React (13 file)
+│           ├── LandingPage.js
+│           ├── LoginPage.js
+│           ├── RegisterPage.js
+│           ├── AuthCallback.js
+│           ├── Dashboard.js
+│           ├── DashboardContent.js
+│           ├── CalendarPage.js
+│           ├── StatsPage.js
+│           ├── RequestsPage.js
+│           ├── TeamPage.js
+│           ├── SettingsPage.js
+│           ├── AnnouncementsPage.js
+│           └── ClosuresPage.js
 ├── memory/
 │   └── PRD.md
 ├── test_reports/
-│   ├── iteration_1-4.json              # Report testing agent
-│   └── pytest/
-│       └── pytest_results_v2.xml
-└── AUDIT_TECNICO_POWERLEAVE.md          # Audit v1 (precedente)
+│   └── iteration_*.json
+├── AUDIT_TECNICO_POWERLEAVE.md          # Audit v1
+└── AUDIT_TECNICO_POWERLEAVE_v2.md       # Questo documento
 ```
 
-### 2.2 File Monolitici — Dove Sta la Logica
+### 2.2 Struttura Modulare Backend
 
-#### `backend/server.py` — 1 489 righe, 48 KB
+Il backend è ora organizzato per responsabilità:
 
-Contiene l'**intera** applicazione backend: import, config, modelli Pydantic, helper auth, seed data, e tutti i 35 endpoint REST.
+| File | Righe | Responsabilità |
+|------|-------|----------------|
+| `server.py` | ~50 | App init, include routers, health check |
+| `config.py` | ~30 | Env vars, costanti, rate limiter |
+| `models.py` | ~100 | Modelli Pydantic (User, LeaveRequest, etc.) |
+| `auth.py` | ~80 | Token JWT, password hash, get_current_user |
+| `database.py` | ~60 | Motor client, lifespan, indici |
+| `seed.py` | ~150 | Seed leave types, festività, demo users |
+| `routes/*.py` | ~800 tot | Endpoint REST divisi per dominio |
 
-| Righe       | Sezione                        | Dettaglio                                                 |
-|-------------|--------------------------------|-----------------------------------------------------------|
-| 1–47        | Import + Config                | 11 import, env var con fail-fast, rate limiter, logger    |
-| 49–53       | Password hashing + Security    | bcrypt context, HTTPBearer                                |
-| 55–74       | DB init + Lifespan             | Motor client, 5 indici, seed check                        |
-| 76–97       | FastAPI app + CORS + RateLimit | App init, rate limit handler, CORS con 2 origini hardcoded |
-| 99–177      | Modelli Pydantic (9 classi)    | UserBase, UserCreate, UserLogin, User, Organization, LeaveType, LeaveRequestCreate, LeaveRequest, LeaveBalance, CompanyClosure, TeamMember |
-| 179–239     | Auth Helpers (4 funzioni)      | `create_access_token`, `verify_password`, `get_password_hash`, `get_current_user`, `get_admin_user` |
-| 241–409     | Seed Data (2 funzioni)         | `seed_default_data`: 4 leave types + 12 festività. `seed_demo_users`: 1 org + 4 utenti + saldi + 3 richieste sample |
-| 411–636     | Auth Endpoints (5 endpoint)    | register, login, session (OAuth), me, logout              |
-| 638–714     | Leave Types (4 endpoint)       | CRUD tipi assenza                                         |
-| 716–761     | Settings/Rules (2 endpoint)    | GET/PUT regole organizzazione                             |
-| 763–905     | Leave Requests (3 endpoint)    | create, list, review (approve/reject con aggiornamento saldo) |
-| 907–956     | Statistics (1 endpoint)        | Dashboard stats aggregate                                 |
-| 958–1003    | Calendar (2 endpoint)          | Monthly leaves + closures                                 |
-| 1005–1120   | Team (4 endpoint)              | list, invite, update role, remove member                  |
-| 1122–1170   | Leave Balances (1 endpoint)    | Lista saldi con lookup utenti/tipi (anti N+1)             |
-| 1172–1196   | Organization (2 endpoint)      | GET/PUT organizzazione                                    |
-| 1198–1276   | Announcements (4 endpoint)     | CRUD bacheca annunci                                      |
-| 1278–1479   | Closures + Exceptions (6 end.) | CRUD chiusure, richiesta/review deroghe, auto-leave       |
-| 1481–1489   | Health + main                  | Health check, uvicorn entry                               |
+### 2.3 Struttura Modulare Frontend
 
-**Problemi strutturali di `server.py`**:
-- Nessuna separazione tra routing, logica di business e accesso dati.
-- 12 endpoint accettano `dict` generico come input invece di modelli Pydantic tipizzati (vedi riga 651, 672, 741, 856, 1020, ecc.), perdendo validazione automatica e documentazione OpenAPI.
-- I 9 modelli Pydantic definiti alle righe 99–177 non sono mai usati come `response_model` degli endpoint.
+Il frontend è organizzato con separazione netta:
 
-#### `frontend/src/App.js` — 3 533 righe, 148 KB
+| Directory | Contenuto |
+|-----------|-----------|
+| `lib/` | Utility (api.js) |
+| `context/` | React Context providers |
+| `components/` | Componenti riutilizzabili |
+| `pages/` | Componenti pagina (route-level) |
 
-Contiene **tutti** i 19 componenti React dell'applicazione, dal servizio notifiche al router.
-
-| Righe       | Componente           | Righe tot | Tipo      | Responsabilità                              |
-|-------------|----------------------|-----------|-----------|---------------------------------------------|
-| 9–92        | NotificationService  | 83        | Singleton | Notifiche browser + toast via Sonner        |
-| 94–104      | Context              | 10        | Provider  | AuthContext + NotificationContext            |
-| 107–133     | api helper           | 26        | Utility   | Wrapper fetch con token e error handling     |
-| 136–199     | AuthProvider         | 63        | Provider  | login, register, logout, checkAuth, OAuth    |
-| 203–318     | Icons + RocketLogo   | 115       | Puro      | 14 icone SVG inline + logo razzo             |
-| 321–364     | ThemeToggle          | 43        | Stateful  | Switch dark/light con localStorage           |
-| 367–601     | LandingPage          | 234       | Stateful  | Hero, features grid, pricing, footer         |
-| 603–705     | LoginPage            | 102       | Stateful  | Form login con validazione client            |
-| 707–828     | RegisterPage         | 121       | Stateful  | Form registrazione                           |
-| 830–879     | AuthCallback         | 49        | Effetto   | Gestione callback OAuth (Emergent)           |
-| 882–1253    | Dashboard            | 371       | Stateful  | Sidebar desktop + hamburger mobile + routing interno + modale richiesta |
-| 1256–1628   | DashboardContent     | 372       | Stateful  | Stats cards, form richiesta inline, calendario mini, saldi, richieste pending |
-| 1629–1676   | MiniCalendar         | 47        | Stateful  | Calendario mese compatto                     |
-| 1679–1804   | CalendarPage         | 125       | Stateful  | Calendario completo con legenda              |
-| 1805–2190   | StatsPage            | 385       | Stateful  | Grafici trend (div/CSS), distribuzione assenze, tabella team |
-| 2192–2299   | RequestsPage         | 107       | Stateful  | Lista richieste con filtri stato             |
-| 2301–2463   | TeamPage             | 162       | Stateful  | Lista team + modale invito                   |
-| 2465–2952   | SettingsPage         | 487       | Stateful  | 4 tab: Organizzazione, Tipi Assenza, Regole, Team |
-| 2954–3151   | AnnouncementsPage    | 197       | Stateful  | CRUD annunci con form in-page                |
-| 3153–3478   | ClosuresPage         | 325       | Stateful  | Lista chiusure, form, deroghe, review        |
-| 3480–3533   | App + AppRouter      | 53        | Router    | Hash-based routing + auth guard              |
-
-**Problemi strutturali di `App.js`**:
-- 19 componenti in un file da 148 KB. Nessun code splitting, nessun lazy loading.
-- Routing via `window.location.hash` (switch/case manuale). Nessun `react-router-dom`.
-- 14 icone SVG definite inline (~115 righe) invece di usare una libreria icone.
-- Grafici in `StatsPage` disegnati con div + CSS inline, nessuna libreria chart.
-- 36 blocchi `try/catch` per gestione errori, ma nessun Error Boundary React.
-
-#### `frontend/src/index.css` — 540 righe
-
-| Righe       | Contenuto                                                   |
-|-------------|-------------------------------------------------------------|
-| 1           | Import font Inter da Google Fonts                           |
-| 3–54        | CSS variables per tema light (`:root`) e dark (`.dark`)     |
-| 56–100      | Reset CSS + base styles (body, link, scrollbar)             |
-| 101–540     | Utility classes manuali che replicano Tailwind: `flex`, `grid`, `p-*`, `m-*`, `rounded-*`, `text-*`, `bg-*`, `border-*`, `shadow-*`, `animate-*`, ecc. |
+**Code Splitting**: 5 pagine caricate con `React.lazy()`:
+- StatsPage, CalendarPage, SettingsPage, AnnouncementsPage, ClosuresPage
 
 ---
 
