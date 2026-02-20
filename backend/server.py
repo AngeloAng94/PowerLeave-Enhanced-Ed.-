@@ -48,7 +48,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://saas-tech-check.preview.emergentagent.com"
+        "https://hr-italia-preview.preview.emergentagent.com"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],

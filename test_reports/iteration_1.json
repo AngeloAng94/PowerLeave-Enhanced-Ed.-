@@ -41,7 +41,7 @@
   "test_report_links": ["/app/backend_test.py"],
   "action_item_for_main_agent": {
     "critical_fix_required": "Fix CORS configuration in backend server.py",
-    "specific_change": "Replace 'allow_origins=[\\"*\\"]' with 'allow_origins=[\"http://localhost:3000\", \"https://saas-tech-check.preview.emergentagent.com\"]' in CORSMiddleware configuration",
+    "specific_change": "Replace 'allow_origins=[\\"*\\"]' with 'allow_origins=[\"http://localhost:3000\", \"https://hr-italia-preview.preview.emergentagent.com\"]' in CORSMiddleware configuration",
     "file_location": "/app/backend/server.py lines 66-72",
     "impact": "Without this fix, the entire frontend is non-functional as no API calls can be made",
     "test_verification": "After fix, user should be able to login with admin@demo.it/demo123 and access dashboard with stats and pending requests"

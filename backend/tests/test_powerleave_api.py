@@ -9,7 +9,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://saas-tech-check.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://hr-italia-preview.preview.emergentagent.com")
 
 # Unique run ID to avoid collisions across consecutive runs
 RUN_ID = uuid.uuid4().hex[:8]
