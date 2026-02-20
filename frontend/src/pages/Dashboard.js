@@ -260,10 +260,46 @@ export default function Dashboard() {
 
 function RequestModal({ leaveTypes, onSubmit, onClose }) {
   const [form, setForm] = useState({ leave_type_id: leaveTypes[0]?.id || '', start_date: '', end_date: '', hours: 8, notes: '' });
+  const [error, setError] = useState('');
+
+  // Calculate date constraints
+  const today = new Date().toISOString().split('T')[0];
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() + 2);
+  const maxDateStr = maxDate.toISOString().split('T')[0];
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.start_date || !form.end_date) return;
+    setError('');
+    
+    if (!form.start_date || !form.end_date) {
+      setError('Inserisci entrambe le date');
+      return;
+    }
+
+    const start = new Date(form.start_date);
+    const end = new Date(form.end_date);
+    const todayDate = new Date(today);
+    const maxFutureDate = new Date(maxDateStr);
+
+    // Validation: start date cannot be in the past
+    if (start < todayDate) {
+      setError('La data di inizio non può essere nel passato');
+      return;
+    }
+
+    // Validation: end date must be >= start date
+    if (end < start) {
+      setError('La data di fine deve essere uguale o successiva alla data di inizio');
+      return;
+    }
+
+    // Validation: dates must be within reasonable range
+    if (start > maxFutureDate || end > maxFutureDate) {
+      setError('Le date non possono essere oltre 2 anni nel futuro');
+      return;
+    }
+
     onSubmit(form);
   };
 
@@ -284,6 +320,17 @@ function RequestModal({ leaveTypes, onSubmit, onClose }) {
         width: '100%', maxWidth: '440px', border: '1px solid var(--border)',
       }} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', color: 'var(--foreground)' }}>Nuova Richiesta di Assenza</h3>
+        
+        {error && (
+          <div style={{
+            padding: '10px 12px', borderRadius: '8px', marginBottom: '12px',
+            background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)',
+            color: '#EF4444', fontSize: '13px',
+          }}>
+            {error}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '12px' }}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '4px', color: 'var(--foreground)' }}>Tipo</label>
@@ -294,11 +341,29 @@ function RequestModal({ leaveTypes, onSubmit, onClose }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '4px', color: 'var(--foreground)' }}>Dal</label>
-              <input data-testid="request-start" type="date" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})} required style={inputStyle} />
+              <input 
+                data-testid="request-start" 
+                type="date" 
+                value={form.start_date} 
+                onChange={e => setForm({...form, start_date: e.target.value})} 
+                min={today}
+                max={maxDateStr}
+                required 
+                style={inputStyle} 
+              />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '4px', color: 'var(--foreground)' }}>Al</label>
-              <input data-testid="request-end" type="date" value={form.end_date} onChange={e => setForm({...form, end_date: e.target.value})} required style={inputStyle} />
+              <input 
+                data-testid="request-end" 
+                type="date" 
+                value={form.end_date} 
+                onChange={e => setForm({...form, end_date: e.target.value})} 
+                min={form.start_date || today}
+                max={maxDateStr}
+                required 
+                style={inputStyle} 
+              />
             </div>
           </div>
           <div style={{ marginBottom: '12px' }}>
