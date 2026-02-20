@@ -373,9 +373,9 @@ reviewed_at   : datetime  (dopo review)
 
 | ID  | Severità | Priorità | Descrizione | Stato | Dettaglio tecnico |
 |-----|----------|----------|-------------|-------|-------------------|
-| S01 | **MEDIA** | P1 | CORS: `allow_methods=["*"]`, `allow_headers=["*"]` | Aperto | `server.py` L95–96. Permette qualsiasi metodo/header. In produzione, restringere a GET/POST/PUT/DELETE e header specifici. |
+| S01 | **MEDIA** | P1 | CORS: `allow_methods=["*"]`, `allow_headers=["*"]` | **Risolto — Fix 6** | `server.py` L95–96. Ristretto a GET/POST/PUT/DELETE/OPTIONS e Content-Type/Authorization. |
 | S02 | **MEDIA** | P1 | Token JWT in localStorage | Aperto | `App.js` L166. Il token è leggibile da JavaScript. Un attacco XSS può esfiltrare il token. Il cookie HttpOnly è un backup, ma il token è comunque esposto. |
-| S03 | **MEDIA** | P1 | Nessuna validazione forza password | Aperto | `server.py` L441: `get_password_hash(user_data.password)` accetta qualsiasi stringa. Nessun minimo di lunghezza, complessità o check server-side. Solo il frontend impone min 6 char. |
+| S03 | **MEDIA** | P1 | Nessuna validazione forza password | **Risolto — Fix 4** | Validazione server-side: min 8 char + almeno 1 numero su register e invite. HTTP 422 con messaggio chiaro. |
 | S04 | **MEDIA** | P1 | Password temporanea non consegnabile all'utente | Aperto | `server.py` L1065–1066. La temp password è loggata server-side ma non c'è modo per l'admin di comunicarla all'utente invitato (no email, no UI). L'utente invitato non può accedere. |
 | S05 | **BASSA** | P2 | SameSite=None senza necessità | Aperto | `server.py` L470. `SameSite=None` è necessario solo per cookie cross-origin. Se frontend e backend sono sullo stesso dominio, `Lax` sarebbe più sicuro. |
 | S06 | **BASSA** | P2 | Nessun CSRF token | Aperto | Mitigato parzialmente dal cookie SameSite, ma con SameSite=None il rischio rimane. |
@@ -500,9 +500,9 @@ reviewed_at   : datetime  (dopo review)
 | D02 | Frontend  | `App.js` monolite (3 533 righe)                      | Bundle size, manutenibilità, code splitting  | Alto   |
 | D03 | Frontend  | CSS manuale (540 righe) duplica Tailwind             | Tailwind installato ma non usato; doppio stile | Medio  |
 | D04 | Backend   | 12 endpoint con `dict` invece di Pydantic models     | Nessuna validazione input, docs OpenAPI incomplete | Medio |
-| D05 | DB        | Schema incoerente `company_closures` (`date` vs `start_date`) | Chiusure custom non trovate da query GET per anno | Medio |
-| D06 | DB        | Indici mancanti su 4 collection                      | Full scan con crescita dati                  | Basso  |
-| D07 | Backend   | 4× `datetime.now()` senza timezone                   | Inconsistenza con `datetime.now(timezone.utc)` usato altrove | Basso |
+| D05 | DB        | Schema incoerente `company_closures` (`date` vs `start_date`) | **Risolto — Fix 1** | — |
+| D06 | DB        | Indici mancanti su 4 collection                      | **Risolto — Fix 2** | — |
+| D07 | Backend   | 4× `datetime.now()` senza timezone                   | **Risolto — Fix 5** | — |
 | D08 | Backend   | Logica seed balance duplicata 3 volte                | Rischio drift tra register, invite, OAuth    | Basso  |
 | D09 | Frontend  | Nessun react-router-dom                              | URL non navigabili, no deep-link, no history | Medio  |
 | D10 | Frontend  | 14 icone SVG inline                                  | ~115 righe di codice evitabili con lucide-react | Basso |
