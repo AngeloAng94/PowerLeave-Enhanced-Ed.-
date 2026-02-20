@@ -250,20 +250,20 @@ async def seed_default_data():
     ]
     await db.leave_types.insert_many(leave_types)
     
-    # Default Italian holidays 2026
+    # Default Italian holidays 2026 (unified schema: start_date/end_date)
     holidays = [
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-01-01", "reason": "Capodanno", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-01-06", "reason": "Epifania", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-04-05", "reason": "Pasqua", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-04-06", "reason": "Lunedì dell'Angelo", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-04-25", "reason": "Festa della Liberazione", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-05-01", "reason": "Festa dei Lavoratori", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-06-02", "reason": "Festa della Repubblica", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-08-15", "reason": "Ferragosto", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-11-01", "reason": "Ognissanti", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-12-08", "reason": "Immacolata Concezione", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-12-25", "reason": "Natale", "type": "holiday"},
-        {"id": str(uuid.uuid4()), "org_id": None, "date": "2026-12-26", "reason": "Santo Stefano", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-01-01", "end_date": "2026-01-01", "reason": "Capodanno", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-01-06", "end_date": "2026-01-06", "reason": "Epifania", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-04-05", "end_date": "2026-04-05", "reason": "Pasqua", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-04-06", "end_date": "2026-04-06", "reason": "Lunedì dell'Angelo", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-04-25", "end_date": "2026-04-25", "reason": "Festa della Liberazione", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-05-01", "end_date": "2026-05-01", "reason": "Festa dei Lavoratori", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-06-02", "end_date": "2026-06-02", "reason": "Festa della Repubblica", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-08-15", "end_date": "2026-08-15", "reason": "Ferragosto", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-11-01", "end_date": "2026-11-01", "reason": "Ognissanti", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-12-08", "end_date": "2026-12-08", "reason": "Immacolata Concezione", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-12-25", "end_date": "2026-12-25", "reason": "Natale", "type": "holiday"},
+        {"id": str(uuid.uuid4()), "org_id": None, "start_date": "2026-12-26", "end_date": "2026-12-26", "reason": "Santo Stefano", "type": "holiday"},
     ]
     await db.company_closures.insert_many(holidays)
     
@@ -997,7 +997,8 @@ async def get_company_closures(
     
     closures = await db.company_closures.find({
         "$or": [{"org_id": None}, {"org_id": org_id}],
-        "date": {"$gte": start_date, "$lt": end_date}
+        "start_date": {"$lt": end_date},
+        "end_date": {"$gte": start_date}
     }, {"_id": 0}).to_list(100)
     
     return closures
@@ -1288,12 +1289,12 @@ async def get_closures(
     query = {"$or": [{"org_id": None}, {"org_id": org_id}]}
     
     if year:
-        query["date"] = {"$regex": f"^{year}"}
+        query["start_date"] = {"$gte": f"{year}-01-01", "$lte": f"{year}-12-31"}
     
     closures = await db.company_closures.find(
         query,
         {"_id": 0}
-    ).sort("date", 1).to_list(500)
+    ).sort("start_date", 1).to_list(500)
     
     return closures
 
@@ -1306,7 +1307,7 @@ async def create_closure(
     org_id = current_user["org_id"]
     now = datetime.now(timezone.utc)
     
-    start_date = closure_data.get("start_date") or closure_data.get("date")
+    start_date = closure_data.get("start_date")
     end_date = closure_data.get("end_date") or start_date
     
     closure = {
