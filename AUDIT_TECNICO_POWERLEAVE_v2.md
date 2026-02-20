@@ -889,4 +889,5 @@ Nuova classe `TestDateValidation` con 3 test:
 *Aggiornato con Fix 1–6 applicati il 18 Febbraio 2026*  
 *Aggiornato con Refactoring Strutturale il 19 Febbraio 2026*
 *Aggiornato con Fix UI/UX il 20 Febbraio 2026*
+*Aggiornato con Fix Validazione Date il 20 Febbraio 2026*
 *Basato su lettura completa del codice sorgente, schema MongoDB live, test report e configurazioni.*
