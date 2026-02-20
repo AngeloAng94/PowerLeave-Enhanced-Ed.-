@@ -27,7 +27,8 @@ Sistema di gestione ferie per PMI italiane con design moderno, configurabile dal
 - CI GitHub Actions: .github/workflows/ci.yml (backend pytest + frontend build)
 
 ### Session 5 - 18 Feb 2026 (Audit Tecnico)
-- Audit tecnico completo: /app/AUDIT_TECNICO_POWERLEAVE.md (1023 righe)
+- Audit v1: /app/AUDIT_TECNICO_POWERLEAVE.md (1023 righe)
+- Audit v2 (post-P0 security): /app/AUDIT_TECNICO_POWERLEAVE_v2.md (607 righe, basato su lettura completa codice attuale)
 
 ### Session 4 - Feb 2026 (Configurabilita)
 - Pagina Impostazioni (4 tab), Leave Types CRUD, Settings Rules API
