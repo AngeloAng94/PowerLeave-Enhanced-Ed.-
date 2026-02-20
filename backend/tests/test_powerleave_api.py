@@ -353,3 +353,86 @@ class TestStatsAndData:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
+
+
+# ──────────────────────────────────────────────
+# Additional Tests for Structural Refactoring Verification
+# ──────────────────────────────────────────────
+
+class TestPagination:
+    """Verify pagination works on key endpoints"""
+    
+    def test_leave_requests_pagination(self, admin_headers):
+        """Pagination returns correct number of items"""
+        resp = requests.get(f"{BASE_URL}/api/leave-requests?page=1&page_size=2", headers=admin_headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) <= 2
+    
+    def test_announcements_pagination(self, admin_headers):
+        """Announcements endpoint supports pagination"""
+        resp = requests.get(f"{BASE_URL}/api/announcements?page=1&page_size=5", headers=admin_headers)
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
+    
+    def test_leave_balances_pagination(self, admin_headers):
+        """Leave balances endpoint supports pagination"""
+        resp = requests.get(f"{BASE_URL}/api/leave-balances?page=1&page_size=5", headers=admin_headers)
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
+
+
+class TestPasswordValidation:
+    """Verify password validation returns 422 for weak passwords"""
+    
+    def test_short_password_rejected(self):
+        """Password < 8 chars should return 422"""
+        resp = requests.post(f"{BASE_URL}/api/auth/register", json={
+            "email": f"test_{RUN_ID}_short@audit.it",
+            "name": "Test Short",
+            "password": "short",  # Too short
+            "organization_name": "TestOrg"
+        })
+        assert resp.status_code == 422
+        assert "8 caratteri" in resp.json().get("detail", "")
+    
+    def test_password_without_number_rejected(self):
+        """Password without numbers should return 422"""
+        resp = requests.post(f"{BASE_URL}/api/auth/register", json={
+            "email": f"test_{RUN_ID}_nonum@audit.it",
+            "name": "Test NoNum",
+            "password": "password",  # No numbers
+            "organization_name": "TestOrg"
+        })
+        assert resp.status_code == 422
+        assert "numero" in resp.json().get("detail", "")
+
+
+class TestClosuresSchema:
+    """Verify closures use start_date/end_date (not 'date')"""
+    
+    def test_closures_have_start_date_field(self, admin_headers):
+        """Closures should have start_date field, not just 'date'"""
+        resp = requests.get(f"{BASE_URL}/api/closures?year=2026", headers=admin_headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) > 0
+        
+        first_closure = data[0]
+        assert "start_date" in first_closure, "start_date field must exist"
+        assert "end_date" in first_closure, "end_date field must exist"
+        # 'date' field should not exist (old schema)
+
+
+class TestLeaveTypesCount:
+    """Verify leave types contain expected Italian types"""
+    
+    def test_has_ferie_and_permesso(self, admin_headers):
+        """Should have at least 4 types including Ferie and Permesso"""
+        resp = requests.get(f"{BASE_URL}/api/leave-types", headers=admin_headers)
+        assert resp.status_code == 200
+        types = resp.json()
+        assert len(types) >= 4
+        names = [t["name"] for t in types]
+        assert "Ferie" in names
+        assert "Permesso" in names
