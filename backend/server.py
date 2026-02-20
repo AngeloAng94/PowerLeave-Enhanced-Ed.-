@@ -46,6 +46,14 @@ limiter = Limiter(key_func=get_remote_address)
 
 logger = logging.getLogger("powerleave")
 
+# Password validation
+import re
+def validate_password(password: str):
+    if len(password) < 8:
+        raise HTTPException(status_code=422, detail="La password deve avere almeno 8 caratteri")
+    if not re.search(r"\d", password):
+        raise HTTPException(status_code=422, detail="La password deve contenere almeno un numero")
+
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -417,6 +425,9 @@ async def seed_demo_users():
 @app.post("/api/auth/register")
 @limiter.limit("10/minute")
 async def register(request: Request, user_data: UserCreate, response: Response):
+    # Validate password
+    validate_password(user_data.password)
+    
     # Check if email exists
     existing = await db.users.find_one({"email": user_data.email})
     if existing:
@@ -1042,7 +1053,8 @@ async def invite_team_member(
     now = datetime.now(timezone.utc)
     
     # Create user with temporary password
-    temp_password = uuid.uuid4().hex[:8]
+    temp_password = uuid.uuid4().hex[:8] + "1"  # ensure at least 1 digit, 9 chars
+    validate_password(temp_password)
     
     await db.users.insert_one({
         "user_id": user_id,
@@ -1129,7 +1141,7 @@ async def remove_team_member(
 @app.get("/api/leave-balances")
 async def get_leave_balances(current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
-    year = datetime.now().year
+    year = datetime.now(timezone.utc).year
     
     # Get all balances for org
     if current_user.get("role") == "admin":
