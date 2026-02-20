@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { RocketLogo } from '../components/Icons';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function RegisterPage() {
   const { register, loginWithGoogle } = useAuth();
@@ -35,9 +36,25 @@ export default function RegisterPage() {
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
       background: 'var(--background)', padding: '20px',
     }}>
+      {/* Top bar with home link and theme toggle */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: '20px',
+      }}>
+        <a href="#/" style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          textDecoration: 'none', color: 'var(--foreground)', fontWeight: 600,
+        }}>
+          <RocketLogo size={28} />
+          <span>PowerLeave</span>
+        </a>
+        <ThemeToggle />
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{
         width: '100%', maxWidth: '400px', padding: '40px',
         background: 'var(--card)', borderRadius: '16px',
