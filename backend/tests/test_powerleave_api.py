@@ -273,9 +273,13 @@ class TestClosures:
         assert any("Natale" in r for r in reasons)
 
     def test_closure_crud_and_exception(self, admin_headers, user_headers):
+        # Use valid future dates (within 2 years)
+        closure_start = f"{TEST_YEAR}-11-15"
+        closure_end = f"{TEST_YEAR}-11-16"
+        
         # Create closure
         c = requests.post(f"{BASE_URL}/api/closures", headers=admin_headers, json={
-            "start_date": "2029-11-15", "end_date": "2029-11-16",
+            "start_date": closure_start, "end_date": closure_end,
             "reason": f"TEST_RUN_{RUN_ID}", "type": "shutdown",
             "auto_leave": False, "allow_exceptions": True
         })
@@ -296,8 +300,12 @@ class TestClosures:
         requests.delete(f"{BASE_URL}/api/closures/{cid}", headers=admin_headers)
 
     def test_user_cannot_create_closure(self, user_headers):
+        # Use valid future dates
+        closure_start = f"{TEST_YEAR}-12-24"
+        closure_end = f"{TEST_YEAR}-12-31"
+        
         resp = requests.post(f"{BASE_URL}/api/closures", headers=user_headers, json={
-            "start_date": "2029-12-24", "end_date": "2029-12-31",
+            "start_date": closure_start, "end_date": closure_end,
             "reason": "nope", "type": "shutdown"
         })
         assert resp.status_code == 403
