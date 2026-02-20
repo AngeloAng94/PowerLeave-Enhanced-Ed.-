@@ -117,6 +117,7 @@ export default function RegisterPage() {
           Hai già un account? <a href="#/login" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>Accedi</a>
         </p>
       </div>
+      </div>
     </div>
   );
 }
