@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { RocketLogo, Icons } from '../components/Icons';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function LandingPage() {
   const { loginWithGoogle } = useAuth();
@@ -17,7 +18,8 @@ export default function LandingPage() {
           <RocketLogo size={32} />
           <span style={{ fontWeight: 700, fontSize: '20px' }}>PowerLeave</span>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ThemeToggle />
           <a href="#/login" data-testid="nav-login" style={{
             padding: '8px 16px', borderRadius: '8px', textDecoration: 'none',
             color: 'var(--foreground)', border: '1px solid var(--border)',
