@@ -8,11 +8,19 @@ import pytest
 import requests
 import os
 import uuid
+from datetime import datetime, timedelta
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://hr-italia-preview.preview.emergentagent.com")
 
 # Unique run ID to avoid collisions across consecutive runs
 RUN_ID = uuid.uuid4().hex[:8]
+
+# Calculate valid future dates (within 2 years from today)
+TODAY = datetime.now()
+# Use dates 6-12 months in the future to avoid conflicts
+FUTURE_DATE_BASE = TODAY + timedelta(days=180)  # ~6 months ahead
+TEST_YEAR = FUTURE_DATE_BASE.year
+TEST_MONTH = FUTURE_DATE_BASE.month
 
 
 # ──────────────────────────────────────────────
