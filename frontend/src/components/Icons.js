@@ -1,16 +1,18 @@
 import React from 'react';
 
+const LOGO_URL = 'https://customer-assets.emergentagent.com/job_hr-powerup/artifacts/roxglb36_ChatGPT%20Image%2017%20feb%202026%2C%2010_27_22.png';
+
 export const RocketLogo = ({ size = 32 }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
-    <defs>
-      <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#3B82F6" />
-        <stop offset="100%" stopColor="#8B5CF6" />
-      </linearGradient>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="url(#logoGrad)" />
-    <text x="50" y="62" textAnchor="middle" fill="white" fontSize="36" fontWeight="bold">P</text>
-  </svg>
+  <img 
+    src={LOGO_URL} 
+    alt="PowerLeave Logo" 
+    style={{ 
+      width: size, 
+      height: size, 
+      objectFit: 'contain',
+      borderRadius: '8px'
+    }} 
+  />
 );
 
 export const Icons = {
