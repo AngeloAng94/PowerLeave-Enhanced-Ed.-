@@ -150,10 +150,10 @@ class TestLeaveRequests:
         assert isinstance(resp.json(), list)
 
     def test_create_leave_request(self, user_headers, admin_headers):
-        """Create a leave request on a unique far-future date to avoid overlaps."""
-        # Use a unique date based on RUN_ID to guarantee no overlap
+        """Create a leave request on a unique future date to avoid overlaps."""
+        # Use a unique date based on RUN_ID within valid range (next 6-12 months)
         unique_day = (int(RUN_ID, 16) % 28) + 1  # 1-28
-        start = f"2029-06-{unique_day:02d}"
+        start = f"{TEST_YEAR}-{TEST_MONTH:02d}-{unique_day:02d}"
         end = start
 
         resp = requests.post(f"{BASE_URL}/api/leave-requests",
@@ -181,8 +181,11 @@ class TestLeaveRequests:
 
     def test_leave_request_review(self, user_headers, admin_headers):
         """Create then approve a leave request."""
+        # Use a different month to avoid overlap with previous test
+        next_month = TEST_MONTH + 1 if TEST_MONTH < 12 else 1
+        next_year = TEST_YEAR if TEST_MONTH < 12 else TEST_YEAR + 1
         unique_day = ((int(RUN_ID, 16) + 5) % 28) + 1
-        start = f"2029-07-{unique_day:02d}"
+        start = f"{next_year}-{next_month:02d}-{unique_day:02d}"
         end = start
 
         # Create
