@@ -67,6 +67,10 @@ async def lifespan(app: FastAPI):
     await db.organizations.create_index("org_id", unique=True)
     await db.leave_requests.create_index([("org_id", 1), ("user_id", 1)])
     await db.leave_requests.create_index([("org_id", 1), ("start_date", 1)])
+    await db.leave_types.create_index("org_id")
+    await db.leave_balances.create_index([("org_id", 1), ("year", 1)])
+    await db.announcements.create_index("org_id")
+    await db.closure_exceptions.create_index("org_id")
     # Seed default leave types if empty
     if await db.leave_types.count_documents({}) == 0:
         await seed_default_data()
@@ -92,8 +96,8 @@ app.add_middleware(
         "https://saas-tech-check.preview.emergentagent.com"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # ============== MODELS ==============
@@ -896,7 +900,7 @@ async def review_leave_request(
                 "user_id": leave_request["user_id"],
                 "org_id": org_id,
                 "leave_type_id": leave_request["leave_type_id"],
-                "year": datetime.now().year
+                "year": datetime.now(timezone.utc).year
             },
             {"$inc": {"used_days": days_to_deduct}},
             upsert=True
@@ -909,7 +913,7 @@ async def review_leave_request(
 @app.get("/api/stats")
 async def get_stats(current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
-    year = datetime.now().year
+    year = datetime.now(timezone.utc).year
     
     # Count requests
     approved_count = await db.leave_requests.count_documents({
@@ -927,7 +931,7 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
     total_staff = await db.users.count_documents({"org_id": org_id})
     
     # Staff on leave today
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     on_leave_today = await db.leave_requests.count_documents({
         "org_id": org_id,
         "status": "approved",
