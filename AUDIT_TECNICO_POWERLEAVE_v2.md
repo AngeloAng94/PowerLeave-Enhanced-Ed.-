@@ -847,7 +847,7 @@ Nuova classe `TestDateValidation` con 3 test:
    - Rate limiting su auth
    - Password validation server-side
    - CORS ristretto
-   - Test suite stabile (30 test)
+   - Test suite stabile (33 test)
    - CI/CD GitHub Actions
 
 2. **Fix Critici Database** (P0)
@@ -866,6 +866,12 @@ Nuova classe `TestDateValidation` con 3 test:
    - Logo originale ripristinato
    - ThemeToggle su tutte le pagine
    - Branding corretto ("PowerLeave" senza "PMI")
+
+5. **Validazione Date** (P0) — CRITICO
+   - No date nel passato
+   - End date >= Start date
+   - Max 2 anni nel futuro
+   - Validazione doppia (frontend + backend)
 
 ### Da completare 🔄
 
