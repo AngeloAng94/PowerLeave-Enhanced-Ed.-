@@ -25,6 +25,12 @@ Sistema di gestione ferie per PMI italiane con design moderno, configurabile dal
 - temp_password rimossa dalla response di POST /api/team/invite (log solo server-side)
 - Test suite riscritta: 23 test idempotenti, 100% stabili su run consecutivi (3x verified)
 - CI GitHub Actions: .github/workflows/ci.yml (backend pytest + frontend build)
+- Fix 1: Schema company_closures unificato (date → start_date/end_date) + migrazione DB
+- Fix 2: Indici MongoDB aggiunti su leave_types, leave_balances, announcements, closure_exceptions
+- Fix 3: Paginazione su leave-requests, leave-balances, announcements
+- Fix 4: Validazione password server-side (min 8 char + 1 numero)
+- Fix 5: 4x datetime.now() → datetime.now(timezone.utc)
+- Fix 6: CORS ristretto (methods + headers specifici)
 
 ### Session 5 - 18 Feb 2026 (Audit Tecnico)
 - Audit v1: /app/AUDIT_TECNICO_POWERLEAVE.md (1023 righe)
