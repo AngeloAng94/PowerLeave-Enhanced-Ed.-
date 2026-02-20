@@ -150,7 +150,7 @@ export default function LandingPage() {
         padding: '24px', textAlign: 'center', borderTop: '1px solid var(--border)',
         fontSize: '13px', color: 'var(--muted-foreground)',
       }}>
-        PowerLeave — Gestione Ferie per PMI Italiane
+        PowerLeave — Gestione Ferie Semplice e Veloce
       </footer>
     </div>
   );
