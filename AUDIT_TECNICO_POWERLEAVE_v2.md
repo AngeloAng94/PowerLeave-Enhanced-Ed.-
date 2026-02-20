@@ -766,6 +766,77 @@ const [dark, setDark] = useState(() => {
 
 ---
 
+## APPENDICE D — FIX CRITICO VALIDAZIONE DATE (20 Feb 2026)
+
+### Problema identificato
+
+**BUG CRITICO**: Il form di richiesta ferie permetteva l'inserimento di date assurde:
+- Date nel passato (es. 1994, 1995)
+- Date nel futuro lontanissimo (es. 4292, 2999)
+
+Questo era un problema di validazione mancante sia lato frontend che backend.
+
+### Fix applicati
+
+| Fix | Descrizione | File modificati | Stato |
+|-----|-------------|-----------------|-------|
+| **DATE-1** | **Validazione backend**: Start date non può essere nel passato | `routes/leave.py` L88–108 | Risolto |
+| **DATE-2** | **Validazione backend**: End date >= Start date | `routes/leave.py` L88–108 | Risolto |
+| **DATE-3** | **Validazione backend**: Max 2 anni nel futuro | `routes/leave.py` L88–108 | Risolto |
+| **DATE-4** | **Validazione frontend**: Attributi `min`/`max` su input date | `Dashboard.js` L283–303 | Risolto |
+| **DATE-5** | **Validazione frontend**: Check JavaScript con messaggio italiano | `Dashboard.js` L264–295 | Risolto |
+
+### Dettaglio implementazione Backend
+
+```python
+# routes/leave.py - Validazione date
+today = datetime.now(timezone.utc).replace(...)
+
+# Start date non può essere nel passato
+if start < today:
+    raise HTTPException(422, "La data di inizio non può essere nel passato")
+
+# End date >= start date
+if end < start:
+    raise HTTPException(422, "La data di fine deve essere uguale o successiva...")
+
+# Max 2 anni nel futuro
+max_future_date = today.replace(year=today.year + 2)
+if start > max_future_date or end > max_future_date:
+    raise HTTPException(422, "Le date non possono essere oltre 2 anni nel futuro")
+```
+
+### Dettaglio implementazione Frontend
+
+```javascript
+// Dashboard.js - Validazione date
+const today = new Date().toISOString().split('T')[0];
+const maxDate = new Date();
+maxDate.setFullYear(maxDate.getFullYear() + 2);
+
+// Input con min/max HTML5
+<input type="date" min={today} max={maxDateStr} ... />
+
+// Validazione JavaScript custom con messaggi italiani
+if (start < todayDate) {
+  setError('La data di inizio non può essere nel passato');
+  return;
+}
+```
+
+### Test aggiunti
+
+Nuova classe `TestDateValidation` con 3 test:
+- `test_past_date_rejected` — Verifica HTTP 422 per date nel passato
+- `test_end_before_start_rejected` — Verifica HTTP 422 se end < start
+- `test_far_future_date_rejected` — Verifica HTTP 422 per date oltre 2 anni
+
+### Test Suite aggiornata
+
+- **pytest**: 33/33 passed (30 originali + 3 nuovi)
+
+---
+
 ## RIEPILOGO STATO PROGETTO
 
 ### Completato ✅
