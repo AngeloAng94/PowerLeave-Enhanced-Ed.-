@@ -603,5 +603,32 @@ frontend/src/
 
 ---
 
+## APPENDICE — FIX APPLICATI (18 Feb 2026, post-audit)
+
+Tutti i fix sono stati verificati con 23/23 test passed (2 run consecutivi stabili).
+
+| Fix | Descrizione | File:Righe | Stato |
+|-----|-------------|------------|-------|
+| **Fix 1** | **Schema `company_closures` unificato**: seed migrato da `date` a `start_date`/`end_date`. GET `/api/closures` filtra su `start_date`. GET `/api/calendar/closures` filtra su `start_date`/`end_date`. POST `/api/closures` non accetta più il campo `date`. Dati DB live migrati (12 festività). | `server.py` L254–267, L1293–1297, L1000–1003, L1311 | Risolto |
+| **Fix 2** | **Indici MongoDB aggiunti**: `leave_types(org_id)`, `leave_balances(org_id, year)`, `announcements(org_id)`, `closure_exceptions(org_id)` | `server.py` L69–72 | Risolto |
+| **Fix 3** | **Paginazione**: parametri `page` (default 1) e `page_size` (default 50/50/20) su GET `/api/leave-requests`, `/api/leave-balances`, `/api/announcements`. Retrocompatibile (senza parametri = comportamento originale). | `server.py` GET endpoints | Risolto |
+| **Fix 4** | **Validazione password server-side**: min 8 caratteri + almeno 1 numero su POST `/api/auth/register` e POST `/api/team/invite`. HTTP 422 con messaggio chiaro. | `server.py` L50–53, L420, L1054 | Risolto |
+| **Fix 5** | **datetime timezone**: 4 occorrenze di `datetime.now()` sostituite con `datetime.now(timezone.utc)` per coerenza | `server.py` L905, L918, L936, L1137 | Risolto |
+| **Fix 6** | **CORS ristretto**: `allow_methods` da `["*"]` a `["GET","POST","PUT","DELETE","OPTIONS"]`, `allow_headers` da `["*"]` a `["Content-Type","Authorization"]` | `server.py` L95–96 | Risolto |
+
+### Debito Tecnico Aggiornato (post-fix)
+
+| ID  | Stato |
+|-----|-------|
+| D05 (schema closures) | **Risolto** (Fix 1) |
+| D06 (indici mancanti) | **Risolto** (Fix 2) |
+| D07 (datetime senza tz) | **Risolto** (Fix 5) |
+| S01 (CORS permissivo) | **Risolto** (Fix 6) |
+| S03 (password debole) | **Risolto** (Fix 4) |
+| D01–D04, D08–D14 | Invariati (richiesto refactoring strutturale) |
+
+---
+
 *Documento generato il 18 Febbraio 2026*  
+*Aggiornato con Fix 1–6 applicati il 18 Febbraio 2026*  
 *Basato su lettura completa del codice sorgente, schema MongoDB live, test report e configurazioni.*
