@@ -16,6 +16,10 @@
 6. [Testing & Qualità](#6-testing--qualità)
 7. [Debito Tecnico Attuale](#7-debito-tecnico-attuale)
 8. [Roadmap Suggerita (3 Step)](#8-roadmap-suggerita-3-step)
+9. [Appendice A — Fix Applicati (18 Feb)](#appendice--fix-applicati-18-feb-2026-post-audit)
+10. [Appendice B — Refactoring Strutturale (19 Feb)](#appendice-b--refactoring-strutturale-19-feb-2026)
+11. [Appendice C — Fix UI/UX (20 Feb)](#appendice-c--fix-uiux-20-feb-2026)
+12. [Riepilogo Stato Progetto](#riepilogo-stato-progetto)
 
 ---
 
