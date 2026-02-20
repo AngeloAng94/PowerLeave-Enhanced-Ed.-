@@ -19,13 +19,18 @@ Sistema di gestione ferie per aziende italiane con design moderno, configurabile
 
 ## What's Been Implemented
 
-### Session 8 - 20 Feb 2026 (UI/UX Fix)
+### Session 8 - 20 Feb 2026 (UI/UX Fix + Date Validation)
 - **Dark mode ripristinato come default** - ThemeToggle ora usa dark mode quando non c'è preferenza salvata
 - **Logo originale ripristinato** - Immagine razzo al posto dell'icona SVG "P"
 - **ThemeToggle aggiunto a tutte le pagine** - Landing, Login, Register ora hanno il toggle tema
 - **Branding corretto** - Rimosso "PMI Italiane", ora dice "Gestione Ferie Semplice e Veloce"
 - **Link home su Login/Register** - Logo cliccabile per tornare alla landing
-- **Audit v2 aggiornato** - Aggiunte Appendice B (Refactoring) e Appendice C (Fix UI/UX)
+- **FIX CRITICO: Validazione date richieste ferie** - Aggiunta validazione doppia (frontend + backend):
+  - No date nel passato
+  - End date >= Start date
+  - Max 2 anni nel futuro
+- **Test suite ampliata** - 33 test (30 + 3 nuovi per validazione date)
+- **Audit v2 aggiornato** - Aggiunte Appendice B, C, D
 
 ### Session 7 - 19 Feb 2026 (Structural Refactoring)
 - Audit v2 tabelle sincronizzate con fix applicati
