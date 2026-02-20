@@ -848,6 +848,8 @@ async def create_leave_request(
 async def get_leave_requests(
     filter_status: Optional[str] = None,
     user_id: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 50,
     current_user: dict = Depends(get_current_user)
 ):
     org_id = current_user["org_id"]
@@ -862,7 +864,8 @@ async def get_leave_requests(
     if filter_status:
         query["status"] = filter_status
     
-    requests = await db.leave_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    skip = (max(1, page) - 1) * page_size
+    requests = await db.leave_requests.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).to_list(page_size)
     return requests
 
 @app.put("/api/leave-requests/{request_id}/review")
@@ -1139,21 +1142,27 @@ async def remove_team_member(
 # ============== LEAVE BALANCES ==============
 
 @app.get("/api/leave-balances")
-async def get_leave_balances(current_user: dict = Depends(get_current_user)):
+async def get_leave_balances(
+    page: int = 1,
+    page_size: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
     org_id = current_user["org_id"]
     year = datetime.now(timezone.utc).year
+    
+    skip = (max(1, page) - 1) * page_size
     
     # Get all balances for org
     if current_user.get("role") == "admin":
         balances = await db.leave_balances.find(
             {"org_id": org_id, "year": year},
             {"_id": 0}
-        ).to_list(1000)
+        ).skip(skip).to_list(page_size)
     else:
         balances = await db.leave_balances.find(
             {"org_id": org_id, "user_id": current_user["user_id"], "year": year},
             {"_id": 0}
-        ).to_list(100)
+        ).skip(skip).to_list(page_size)
     
     # Fetch all users and leave types upfront to avoid N+1 queries
     user_ids = list(set(b["user_id"] for b in balances))
@@ -1215,14 +1224,20 @@ async def update_organization(
 # ============== ANNOUNCEMENTS (BACHECA) ==============
 
 @app.get("/api/announcements")
-async def get_announcements(current_user: dict = Depends(get_current_user)):
+async def get_announcements(
+    page: int = 1,
+    page_size: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
     """Get all announcements for the organization"""
     org_id = current_user["org_id"]
+    
+    skip = (max(1, page) - 1) * page_size
     
     announcements = await db.announcements.find(
         {"org_id": org_id},
         {"_id": 0}
-    ).sort("created_at", -1).to_list(100)
+    ).sort("created_at", -1).skip(skip).to_list(page_size)
     
     return announcements
 
