@@ -406,13 +406,13 @@ reviewed_at   : datetime  (dopo review)
 | Area     | Problema | Dove | Impatto |
 |----------|----------|------|---------|
 | **BE**   | Singolo worker uvicorn | `server.py` L1488 | Tutte le richieste serializzate su un solo processo. Max ~50 utenti concorrenti prima di saturazione. |
-| **BE**   | Nessuna paginazione | Tutti i GET lista (es. L850 `.to_list(500)`) | Con molti dati, le response crescono linearmente. `leave_requests` carica fino a 500 documenti per chiamata. |
+| **BE**   | Nessuna paginazione | Tutti i GET lista | **Risolto — Fix 3**: parametri `page`/`page_size` su leave-requests, leave-balances, announcements. |
 | **BE**   | Nessun caching | Nessun layer cache | Stats, leave types, e organization cambiano raramente ma vengono ricalcolati ad ogni richiesta. |
-| **BE**   | 4× `datetime.now()` senza timezone | `server.py` L899, 912, 930, 1127 | Queste righe usano `datetime.now()` (locale) invece di `datetime.now(timezone.utc)`. In contesto UTC-server è equivalente, ma è una inconsistenza con il resto del codice che usa `timezone.utc`. |
+| **BE**   | 4× `datetime.now()` senza timezone | `server.py` | **Risolto — Fix 5**: Tutte sostituite con `datetime.now(timezone.utc)`. |
 | **FE**   | Bundle monolite | `App.js` 148 KB source (stima ~300 KB bundle) | Nessun code splitting. Tutte le 19 pagine caricate al primo render, anche se l'utente ne visita 2. |
 | **FE**   | Grafici in div/CSS | `StatsPage` L1805–2190 | Barre e torte disegnate con `div` e `style={{height: ...}}`. Non interattivi, non accessibili, non responsive. |
-| **DB**   | Indici mancanti | `leave_types`, `leave_balances`, `announcements`, `closure_exceptions` | Nessun indice su `org_id`. Full collection scan per ogni query multi-tenant. |
-| **DB**   | Schema incoerente closures | `company_closures` | Due schemi coesistenti (`date` vs `start_date`). La query GET filtra solo per `date`, non trovando chiusure custom. |
+| **DB**   | Indici mancanti | `leave_types`, `leave_balances`, `announcements`, `closure_exceptions` | **Risolto — Fix 2**: Indici su `org_id` aggiunti per tutte e 4 le collection. |
+| **DB**   | Schema incoerente closures | `company_closures` | **Risolto — Fix 1**: Schema unificato a `start_date`/`end_date`. Dati migrati. |
 | **DB**   | Date come stringhe | `leave_requests.start_date`, `.end_date` | Funzionale per confronti lessicografici, ma non ottimale per range query native MongoDB. |
 
 ### 5.3 Raccomandazioni Sintetiche (cosa migliorare prima)
