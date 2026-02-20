@@ -1,13 +1,13 @@
 # PowerLeave - Product Requirements Document
 
 ## Original Problem Statement
-Sistema di gestione ferie per PMI italiane con design moderno, configurabile dalle aziende. Trasformare il progetto GitHub PowerLeave in un'applicazione SaaS production-ready.
+Sistema di gestione ferie per aziende italiane con design moderno, configurabile dalle aziende. Trasformare il progetto GitHub PowerLeave in un'applicazione SaaS production-ready.
 
 ## Architecture
 - **Frontend**: React 18 + CSS Custom + Sonner + React.lazy (code splitting)
 - **Backend**: FastAPI modulare (14 file) + MongoDB (Motor async) + slowapi
 - **Auth**: JWT + Google OAuth (predisposto via Emergent)
-- **Theme**: Light/Dark mode con persistenza localStorage
+- **Theme**: Light/Dark mode con persistenza localStorage (default: dark)
 
 ## Demo Users
 | Email | Password | Ruolo |
@@ -19,12 +19,19 @@ Sistema di gestione ferie per PMI italiane con design moderno, configurabile dal
 
 ## What's Been Implemented
 
-### Session 7 - 20 Feb 2026 (Structural Refactoring)
+### Session 8 - 20 Feb 2026 (UI/UX Fix)
+- **Dark mode ripristinato come default** - ThemeToggle ora usa dark mode quando non c'è preferenza salvata
+- **Logo originale ripristinato** - Immagine razzo al posto dell'icona SVG "P"
+- **ThemeToggle aggiunto a tutte le pagine** - Landing, Login, Register ora hanno il toggle tema
+- **Branding corretto** - Rimosso "PMI Italiane", ora dice "Gestione Ferie Semplice e Veloce"
+- **Link home su Login/Register** - Logo cliccabile per tornare alla landing
+- **Audit v2 aggiornato** - Aggiunte Appendice B (Refactoring) e Appendice C (Fix UI/UX)
+
+### Session 7 - 19 Feb 2026 (Structural Refactoring)
 - Audit v2 tabelle sincronizzate con fix applicati
 - Backend: server.py (1489→77 righe) refactored in 14 moduli (config, models, auth, database, seed, 8 route files)
 - Frontend: App.js (3533→57 righe) refactored in 20+ file (pages/*, components/*, context/*, lib/*)
 - React.lazy code splitting su 5 pagine (StatsPage, CalendarPage, SettingsPage, AnnouncementsPage, ClosuresPage)
-- Logica init_leave_balances centralizzata in database.py (risolto D08)
 - Test: 30/30 backend + 100% frontend (testing agent iteration 5)
 
 ### Session 6 - 18 Feb 2026 (P0 Security & Fixes)
@@ -49,17 +56,21 @@ backend/ (14 file)
 frontend/src/ (20+ file)
 ├── App.js (57 righe - wiring)
 ├── lib/api.js, context/AuthContext.js, context/NotificationContext.js
-├── components/ (Icons, ThemeToggle, MiniCalendar)
+├── components/ (Icons, ThemeToggle)
 └── pages/ (13 page files with React.lazy for 5)
 ```
 
-## Next Tasks
+## Next Tasks (P0)
+- [ ] Aggiungere `response_model` agli endpoint FastAPI (D04)
+- [ ] Helper centralizzato init_leave_balances (D08)
+
+## Upcoming Tasks (P1)
 - [ ] Dockerizzazione (Dockerfile + docker-compose)
 - [ ] README.md professionale
-- [ ] Hardening residuo: token rotation, Error Boundary, test frontend
 
-## Future (P1-P2)
-- [ ] Google Calendar integration (on hold)
-- [ ] Email notifications SendGrid (on hold)
+## Future (P2-P3)
+- [ ] Google Calendar integration (on hold per utente)
+- [ ] Email notifications SendGrid (on hold per utente)
 - [ ] Export report, grafici recharts, PWA
 - [ ] Multi-livello approvazioni
+- [ ] Hardening: token rotation, Error Boundary, test frontend
