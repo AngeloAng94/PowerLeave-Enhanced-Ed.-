@@ -629,6 +629,199 @@ Tutti i fix sono stati verificati con 23/23 test passed (2 run consecutivi stabi
 
 ---
 
+## APPENDICE B — REFACTORING STRUTTURALE (19 Feb 2026)
+
+Il refactoring strutturale descritto nello Step 1 della Roadmap è stato completato. I file monolitici sono stati decomposti in moduli separati.
+
+### Backend: da `server.py` monolite a struttura modulare
+
+**Nuova struttura:**
+```
+backend/
+├── server.py          # Ridotto a: app init + include_router (entry point)
+├── config.py          # Env vars, costanti, configurazione
+├── models.py          # Tutti i modelli Pydantic
+├── auth.py            # Helpers autenticazione (create_token, verify_password, get_current_user)
+├── database.py        # Connessione DB, lifespan, helpers
+├── seed.py            # seed_default_data, seed_demo_users
+└── routes/
+    ├── auth.py        # register, login, session, me, logout
+    ├── leave.py       # leave-requests, leave-types, leave-balances
+    ├── team.py        # team CRUD + invite
+    ├── organization.py# org, settings, rules
+    ├── announcements.py # announcements CRUD
+    ├── closures.py    # closures + exceptions
+    └── stats.py       # stats, calendar
+```
+
+**File principale `server.py` (prima vs dopo):**
+| Metrica | Prima | Dopo |
+|---------|-------|------|
+| Righe | 1.489 | ~50 |
+| Responsabilità | Tutto | Solo init + routing |
+| Endpoint definiti | 35 | 0 (delegati ai router) |
+
+### Frontend: da `App.js` monolite a componenti separati
+
+**Nuova struttura:**
+```
+frontend/src/
+├── App.js             # Ridotto a: providers + hash router (~60 righe)
+├── lib/
+│   └── api.js         # Client API con axios
+├── context/
+│   ├── AuthContext.js # Provider autenticazione
+│   └── NotificationContext.js # Servizio notifiche + toast
+├── components/
+│   ├── Icons.js       # Logo + icone SVG
+│   └── ThemeToggle.js # Switch dark/light mode
+├── pages/
+│   ├── LandingPage.js
+│   ├── LoginPage.js
+│   ├── RegisterPage.js
+│   ├── AuthCallback.js
+│   ├── Dashboard.js
+│   ├── DashboardContent.js
+│   ├── CalendarPage.js
+│   ├── StatsPage.js
+│   ├── RequestsPage.js
+│   ├── TeamPage.js
+│   ├── SettingsPage.js
+│   ├── AnnouncementsPage.js
+│   └── ClosuresPage.js
+└── index.css          (invariato)
+```
+
+**File principale `App.js` (prima vs dopo):**
+| Metrica | Prima | Dopo |
+|---------|-------|------|
+| Righe | 3.533 | ~60 |
+| Componenti inline | 19 | 0 |
+| Code splitting | No | Sì (`React.lazy` su 5 pagine) |
+
+### Code Splitting implementato
+
+Le seguenti pagine sono caricate con `React.lazy()` per ridurre il bundle iniziale:
+- `StatsPage`
+- `CalendarPage`
+- `SettingsPage`
+- `AnnouncementsPage`
+- `ClosuresPage`
+
+### Debito Tecnico Aggiornato (post-refactoring)
+
+| ID | Stato | Note |
+|----|-------|------|
+| D01 (Backend monolite) | **Risolto** | Struttura modulare con routers |
+| D02 (Frontend monolite) | **Risolto** | Componenti separati + code splitting |
+| D04 (dict invece di Pydantic) | **Aperto** | Richiede aggiunta `response_model` |
+| D08 (logica balance duplicata) | **Aperto** | Richiede helper centralizzato |
+| D03, D09–D14 | Invariati | |
+
+### Test Validazione
+
+- **Backend pytest**: 30/30 test passed (suite ampliata)
+- **Testing agent E2E**: 30/30 test passed (100% success)
+- **Screenshot verification**: Landing, Login, Dashboard funzionanti
+
+---
+
+## APPENDICE C — FIX UI/UX (20 Feb 2026)
+
+### Problemi identificati dall'utente
+
+1. **Modalità scura mancante** — Il refactoring aveva rimosso il default dark mode
+2. **Logo originale rimosso** — Sostituito erroneamente con icona SVG "P"
+3. **Testo "PMI Italiane"** — Non desiderato dall'utente
+
+### Fix applicati
+
+| Fix | Descrizione | File modificati | Stato |
+|-----|-------------|-----------------|-------|
+| **UI-1** | **ThemeToggle aggiunto a tutte le pagine**: Landing, Login, Register ora hanno il toggle tema nell'header | `LandingPage.js`, `LoginPage.js`, `RegisterPage.js` | Risolto |
+| **UI-2** | **Dark mode come default**: Quando non c'è preferenza in localStorage, il sito usa automaticamente il tema scuro | `ThemeToggle.js` L5–8 | Risolto |
+| **UI-3** | **Logo originale ripristinato**: Ripristinata l'immagine del razzo al posto dell'icona SVG "P" | `Icons.js` L3–12 | Risolto |
+| **UI-4** | **Rimosso "PMI Italiane"**: Sostituito con "Gestione Ferie Semplice e Veloce" | `LandingPage.js` L45, L153 | Risolto |
+| **UI-5** | **Link home su Login/Register**: Aggiunto logo cliccabile per tornare alla landing page | `LoginPage.js`, `RegisterPage.js` | Risolto |
+
+### Dettaglio modifiche
+
+**`components/Icons.js`** — Logo ripristinato:
+```javascript
+const LOGO_URL = 'https://customer-assets.emergentagent.com/job_hr-powerup/artifacts/roxglb36_ChatGPT%20Image%2017%20feb%202026%2C%2010_27_22.png';
+
+export const RocketLogo = ({ size = 32 }) => (
+  <img src={LOGO_URL} alt="PowerLeave Logo" style={{ width: size, height: size, objectFit: 'contain', borderRadius: '8px' }} />
+);
+```
+
+**`components/ThemeToggle.js`** — Dark mode default:
+```javascript
+const [dark, setDark] = useState(() => {
+  const saved = localStorage.getItem('theme');
+  if (saved) return saved === 'dark';
+  return true; // Default to dark mode
+});
+```
+
+### Verifica visiva
+
+| Pagina | Dark Mode | Logo | ThemeToggle | Screenshot |
+|--------|-----------|------|-------------|------------|
+| Landing | ✅ | ✅ | ✅ | Verificato |
+| Login | ✅ | ✅ | ✅ | Verificato |
+| Register | ✅ | ✅ | ✅ | Verificato |
+| Dashboard | ✅ | ✅ | ✅ | Verificato |
+
+### Test Backend
+
+- **pytest**: 30/30 passed (nessuna regressione)
+
+---
+
+## RIEPILOGO STATO PROGETTO
+
+### Completato ✅
+
+1. **Sicurezza & Stabilità** (P0)
+   - SECRET_KEY obbligatorio
+   - Rate limiting su auth
+   - Password validation server-side
+   - CORS ristretto
+   - Test suite stabile (30 test)
+   - CI/CD GitHub Actions
+
+2. **Fix Critici Database** (P0)
+   - Schema closures unificato
+   - Indici MongoDB aggiunti
+   - Paginazione API
+   - Datetime timezone-aware
+
+3. **Refactoring Strutturale** (P0)
+   - Backend modulare (routes/, models, auth, config)
+   - Frontend modulare (pages/, components/, context/)
+   - Code splitting con React.lazy
+
+4. **Fix UI/UX** (P0)
+   - Dark mode default
+   - Logo originale ripristinato
+   - ThemeToggle su tutte le pagine
+   - Branding corretto ("PowerLeave" senza "PMI")
+
+### Da completare 🔄
+
+| Task | Priorità | Stato |
+|------|----------|-------|
+| Aggiungere `response_model` agli endpoint | P0 | Non iniziato |
+| Helper centralizzato init saldo ferie | P0 | Non iniziato |
+| Dockerizzazione | P1 | Non iniziato |
+| README professionale | P2 | Non iniziato |
+| Integrazioni Calendar/Email | P2 | In attesa (utente) |
+
+---
+
 *Documento generato il 18 Febbraio 2026*  
 *Aggiornato con Fix 1–6 applicati il 18 Febbraio 2026*  
+*Aggiornato con Refactoring Strutturale il 19 Febbraio 2026*
+*Aggiornato con Fix UI/UX il 20 Febbraio 2026*
 *Basato su lettura completa del codice sorgente, schema MongoDB live, test report e configurazioni.*
