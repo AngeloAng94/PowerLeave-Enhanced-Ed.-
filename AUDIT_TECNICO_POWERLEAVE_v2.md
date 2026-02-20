@@ -19,7 +19,8 @@
 9. [Appendice A — Fix Applicati (18 Feb)](#appendice--fix-applicati-18-feb-2026-post-audit)
 10. [Appendice B — Refactoring Strutturale (19 Feb)](#appendice-b--refactoring-strutturale-19-feb-2026)
 11. [Appendice C — Fix UI/UX (20 Feb)](#appendice-c--fix-uiux-20-feb-2026)
-12. [Riepilogo Stato Progetto](#riepilogo-stato-progetto)
+12. [Appendice D — Fix Validazione Date (20 Feb)](#appendice-d--fix-critico-validazione-date-20-feb-2026)
+13. [Riepilogo Stato Progetto](#riepilogo-stato-progetto)
 
 ---
 
