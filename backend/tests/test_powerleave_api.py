@@ -455,3 +455,47 @@ class TestLeaveTypesCount:
         names = [t["name"] for t in types]
         assert "Ferie" in names
         assert "Permesso" in names
+
+
+class TestDateValidation:
+    """Verify leave request date validation"""
+    
+    def test_past_date_rejected(self, user_headers):
+        """Start date in the past should return 422"""
+        resp = requests.post(f"{BASE_URL}/api/leave-requests", headers=user_headers, json={
+            "leave_type_id": "ferie",
+            "start_date": "2020-01-15",  # Past date
+            "end_date": "2020-01-16",
+            "hours": 8,
+            "notes": f"TEST_RUN_{RUN_ID}_past"
+        })
+        assert resp.status_code == 422
+        assert "passato" in resp.json().get("detail", "").lower()
+    
+    def test_end_before_start_rejected(self, user_headers):
+        """End date before start date should return 422"""
+        # Use valid future dates but end < start
+        future_start = f"{TEST_YEAR + 1}-06-20"
+        future_end = f"{TEST_YEAR + 1}-06-15"  # Before start
+        
+        resp = requests.post(f"{BASE_URL}/api/leave-requests", headers=user_headers, json={
+            "leave_type_id": "ferie",
+            "start_date": future_start,
+            "end_date": future_end,
+            "hours": 8,
+            "notes": f"TEST_RUN_{RUN_ID}_invalid_range"
+        })
+        assert resp.status_code == 422
+        assert "successiva" in resp.json().get("detail", "").lower()
+    
+    def test_far_future_date_rejected(self, user_headers):
+        """Date more than 2 years in the future should return 422"""
+        resp = requests.post(f"{BASE_URL}/api/leave-requests", headers=user_headers, json={
+            "leave_type_id": "ferie",
+            "start_date": "2099-01-15",  # Too far in the future
+            "end_date": "2099-01-16",
+            "hours": 8,
+            "notes": f"TEST_RUN_{RUN_ID}_future"
+        })
+        assert resp.status_code == 422
+        assert "2 anni" in resp.json().get("detail", "")
