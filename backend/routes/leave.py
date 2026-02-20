@@ -88,6 +88,28 @@ async def create_leave_request(data: LeaveRequestCreate, current_user: dict = De
     org_id = current_user["org_id"]
     user_id = current_user["user_id"]
 
+    # Parse and validate dates
+    try:
+        start = datetime.strptime(data.start_date, "%Y-%m-%d")
+        end = datetime.strptime(data.end_date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Formato data non valido. Usa YYYY-MM-DD")
+
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+    
+    # Validation: start date cannot be in the past
+    if start < today:
+        raise HTTPException(status_code=422, detail="La data di inizio non può essere nel passato")
+    
+    # Validation: end date must be >= start date
+    if end < start:
+        raise HTTPException(status_code=422, detail="La data di fine deve essere uguale o successiva alla data di inizio")
+    
+    # Validation: dates must be within reasonable range (max 2 years in the future)
+    max_future_date = today.replace(year=today.year + 2)
+    if start > max_future_date or end > max_future_date:
+        raise HTTPException(status_code=422, detail="Le date non possono essere oltre 2 anni nel futuro")
+
     leave_type = await db.leave_types.find_one(
         {"id": data.leave_type_id, "$or": [{"org_id": None}, {"org_id": org_id}]},
         {"_id": 0}
@@ -104,8 +126,6 @@ async def create_leave_request(data: LeaveRequestCreate, current_user: dict = De
     if existing:
         raise HTTPException(status_code=400, detail="Hai già una richiesta per questo periodo")
 
-    start = datetime.strptime(data.start_date, "%Y-%m-%d")
-    end = datetime.strptime(data.end_date, "%Y-%m-%d")
     days = (end - start).days + 1
 
     request_id = str(uuid.uuid4())
