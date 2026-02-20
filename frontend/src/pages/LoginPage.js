@@ -113,6 +113,7 @@ export default function LoginPage() {
           <strong>Demo:</strong> admin@demo.it / demo123
         </div>
       </div>
+      </div>
     </div>
   );
 }
