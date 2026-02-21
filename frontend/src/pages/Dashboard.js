@@ -133,7 +133,7 @@ export default function Dashboard() {
       }} className="desktop-sidebar">
         <div style={{ padding: '20px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <RocketLogo size={32} />
+            <RocketLogo size={36} />
             <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--foreground)' }}>PowerLeave</span>
           </div>
         </div>
