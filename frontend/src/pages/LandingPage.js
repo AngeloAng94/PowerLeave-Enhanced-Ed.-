@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { RocketLogo, Icons } from '../components/Icons';
+import { RocketLogo, Icons, ANTHERA_LOGO_URL } from '../components/Icons';
 import ThemeToggle from '../components/ThemeToggle';
 
 export default function LandingPage() {
