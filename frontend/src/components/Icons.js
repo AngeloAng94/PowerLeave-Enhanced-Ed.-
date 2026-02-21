@@ -1,6 +1,10 @@
 import React from 'react';
 
-const LOGO_URL = 'https://customer-assets.emergentagent.com/job_hr-powerup/artifacts/roxglb36_ChatGPT%20Image%2017%20feb%202026%2C%2010_27_22.png';
+// New PowerLeave logo (by Anthera)
+const LOGO_URL = 'https://customer-assets.emergentagent.com/job_0549d4d8-9385-420c-b805-6d37ad84a39c/artifacts/jf8k1690_PowerLeave%20-%20ByANTHERA.png';
+
+// Anthera company logo
+export const ANTHERA_LOGO_URL = 'https://customer-assets.emergentagent.com/job_0549d4d8-9385-420c-b805-6d37ad84a39c/artifacts/y1yugvq8_ANTHERA.png';
 
 export const RocketLogo = ({ size = 32 }) => (
   <img 
