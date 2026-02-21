@@ -147,10 +147,28 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer style={{
-        padding: '24px', textAlign: 'center', borderTop: '1px solid var(--border)',
-        fontSize: '13px', color: 'var(--muted-foreground)',
+        padding: '32px 24px', textAlign: 'center', borderTop: '1px solid var(--border)',
+        background: 'var(--card)',
       }}>
-        PowerLeave — Gestione Ferie Semplice e Veloce
+        <div style={{ marginBottom: '16px' }}>
+          <span style={{ fontSize: '14px', color: 'var(--foreground)', fontWeight: 600 }}>
+            PowerLeave
+          </span>
+          <span style={{ fontSize: '13px', color: 'var(--muted-foreground)', marginLeft: '8px' }}>
+            — Workforce Intelligence
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>Powered by</span>
+          <img 
+            src={ANTHERA_LOGO_URL} 
+            alt="Anthera" 
+            style={{ height: '24px', objectFit: 'contain' }} 
+          />
+        </div>
+        <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--muted-foreground)' }}>
+          © {new Date().getFullYear()} Anthera — Empowering Intelligent Systems
+        </div>
       </footer>
     </div>
   );
