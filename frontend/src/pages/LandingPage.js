@@ -42,7 +42,7 @@ export default function LandingPage() {
           background: 'var(--muted)', fontSize: '13px', fontWeight: 500,
           marginBottom: '24px', color: 'var(--muted-foreground)',
         }}>
-          Gestione Ferie Semplice e Veloce
+          Workforce Intelligence
         </div>
         <h1 style={{ fontSize: '48px', fontWeight: 800, lineHeight: 1.1, marginBottom: '20px' }}>
           Gestisci le ferie del tuo team in modo{' '}
