@@ -48,7 +48,7 @@ export default function RegisterPage() {
           display: 'flex', alignItems: 'center', gap: '8px',
           textDecoration: 'none', color: 'var(--foreground)', fontWeight: 600,
         }}>
-          <RocketLogo size={28} />
+          <RocketLogo size={32} />
           <span>PowerLeave</span>
         </a>
         <ThemeToggle />
@@ -61,7 +61,7 @@ export default function RegisterPage() {
         border: '1px solid var(--border)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <RocketLogo size={48} />
+          <RocketLogo size={56} />
           <h1 style={{ fontSize: '24px', fontWeight: 700, marginTop: '12px', color: 'var(--foreground)' }}>Crea il tuo account</h1>
           <p style={{ color: 'var(--muted-foreground)', fontSize: '14px', marginTop: '4px' }}>Inizia a gestire le ferie del tuo team</p>
         </div>
