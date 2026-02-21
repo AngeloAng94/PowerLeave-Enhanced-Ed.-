@@ -15,7 +15,7 @@ export default function LandingPage() {
         background: 'var(--card)', position: 'sticky', top: 0, zIndex: 50,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <RocketLogo size={32} />
+          <RocketLogo size={36} />
           <span style={{ fontWeight: 700, fontSize: '20px' }}>PowerLeave</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
