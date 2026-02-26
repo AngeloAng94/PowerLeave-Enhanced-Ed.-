@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Any
+from datetime import datetime as dt
 
 
 class UserBase(BaseModel):
@@ -26,13 +27,13 @@ class User(BaseModel):
     role: str = "user"
     org_id: str
     picture: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[Any] = None
 
 
 class Organization(BaseModel):
     org_id: str
     name: str
-    created_at: Optional[str] = None
+    created_at: Optional[Any] = None
     owner_id: Optional[str] = None
     email: Optional[str] = None
 
@@ -68,8 +69,8 @@ class LeaveRequest(BaseModel):
     notes: Optional[str] = ""
     status: str = "pending"
     reviewed_by: Optional[str] = None
-    reviewed_at: Optional[str] = None
-    created_at: Optional[str] = None
+    reviewed_at: Optional[Any] = None
+    created_at: Optional[Any] = None
 
 
 class LeaveBalance(BaseModel):
@@ -104,7 +105,7 @@ class CompanyClosure(BaseModel):
     type: str = "holiday"
     auto_leave: Optional[bool] = False
     allow_exceptions: Optional[bool] = True
-    created_at: Optional[str] = None
+    created_at: Optional[Any] = None
     created_by: Optional[str] = None
 
 
@@ -117,8 +118,8 @@ class ClosureException(BaseModel):
     reason: str = ""
     status: str = "pending"
     reviewed_by: Optional[str] = None
-    reviewed_at: Optional[str] = None
-    created_at: Optional[str] = None
+    reviewed_at: Optional[Any] = None
+    created_at: Optional[Any] = None
 
 
 class TeamMember(BaseModel):
@@ -128,7 +129,7 @@ class TeamMember(BaseModel):
     role: str
     picture: Optional[str] = None
     org_id: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[Any] = None
     invited_by: Optional[str] = None
 
 
@@ -140,8 +141,8 @@ class Announcement(BaseModel):
     priority: str = "normal"
     author_id: str
     author_name: str
-    created_at: Optional[str] = None
-    expires_at: Optional[str] = None
+    created_at: Optional[Any] = None
+    expires_at: Optional[Any] = None
 
 
 class OrgSettings(BaseModel):
