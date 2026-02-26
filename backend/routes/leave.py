@@ -6,12 +6,15 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from database import db
 from auth import get_current_user, get_admin_user
-from models import LeaveRequestCreate
+from models import (
+    LeaveRequestCreate, LeaveType, LeaveRequest, LeaveBalanceResponse,
+    SuccessResponse, LeaveRequestCreatedResponse
+)
 
 router = APIRouter(prefix="/api", tags=["leave"])
 
 
-@router.get("/leave-types")
+@router.get("/leave-types", response_model=List[LeaveType])
 async def get_leave_types(current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
     types = await db.leave_types.find(
