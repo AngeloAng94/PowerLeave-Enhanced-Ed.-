@@ -1,16 +1,17 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, HTTPException, Depends
 
 from database import db
 from auth import get_current_user, get_admin_user
+from models import CompanyClosure, ClosureException, SuccessResponse
 
 router = APIRouter(prefix="/api/closures", tags=["closures"])
 
 
-@router.get("")
+@router.get("", response_model=List[CompanyClosure])
 async def get_closures(
     year: Optional[int] = None,
     current_user: dict = Depends(get_current_user)
@@ -28,7 +29,7 @@ async def get_closures(
     return closures
 
 
-@router.post("")
+@router.post("", response_model=CompanyClosure)
 async def create_closure(data: dict, current_user: dict = Depends(get_admin_user)):
     org_id = current_user["org_id"]
     start_date = data.get("start_date")
