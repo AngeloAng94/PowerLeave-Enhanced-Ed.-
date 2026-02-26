@@ -23,7 +23,7 @@ async def get_team(current_user: dict = Depends(get_current_user)):
     return members
 
 
-@router.post("/invite")
+@router.post("/invite", response_model=InviteResponse)
 async def invite_member(data: dict, current_user: dict = Depends(get_admin_user)):
     org_id = current_user["org_id"]
     email = data.get("email")
