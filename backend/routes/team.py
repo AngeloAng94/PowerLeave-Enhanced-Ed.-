@@ -91,4 +91,4 @@ async def remove_team_member(user_id: str, current_user: dict = Depends(get_admi
     await db.leave_balances.delete_many({"user_id": user_id})
     await db.leave_requests.delete_many({"user_id": user_id})
 
-    return {"success": True}
+    return SuccessResponse()
