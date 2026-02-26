@@ -189,7 +189,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/logout")
+@router.post("/logout", response_model=LogoutResponse)
 async def logout(response: Response):
     response.delete_cookie("session_token")
-    return {"message": "Logout effettuato"}
+    return LogoutResponse(message="Logout effettuato")
