@@ -149,10 +149,10 @@ async def create_leave_request(data: LeaveRequestCreate, current_user: dict = De
     }
     await db.leave_requests.insert_one(leave_request)
 
-    return {"success": True, "request_id": request_id}
+    return LeaveRequestCreatedResponse(success=True, request_id=request_id)
 
 
-@router.put("/leave-requests/{request_id}/review")
+@router.put("/leave-requests/{request_id}/review", response_model=SuccessResponse)
 async def review_leave_request(request_id: str, data: dict, current_user: dict = Depends(get_admin_user)):
     status = data.get("status")
     if status not in ["approved", "rejected"]:
