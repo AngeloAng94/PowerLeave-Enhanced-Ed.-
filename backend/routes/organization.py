@@ -2,11 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from database import db
 from auth import get_current_user, get_admin_user
+from models import Organization, OrgSettings, SuccessResponse
 
 router = APIRouter(prefix="/api", tags=["organization"])
 
 
-@router.get("/organization")
+@router.get("/organization", response_model=Organization)
 async def get_organization(current_user: dict = Depends(get_current_user)):
     org = await db.organizations.find_one(
         {"org_id": current_user["org_id"]},
@@ -17,7 +18,7 @@ async def get_organization(current_user: dict = Depends(get_current_user)):
     return org
 
 
-@router.put("/organization")
+@router.put("/organization", response_model=SuccessResponse)
 async def update_organization(data: dict, current_user: dict = Depends(get_admin_user)):
     updates = {}
     if "name" in data:
@@ -29,10 +30,10 @@ async def update_organization(data: dict, current_user: dict = Depends(get_admin
             {"org_id": current_user["org_id"]},
             {"$set": updates}
         )
-    return {"success": True}
+    return SuccessResponse()
 
 
-@router.get("/settings/rules")
+@router.get("/settings/rules", response_model=OrgSettings)
 async def get_rules(current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
     settings = await db.org_settings.find_one(
@@ -40,17 +41,17 @@ async def get_rules(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     )
     if not settings:
-        return {
-            "org_id": org_id,
-            "min_notice_days": 7,
-            "max_consecutive_days": 15,
-            "auto_approve_under_days": 0,
-            "blocked_periods": []
-        }
+        return OrgSettings(
+            org_id=org_id,
+            min_notice_days=7,
+            max_consecutive_days=15,
+            auto_approve_under_days=0,
+            blocked_periods=[]
+        )
     return settings
 
 
-@router.put("/settings/rules")
+@router.put("/settings/rules", response_model=SuccessResponse)
 async def update_rules(data: dict, current_user: dict = Depends(get_admin_user)):
     org_id = current_user["org_id"]
     updates = {"org_id": org_id}
@@ -63,4 +64,4 @@ async def update_rules(data: dict, current_user: dict = Depends(get_admin_user))
         {"$set": updates},
         upsert=True
     )
-    return {"success": True}
+    return SuccessResponse()
