@@ -149,7 +149,7 @@ async def get_exceptions(current_user: dict = Depends(get_current_user)):
     return exceptions
 
 
-@router.put("/exceptions/{exception_id}/review")
+@router.put("/exceptions/{exception_id}/review", response_model=SuccessResponse)
 async def review_exception(exception_id: str, review_data: dict, current_user: dict = Depends(get_admin_user)):
     status = review_data.get("status")
     if status not in ["approved", "rejected"]:
@@ -176,4 +176,4 @@ async def review_exception(exception_id: str, review_data: dict, current_user: d
             "is_closure_leave": True
         })
 
-    return {"success": True}
+    return SuccessResponse()
