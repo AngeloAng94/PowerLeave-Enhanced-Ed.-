@@ -94,7 +94,7 @@ async def login(request: Request, credentials: UserLogin, response: Response):
     }
 
 
-@router.post("/session")
+@router.post("/session", response_model=AuthResponse)
 async def create_session(request: Request, response: Response):
     """Process OAuth session from Emergent Auth"""
     try:
