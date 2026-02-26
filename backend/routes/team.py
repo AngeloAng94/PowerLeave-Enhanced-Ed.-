@@ -62,7 +62,7 @@ async def invite_member(data: dict, current_user: dict = Depends(get_admin_user)
     }
 
 
-@router.put("/{user_id}")
+@router.put("/{user_id}", response_model=SuccessResponse)
 async def update_team_member(user_id: str, data: dict, current_user: dict = Depends(get_admin_user)):
     updates = {}
     if "role" in data:
@@ -74,10 +74,10 @@ async def update_team_member(user_id: str, data: dict, current_user: dict = Depe
             {"user_id": user_id, "org_id": current_user["org_id"]},
             {"$set": updates}
         )
-    return {"success": True}
+    return SuccessResponse()
 
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", response_model=SuccessResponse)
 async def remove_team_member(user_id: str, current_user: dict = Depends(get_admin_user)):
     if user_id == current_user["user_id"]:
         raise HTTPException(status_code=400, detail="Non puoi rimuovere te stesso")
