@@ -183,10 +183,10 @@ async def review_leave_request(request_id: str, data: dict, current_user: dict =
             upsert=True
         )
 
-    return {"success": True}
+    return SuccessResponse()
 
 
-@router.get("/leave-balances")
+@router.get("/leave-balances", response_model=List[LeaveBalanceResponse])
 async def get_leave_balances(
     page: int = 1,
     page_size: int = 50,
