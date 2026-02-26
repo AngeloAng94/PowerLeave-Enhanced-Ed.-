@@ -20,7 +20,8 @@
 10. [Appendice B — Refactoring Strutturale (19 Feb)](#appendice-b--refactoring-strutturale-19-feb-2026)
 11. [Appendice C — Fix UI/UX (20 Feb)](#appendice-c--fix-uiux-20-feb-2026)
 12. [Appendice D — Fix Validazione Date (20 Feb)](#appendice-d--fix-critico-validazione-date-20-feb-2026)
-13. [Riepilogo Stato Progetto](#riepilogo-stato-progetto)
+13. [Appendice E — Task Pendenti Completati (20 Feb)](#appendice-e--completamento-task-pendenti-20-feb-2026)
+14. [Riepilogo Stato Progetto](#riepilogo-stato-progetto)
 
 ---
 
