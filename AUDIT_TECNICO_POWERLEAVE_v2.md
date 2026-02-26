@@ -877,11 +877,110 @@ Nuova classe `TestDateValidation` con 3 test:
 
 | Task | Priorità | Stato |
 |------|----------|-------|
-| Aggiungere `response_model` agli endpoint | P0 | Non iniziato |
-| Helper centralizzato init saldo ferie | P0 | Non iniziato |
-| Dockerizzazione | P1 | Non iniziato |
-| README professionale | P2 | Non iniziato |
 | Integrazioni Calendar/Email | P2 | In attesa (utente) |
+
+---
+
+## APPENDICE E — COMPLETAMENTO TASK PENDENTI (20 Feb 2026)
+
+### Task completati in questa sessione
+
+| Task | Priorità | Descrizione | Stato |
+|------|----------|-------------|-------|
+| **P0-1** | P0 | `response_model` su tutti gli endpoint FastAPI | ✅ Completato |
+| **P0-2** | P0 | Helper centralizzato `init_leave_balances` | ✅ Già presente |
+| **P1** | P1 | Dockerizzazione (Dockerfile + docker-compose) | ✅ Completato |
+| **P2** | P2 | README.md professionale | ✅ Completato |
+
+### Dettaglio P0-1: Response Models
+
+Aggiunti `response_model` a **tutti gli endpoint** per documentazione OpenAPI completa:
+
+**Nuovi modelli creati in `models.py`:**
+- `SuccessResponse` — Risposta generica `{success: true}`
+- `LeaveRequestCreatedResponse` — `{success, request_id}`
+- `InviteResponse` — `{success, user_id, message}`
+- `AuthResponse` — Token + dati utente
+- `LogoutResponse` — Messaggio logout
+- `StatsResponse` — Statistiche dashboard
+- `LeaveBalanceResponse` — Saldo con info estese
+- `OrgSettings` — Regole organizzazione
+- `CompanyClosure`, `ClosureException`, `Announcement`, `TeamMember` — Modelli completi
+
+**Endpoint aggiornati:**
+| Route File | Endpoint | Response Model |
+|------------|----------|----------------|
+| `auth.py` | POST /register | `AuthResponse` |
+| `auth.py` | POST /login | `AuthResponse` |
+| `auth.py` | POST /session | `AuthResponse` |
+| `auth.py` | POST /logout | `LogoutResponse` |
+| `leave.py` | GET /leave-types | `List[LeaveType]` |
+| `leave.py` | POST /leave-types | `LeaveType` |
+| `leave.py` | PUT /leave-types/{id} | `SuccessResponse` |
+| `leave.py` | DELETE /leave-types/{id} | `SuccessResponse` |
+| `leave.py` | GET /leave-requests | `List[LeaveRequest]` |
+| `leave.py` | POST /leave-requests | `LeaveRequestCreatedResponse` |
+| `leave.py` | PUT /leave-requests/{id}/review | `SuccessResponse` |
+| `leave.py` | GET /leave-balances | `List[LeaveBalanceResponse]` |
+| `team.py` | GET /team | `List[TeamMember]` |
+| `team.py` | POST /team/invite | `InviteResponse` |
+| `team.py` | PUT /team/{id} | `SuccessResponse` |
+| `team.py` | DELETE /team/{id} | `SuccessResponse` |
+| `organization.py` | GET /organization | `Organization` |
+| `organization.py` | PUT /organization | `SuccessResponse` |
+| `organization.py` | GET /settings/rules | `OrgSettings` |
+| `organization.py` | PUT /settings/rules | `SuccessResponse` |
+| `announcements.py` | GET /announcements | `List[Announcement]` |
+| `announcements.py` | POST /announcements | `Announcement` |
+| `announcements.py` | PUT /announcements/{id} | `SuccessResponse` |
+| `announcements.py` | DELETE /announcements/{id} | `SuccessResponse` |
+| `closures.py` | GET /closures | `List[CompanyClosure]` |
+| `closures.py` | POST /closures | `CompanyClosure` |
+| `closures.py` | DELETE /closures/{id} | `SuccessResponse` |
+| `closures.py` | POST /closures/{id}/exception | `ClosureException` |
+| `closures.py` | GET /closures/exceptions | `List[ClosureException]` |
+| `closures.py` | PUT /closures/exceptions/{id}/review | `SuccessResponse` |
+| `stats.py` | GET /stats | `StatsResponse` |
+
+### Dettaglio P0-2: Helper init_leave_balances
+
+**Stato**: Già implementato in sessione precedente.
+
+La funzione `init_leave_balances(user_id, org_id, year)` è definita in `database.py` e viene chiamata da:
+- `routes/auth.py` (register)
+- `routes/team.py` (invite)
+
+### Dettaglio P1: Dockerizzazione
+
+**File creati:**
+
+1. `backend/Dockerfile` — Python 3.11-slim, uvicorn
+2. `frontend/Dockerfile` — Node 18 build + nginx production
+3. `docker-compose.yml` — 3 servizi (mongo, backend, frontend)
+4. `.env.example` — Template variabili d'ambiente
+
+**Comando per avviare:**
+```bash
+docker-compose up --build
+```
+
+### Dettaglio P2: README Professionale
+
+**Creato `README.md`** con:
+- Badge tecnologie
+- Descrizione prodotto
+- Tabella stack tecnologico
+- Lista funzionalità
+- Struttura progetto
+- Istruzioni avvio (Docker e manuale)
+- Credenziali demo
+- Comandi test
+- Link documentazione
+
+### Verifica finale
+
+- **Test backend**: 33/33 passed ✅
+- **Nessuna regressione** introdotta
 
 ---
 
@@ -890,4 +989,5 @@ Nuova classe `TestDateValidation` con 3 test:
 *Aggiornato con Refactoring Strutturale il 19 Febbraio 2026*
 *Aggiornato con Fix UI/UX il 20 Febbraio 2026*
 *Aggiornato con Fix Validazione Date il 20 Febbraio 2026*
+*Aggiornato con Task Pendenti completati il 20 Febbraio 2026*
 *Basato su lettura completa del codice sorgente, schema MongoDB live, test report e configurazioni.*
