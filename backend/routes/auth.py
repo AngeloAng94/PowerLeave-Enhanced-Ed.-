@@ -68,7 +68,7 @@ async def register(request: Request, user_data: UserCreate, response: Response):
     }
 
 
-@router.post("/login")
+@router.post("/login", response_model=AuthResponse)
 @limiter.limit("10/minute")
 async def login(request: Request, credentials: UserLogin, response: Response):
     user = await db.users.find_one({"email": credentials.email})
