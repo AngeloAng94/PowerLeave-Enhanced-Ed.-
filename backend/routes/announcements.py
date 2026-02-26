@@ -1,16 +1,17 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, HTTPException, Depends
 
 from database import db
 from auth import get_current_user, get_admin_user
+from models import Announcement, SuccessResponse
 
 router = APIRouter(prefix="/api/announcements", tags=["announcements"])
 
 
-@router.get("")
+@router.get("", response_model=List[Announcement])
 async def get_announcements(
     page: int = 1,
     page_size: int = 20,
@@ -27,7 +28,7 @@ async def get_announcements(
     return announcements
 
 
-@router.post("")
+@router.post("", response_model=Announcement)
 async def create_announcement(data: dict, current_user: dict = Depends(get_admin_user)):
     announcement = {
         "id": str(uuid.uuid4()),
@@ -45,7 +46,7 @@ async def create_announcement(data: dict, current_user: dict = Depends(get_admin
     return announcement
 
 
-@router.put("/{announcement_id}")
+@router.put("/{announcement_id}", response_model=SuccessResponse)
 async def update_announcement(announcement_id: str, data: dict, current_user: dict = Depends(get_admin_user)):
     updates = {}
     for key in ["title", "content", "priority"]:
@@ -56,14 +57,14 @@ async def update_announcement(announcement_id: str, data: dict, current_user: di
             {"id": announcement_id, "org_id": current_user["org_id"]},
             {"$set": updates}
         )
-    return {"success": True}
+    return SuccessResponse()
 
 
-@router.delete("/{announcement_id}")
+@router.delete("/{announcement_id}", response_model=SuccessResponse)
 async def delete_announcement(announcement_id: str, current_user: dict = Depends(get_admin_user)):
     result = await db.announcements.delete_one(
         {"id": announcement_id, "org_id": current_user["org_id"]}
     )
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Annuncio non trovato")
-    return {"success": True}
+    return SuccessResponse()
