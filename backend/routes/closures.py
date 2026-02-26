@@ -132,7 +132,7 @@ async def request_exception(closure_id: str, exception_data: dict, current_user:
     return exception
 
 
-@router.get("/exceptions")
+@router.get("/exceptions", response_model=List[ClosureException])
 async def get_exceptions(current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
 
