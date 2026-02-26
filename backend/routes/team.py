@@ -6,12 +6,13 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from database import db, init_leave_balances
 from auth import get_current_user, get_admin_user, get_password_hash, validate_password
+from models import TeamMember, SuccessResponse, InviteResponse
 
 logger = logging.getLogger("powerleave")
 router = APIRouter(prefix="/api/team", tags=["team"])
 
 
-@router.get("")
+@router.get("", response_model=List[TeamMember])
 async def get_team(current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
     members = await db.users.find(
