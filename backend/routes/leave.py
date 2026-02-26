@@ -40,7 +40,7 @@ async def create_leave_type(data: dict, current_user: dict = Depends(get_admin_u
     return leave_type
 
 
-@router.put("/leave-types/{type_id}")
+@router.put("/leave-types/{type_id}", response_model=SuccessResponse)
 async def update_leave_type(type_id: str, data: dict, current_user: dict = Depends(get_admin_user)):
     updates = {}
     if "name" in data:
@@ -51,18 +51,18 @@ async def update_leave_type(type_id: str, data: dict, current_user: dict = Depen
         updates["days_per_year"] = data["days_per_year"]
     if updates:
         await db.leave_types.update_one({"id": type_id}, {"$set": updates})
-    return {"success": True}
+    return SuccessResponse()
 
 
-@router.delete("/leave-types/{type_id}")
+@router.delete("/leave-types/{type_id}", response_model=SuccessResponse)
 async def delete_leave_type(type_id: str, current_user: dict = Depends(get_admin_user)):
     result = await db.leave_types.delete_one({"id": type_id, "is_custom": True})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Tipo di assenza non trovato o non eliminabile")
-    return {"success": True}
+    return SuccessResponse()
 
 
-@router.get("/leave-requests")
+@router.get("/leave-requests", response_model=List[LeaveRequest])
 async def get_leave_requests(
     filter_status: Optional[str] = None,
     user_id: Optional[str] = None,
