@@ -47,11 +47,11 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
     total_used = sum(b.get("used_days", 0) for b in balances)
     utilization_rate = round((total_used / total_available * 100) if total_available > 0 else 0)
 
-    return {
-        "approved_count": approved_count,
-        "pending_count": pending_count,
-        "total_staff": total_staff,
-        "available_staff": available_staff,
-        "on_leave_today": on_leave,
-        "utilization_rate": utilization_rate,
-    }
+    return StatsResponse(
+        approved_count=approved_count,
+        pending_count=pending_count,
+        total_staff=total_staff,
+        available_staff=available_staff,
+        on_leave_today=on_leave,
+        utilization_rate=utilization_rate,
+    )
