@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: powerleave-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - powerleave-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: powerleave-backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - DB_NAME=${DB_NAME:-powerleave}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production-minimum-32-chars}
+    networks:
+      - powerleave-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+    container_name: powerleave-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - powerleave-network
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  powerleave-network:
+    driver: bridge
