@@ -86,7 +86,7 @@ async def get_leave_requests(
     return requests
 
 
-@router.post("/leave-requests")
+@router.post("/leave-requests", response_model=LeaveRequestCreatedResponse)
 async def create_leave_request(data: LeaveRequestCreate, current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
     user_id = current_user["user_id"]
