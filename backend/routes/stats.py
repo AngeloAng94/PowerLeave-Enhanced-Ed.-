@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends
 
 from database import db
 from auth import get_current_user
+from models import StatsResponse
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=StatsResponse)
 async def get_stats(current_user: dict = Depends(get_current_user)):
     org_id = current_user["org_id"]
     year = datetime.now(timezone.utc).year
