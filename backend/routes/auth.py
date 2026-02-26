@@ -11,14 +11,14 @@ from auth import (
     create_access_token, verify_password, get_password_hash,
     validate_password, get_current_user
 )
-from models import UserCreate, UserLogin
+from models import UserCreate, UserLogin, AuthResponse, LogoutResponse
 from config import SECRET_KEY
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 limiter = Limiter(key_func=get_remote_address)
 
 
-@router.post("/register")
+@router.post("/register", response_model=AuthResponse)
 @limiter.limit("10/minute")
 async def register(request: Request, user_data: UserCreate, response: Response):
     validate_password(user_data.password)
