@@ -89,7 +89,7 @@ async def create_closure(data: dict, current_user: dict = Depends(get_admin_user
     return closure
 
 
-@router.delete("/{closure_id}")
+@router.delete("/{closure_id}", response_model=SuccessResponse)
 async def delete_closure(closure_id: str, current_user: dict = Depends(get_admin_user)):
     closure = await db.company_closures.find_one(
         {"id": closure_id, "org_id": current_user["org_id"]},
@@ -102,10 +102,10 @@ async def delete_closure(closure_id: str, current_user: dict = Depends(get_admin
     await db.leave_requests.delete_many({"closure_id": closure_id})
     await db.closure_exceptions.delete_many({"closure_id": closure_id})
 
-    return {"success": True}
+    return SuccessResponse()
 
 
-@router.post("/{closure_id}/exception")
+@router.post("/{closure_id}/exception", response_model=ClosureException)
 async def request_exception(closure_id: str, exception_data: dict, current_user: dict = Depends(get_current_user)):
     closure = await db.company_closures.find_one(
         {"id": closure_id},
