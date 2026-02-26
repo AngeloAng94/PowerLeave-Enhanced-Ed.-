@@ -67,12 +67,12 @@ frontend/src/ (20+ file)
 ```
 
 ## Next Tasks (P0)
-- [ ] Aggiungere `response_model` agli endpoint FastAPI (D04)
-- [ ] Helper centralizzato init_leave_balances (D08)
+- [x] ~~Aggiungere `response_model` agli endpoint FastAPI (D04)~~ ✅
+- [x] ~~Helper centralizzato init_leave_balances (D08)~~ ✅ (già presente)
 
 ## Upcoming Tasks (P1)
-- [ ] Dockerizzazione (Dockerfile + docker-compose)
-- [ ] README.md professionale
+- [x] ~~Dockerizzazione (Dockerfile + docker-compose)~~ ✅
+- [x] ~~README.md professionale~~ ✅
 
 ## Future (P2-P3)
 - [ ] Google Calendar integration (on hold per utente)
