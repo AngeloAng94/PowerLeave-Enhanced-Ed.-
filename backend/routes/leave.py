@@ -24,7 +24,7 @@ async def get_leave_types(current_user: dict = Depends(get_current_user)):
     return types
 
 
-@router.post("/leave-types")
+@router.post("/leave-types", response_model=LeaveType)
 async def create_leave_type(data: dict, current_user: dict = Depends(get_admin_user)):
     org_id = current_user["org_id"]
     leave_type = {
