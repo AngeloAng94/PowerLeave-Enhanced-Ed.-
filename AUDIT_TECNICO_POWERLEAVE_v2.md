@@ -863,7 +863,7 @@ Nuova classe `TestDateValidation` con 3 test:
 
 4. **Fix UI/UX** (P0)
    - Dark mode default
-   - Logo originale ripristinato
+   - Logo originale ripristinato (Anthera)
    - ThemeToggle su tutte le pagine
    - Branding corretto ("PowerLeave" senza "PMI")
 
@@ -872,6 +872,22 @@ Nuova classe `TestDateValidation` con 3 test:
    - End date >= Start date
    - Max 2 anni nel futuro
    - Validazione doppia (frontend + backend)
+
+6. **Response Models FastAPI** (P0)
+   - `response_model` su tutti gli endpoint
+   - Documentazione OpenAPI completa
+   - 15+ nuovi modelli Pydantic
+
+7. **Dockerizzazione** (P1)
+   - Dockerfile backend (Python 3.11)
+   - Dockerfile frontend (Node 18 + nginx)
+   - docker-compose.yml (3 servizi)
+   - .env.example
+
+8. **README Professionale** (P2)
+   - Documentazione completa
+   - Istruzioni installazione Docker e manuale
+   - Credenziali demo
 
 ### Da completare 🔄
 
